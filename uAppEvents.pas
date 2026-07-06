@@ -39,6 +39,11 @@ type
     ['{A1000004-1111-1111-1111-000000000001}']
   end;
 
+  // --- Dokumente (TRTHeisenberg DB) ---
+  IOpenDokumenteEvent = interface
+    ['{A1000005-1111-1111-1111-000000000001}']
+  end;
+
 // --- Implementierungen ---
 
   TOpenKundenEvent = class(TInterfacedObject, IOpenKundenEvent)
@@ -67,6 +72,9 @@ type
   end;
 
   TOpenPyArtikelEvent = class(TInterfacedObject, IOpenPyArtikelEvent)
+  end;
+
+  TOpenDokumenteEvent = class(TInterfacedObject, IOpenDokumenteEvent)
   end;
 
 implementation

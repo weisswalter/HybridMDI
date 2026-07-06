@@ -12,10 +12,8 @@ object frmMain: TfrmMain
   Font.Style = []
   FormStyle = fsMDIForm
   Menu = MainMenu1
-  OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 15
   object MainMenu1: TMainMenu
     Left = 32
@@ -40,6 +38,13 @@ object frmMain: TfrmMain
       object mnuPyArtikel: TMenuItem
         Caption = 'Artikel (Python)'
         OnClick = mnuPyArtikelClick
+      end
+      object mnuSep2: TMenuItem
+        Caption = '-'
+      end
+      object mnuDokumente: TMenuItem
+        Caption = 'Dokumente (DB-Test)'
+        OnClick = mnuDokumenteClick
       end
     end
   end
