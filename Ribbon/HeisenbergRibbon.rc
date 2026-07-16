@@ -1,0 +1,58 @@
+// ******************************************************************************
+// * This is an automatically generated file containing the ribbon resource for *
+// * your application.                                                          *
+// ******************************************************************************
+
+#include ".\HeisenbergRibbon.h"
+
+STRINGTABLE 
+BEGIN
+    cmdMandantNeu_LabelTitle_RESID L"Neuer Mandant" /* LabelTitle cmdMandantNeu_LabelTitle_RESID: (null) */
+END
+
+STRINGTABLE 
+BEGIN
+    IDC_CMD_TABMODULE_LabelTitle_RESID L"Module" /* LabelTitle IDC_CMD_TABMODULE_LabelTitle_RESID: (null) */
+END
+
+STRINGTABLE 
+BEGIN
+    cmdKunden_LabelTitle_RESID L"Kunden" /* LabelTitle cmdKunden_LabelTitle_RESID: (null) */
+END
+
+STRINGTABLE 
+BEGIN
+    cmdArtikel_LabelTitle_RESID L"Artikel" /* LabelTitle cmdArtikel_LabelTitle_RESID: (null) */
+END
+
+STRINGTABLE 
+BEGIN
+    cmdDokumente_LabelTitle_RESID L"Dokumente" /* LabelTitle cmdDokumente_LabelTitle_RESID: (null) */
+END
+
+STRINGTABLE 
+BEGIN
+    cmdPersonen_LabelTitle_RESID L"Personen" /* LabelTitle cmdPersonen_LabelTitle_RESID: (null) */
+END
+
+STRINGTABLE 
+BEGIN
+    cmdTabTools_LabelTitle_RESID L"Werkzeuge" /* LabelTitle cmdTabTools_LabelTitle_RESID: (null) */
+END
+
+STRINGTABLE 
+BEGIN
+    cmdScanner_LabelTitle_RESID L"Scanner" /* LabelTitle cmdScanner_LabelTitle_RESID: (null) */
+END
+
+STRINGTABLE 
+BEGIN
+    cmdPGManager_LabelTitle_RESID L"DB-Manager" /* LabelTitle cmdPGManager_LabelTitle_RESID: (null) */
+END
+
+STRINGTABLE 
+BEGIN
+    InternalCmd2_LabelTitle_RESID L"Label:InternalCmd2" /* LabelTitle InternalCmd2_LabelTitle_RESID: (null) */
+END
+
+APPLICATION_RIBBON    UIFILE    "C:\\Users\\weiss\\source\\repos\\Heisenberg\\Ribbon\\HeisenbergRibbon.bml"

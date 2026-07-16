@@ -1,14 +1,15 @@
-unit uFrmArtikel;
+unit ArtikelFrm;
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.StdCtrls, Vcl.ExtCtrls,
+  uFrmModuleTemplate;
 
 type
-  TfrmArtikel = class(TForm)
+  TfrmArtikel = class(TfrmTemplate)
     Panel1: TPanel;
     btnSpeichern: TButton;
     btnSchliessen: TButton;

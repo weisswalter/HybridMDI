@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<Application xmlns='http://schemas.microsoft.com/windows/2009/Ribbon'>
+  <Application.Commands>
+
+    <Command Name="cmdGroupMandant">
+    </Command>
+
+    <Command Name="cmdMandantNeu">
+      <Command.LabelTitle>
+        <String Id="196">Neuer Mandant</String>
+      </Command.LabelTitle>
+    </Command>
+
+    <Command Name="cmdTabModule" Symbol="IDC_CMD_TABMODULE" Id="10000">
+      <Command.LabelTitle>
+        <String Id="200">Module</String>
+      </Command.LabelTitle>
+    </Command>
+
+    <Command Name="cmdGroupModule">
+    </Command>
+
+    <Command Name="cmdKunden">
+      <Command.LabelTitle>
+        <String Id="210">Kunden</String>
+      </Command.LabelTitle>
+    </Command>
+
+    <Command Name="cmdArtikel">
+      <Command.LabelTitle>
+        <String Id="220">Artikel</String>
+      </Command.LabelTitle>
+    </Command>
+
+    <Command Name="cmdDokumente">
+      <Command.LabelTitle>
+        <String Id="230">Dokumente</String>
+      </Command.LabelTitle>
+    </Command>
+
+    <Command Name="cmdPersonen">
+      <Command.LabelTitle>
+        <String Id="240">Personen</String>
+      </Command.LabelTitle>
+    </Command>
+
+    <Command Name="cmdTabTools">
+      <Command.LabelTitle>
+        <String Id="245">Werkzeuge</String>
+      </Command.LabelTitle>
+    </Command>
+
+    <Command Name="cmdGroupTools">
+    </Command>
+
+    <Command Name="cmdScanner">
+      <Command.LabelTitle>
+        <String Id="260">Scanner</String>
+      </Command.LabelTitle>
+    </Command>
+
+    <Command Name="cmdPGManager">
+      <Command.LabelTitle>
+        <String Id="270">DB-Manager</String>
+      </Command.LabelTitle>
+    </Command>
+
+  </Application.Commands>
+
+  <Application.Views>
+    <Ribbon>
+      <Ribbon.Tabs>
+        <Tab CommandName="cmdTabModule">
+          <Group CommandName="cmdGroupMandant" SizeDefinition="OneButton">
+            <Button CommandName="cmdMandantNeu" />
+          </Group>
+          <Group CommandName="cmdGroupModule" SizeDefinition="FourButtons">
+            <Button CommandName="cmdKunden" />
+            <Button CommandName="cmdArtikel" />
+            <Button CommandName="cmdDokumente" />
+            <Button CommandName="cmdPersonen" />
+          </Group>
+        </Tab>
+        <Tab CommandName="cmdTabTools">
+          <Group CommandName="cmdGroupTools" SizeDefinition="TwoButtons">
+            <Button CommandName="cmdScanner" />
+            <Button CommandName="cmdPGManager" />
+          </Group>
+        </Tab>
+      </Ribbon.Tabs>
+    </Ribbon>
+  </Application.Views>
+</Application>

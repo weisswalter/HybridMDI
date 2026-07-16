@@ -13,8 +13,10 @@ class ModulArtikel:
             {'nr': 'A-003', 'bezeichnung': 'Unterlegscheibe','preis': 0.05},
         ]
 
-    def show(self):
+    def show(self, parent_handle):
+        Application.Initialize()
         data = self.load()
         frm = FrmArtikel(Application)
+        frm.ParentWindow = parent_handle
         frm.load_data(data)
         frm.Show()

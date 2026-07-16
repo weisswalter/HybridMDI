@@ -1,4 +1,4 @@
-unit uDmPython;
+unit PythonDm;
 
 // Zentrales Python-DataModule.
 // Besitzt die PythonEngine, startet den unsichtbaren Host (Anker-Form für delphivcl),
@@ -11,10 +11,10 @@ uses
   Vcl.ExtCtrls,
   PythonEngine, VarPyth,
   EventBus,
-  uAppEvents;
+  udmModuleTemplate;
 
 type
-  TdmPython = class(TDataModule)
+  TdmPython = class(TdmModuleTemplate)
     Timer1: TTimer;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
@@ -24,11 +24,6 @@ type
     procedure AddPythonPath(const ADir: string);
   public
     property Engine: TPythonEngine read FEngine;
-
-    [Subscribe(TThreadMode.Main)]
-    procedure OnOpenPyKunden(AEvent: IOpenPyKundenEvent);
-    [Subscribe(TThreadMode.Main)]
-    procedure OnOpenPyArtikel(AEvent: IOpenPyArtikelEvent);
   end;
 
 var
@@ -53,7 +48,7 @@ begin
   LPythonDir := TPath.Combine(ExtractFilePath(GetModuleName(HInstance)), 'Python');
   AddPythonPath(LPythonDir);
 
-  GlobalEventBus.RegisterSubscriberForEvents(Self);
+  // Registrierung übernimmt TdmModuleTemplate.Create (SilentRegisterSubscriberForEvents)
 
   // Timer damit delphivcl den HiddenHost erst nach vollständiger VCL-Initialisierung anlegt
   Timer1.Interval := 50;
@@ -62,7 +57,7 @@ end;
 
 procedure TdmPython.DataModuleDestroy(Sender: TObject);
 begin
-  GlobalEventBus.UnregisterForEvents(Self);
+  // Deregistrierung übernimmt TdmModuleTemplate.Destroy
 end;
 
 procedure TdmPython.AddPythonPath(const ADir: string);
@@ -78,17 +73,7 @@ end;
 procedure TdmPython.Timer1Timer(Sender: TObject);
 begin
   Timer1.Enabled := False;
-  FEngine.ExecString('import gui_host; gui_host.start_hidden_host()');
-end;
-
-procedure TdmPython.OnOpenPyKunden(AEvent: IOpenPyKundenEvent);
-begin
-  FEngine.ExecString('import importlib, modul_kunden; importlib.reload(modul_kunden); modul_kunden.ModulKunden().show()');
-end;
-
-procedure TdmPython.OnOpenPyArtikel(AEvent: IOpenPyArtikelEvent);
-begin
-  FEngine.ExecString('import importlib, modul_artikel; importlib.reload(modul_artikel); modul_artikel.ModulArtikel().show()');
+  FEngine.ExecString('import gui_host; gui_host.StartHiddenHost()');
 end;
 
 end.

@@ -1,21 +1,22 @@
-unit uDmArtikel;
+unit ArtikelDm;
 
 interface
 
 uses
   System.SysUtils, System.Classes,
   EventBus,
-  uAppEvents;
+  uAppEvents,
+  udmModuleTemplate;
 
 type
-  TdmArtikel = class(TDataModule)
+  TdmArtikel = class(TdmModuleTemplate)
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
   private
     procedure LoadData;
   public
-    [Subscribe(TThreadMode.Main)]
-    procedure OnOpenArtikel(AEvent: IOpenArtikelEvent);
+    class function GetInstance: TObject;
+    procedure OpenArtikel;
 
     [Subscribe(TThreadMode.Main)]
     procedure OnArtikelResult(AEvent: IArtikelResultEvent);
@@ -30,16 +31,16 @@ implementation
 
 uses
   Vcl.Forms,
-  uFrmArtikel;
+  ArtikelFrm;
 
 procedure TdmArtikel.DataModuleCreate(Sender: TObject);
 begin
-  GlobalEventBus.RegisterSubscriberForEvents(Self);
+  // Registrierung übernimmt TdmModuleTemplate.Create (SilentRegisterSubscriberForEvents)
 end;
 
 procedure TdmArtikel.DataModuleDestroy(Sender: TObject);
 begin
-  GlobalEventBus.UnregisterForEvents(Self);
+  // Deregistrierung übernimmt TdmModuleTemplate.Destroy
 end;
 
 procedure TdmArtikel.LoadData;
@@ -47,7 +48,12 @@ begin
   // Geschäftslogik: Artikeldaten laden
 end;
 
-procedure TdmArtikel.OnOpenArtikel(AEvent: IOpenArtikelEvent);
+class function TdmArtikel.GetInstance: TObject;
+begin
+  Result := dmArtikel;
+end;
+
+procedure TdmArtikel.OpenArtikel;
 var
   LFrm: TfrmArtikel;
 begin

@@ -1,0 +1,192 @@
+object Form2: TForm2
+  Left = 0
+  Top = 0
+  Caption = 'Form2'
+  ClientHeight = 537
+  ClientWidth = 624
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  TextHeight = 15
+  object pnlRibbon: TPanel
+    Left = 0
+    Top = 0
+    Width = 624
+    Height = 121
+    Align = alTop
+    BevelOuter = bvNone
+    Caption = 'pnlRibbon'
+    Color = 12232890
+    ParentBackground = False
+    ShowCaption = False
+    TabOrder = 0
+    ExplicitWidth = 622
+    object pctrModule: TPageControl
+      Left = 0
+      Top = 0
+      Width = 624
+      Height = 121
+      ActivePage = tsDatei
+      Align = alClient
+      Style = tsFlatButtons
+      TabOrder = 0
+      ExplicitWidth = 622
+      object tsDatei: TTabSheet
+        AlignWithMargins = True
+        Margins.Left = 0
+        Margins.Top = 25
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Caption = 'Datei'
+        TabVisible = False
+        object pnl1: TPanel
+          Left = 0
+          Top = 0
+          Width = 616
+          Height = 38
+          Align = alTop
+          BevelOuter = bvNone
+          Caption = 'pnl1'
+          ShowCaption = False
+          TabOrder = 0
+          ExplicitWidth = 614
+          object NavPBtnTopMandantNeu: TJvNavPanelButtonTop
+            Left = 0
+            Top = 0
+            Width = 46
+            Height = 38
+            Align = alLeft
+            Alignment = taCenter
+            Caption = 'First'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -15
+            Font.Name = 'Segoe UI'
+            Font.Style = [fsBold]
+            ParentFont = False
+            ParentStyleManager = False
+            ImageIndex = 1
+          end
+          object NavPBtnTopMandantWaehlen: TJvNavPanelButtonTop
+            Left = 46
+            Top = 0
+            Width = 57
+            Height = 38
+            Align = alLeft
+            Alignment = taCenter
+            Caption = 'Prior'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -15
+            Font.Name = 'Segoe UI'
+            Font.Style = [fsBold]
+            ParentFont = False
+            ParentStyleManager = False
+            ImageIndex = 1
+          end
+          object jvgrdnt2: TJvGradient
+            Left = 195
+            Top = 0
+            Width = 421
+            Height = 38
+            Style = grVertical
+            StartColor = 16245453
+            EndColor = 15966336
+            ExplicitLeft = 376
+            ExplicitWidth = 765
+            ExplicitHeight = 69
+          end
+          object JvNavPanelButtonTop1: TJvNavPanelButtonTop
+            Left = 103
+            Top = 0
+            Width = 46
+            Height = 38
+            Align = alLeft
+            Alignment = taCenter
+            Caption = 'Next'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -15
+            Font.Name = 'Segoe UI'
+            Font.Style = [fsBold]
+            ParentFont = False
+            ParentStyleManager = False
+            ImageIndex = 1
+            ExplicitLeft = 155
+          end
+          object NavPBtnTopMandantNeu1: TJvNavPanelButtonTop
+            Left = 149
+            Top = 0
+            Width = 46
+            Height = 38
+            Align = alLeft
+            Alignment = taCenter
+            Caption = 'First'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -15
+            Font.Name = 'Segoe UI'
+            Font.Style = [fsBold]
+            ParentFont = False
+            ParentStyleManager = False
+            ImageIndex = 1
+            ExplicitLeft = 195
+          end
+        end
+      end
+    end
+    object Adressen: TJvNavPanelHeader
+      Left = 4
+      Top = 0
+      Width = 94
+      Height = 31
+      Alignment = taCenter
+      Caption = 'Adressen'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindow
+      Font.Height = -20
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+      ImageIndex = 0
+      ParentStyleManager = False
+    end
+    object jvnvpnlhdr2: TJvNavPanelHeader
+      Tag = 1
+      Left = 98
+      Top = 0
+      Width = 94
+      Height = 31
+      Alignment = taCenter
+      Caption = 'Module'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindow
+      Font.Height = -20
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+      ImageIndex = 0
+      ParentStyleManager = False
+    end
+    object jvnvpnlhdr3: TJvNavPanelHeader
+      Tag = 2
+      Left = 180
+      Top = 0
+      Width = 142
+      Height = 31
+      Alignment = taCenter
+      Caption = 'Werkzeuge'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindow
+      Font.Height = -20
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+      ImageIndex = 0
+      ParentStyleManager = False
+    end
+  end
+end

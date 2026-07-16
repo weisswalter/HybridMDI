@@ -15,8 +15,10 @@ class ModulKunden:
             {'nr': '10003', 'name': 'Schulz KG',   'ort': 'Berlin'},
         ]
 
-    def show(self):
+    def show(self, parent_handle):
+        Application.Initialize()
         data = self.load()
         frm = FrmKunden(Application)
+        frm.ParentWindow = parent_handle
         frm.load_data(data)
         frm.Show()

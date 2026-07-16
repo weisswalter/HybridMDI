@@ -1,4 +1,4 @@
-unit uDmKunden;
+unit KundenDm;
 
 // DataModule für das Kunden-Modul (Delphi).
 // Enthält die Geschäftslogik. Zeigt das MDI-Child nur bei Bedarf.
@@ -8,17 +8,18 @@ interface
 uses
   System.SysUtils, System.Classes,
   EventBus,
-  uAppEvents;
+  uAppEvents,
+  udmModuleTemplate;
 
 type
-  TdmKunden = class(TDataModule)
+  TdmKunden = class(TdmModuleTemplate)
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
   private
     procedure LoadData;
   public
-    [Subscribe(TThreadMode.Main)]
-    procedure OnOpenKunden(AEvent: IOpenKundenEvent);
+    class function GetInstance: TObject;
+    procedure OpenKunden;
 
     [Subscribe(TThreadMode.Main)]
     procedure OnKundenResult(AEvent: IKundenResultEvent);
@@ -33,16 +34,16 @@ implementation
 
 uses
   Vcl.Forms,
-  uFrmKunden;
+  KundenFrm;
 
 procedure TdmKunden.DataModuleCreate(Sender: TObject);
 begin
-  GlobalEventBus.RegisterSubscriberForEvents(Self);
+  // Registrierung übernimmt TdmModuleTemplate.Create (SilentRegisterSubscriberForEvents)
 end;
 
 procedure TdmKunden.DataModuleDestroy(Sender: TObject);
 begin
-  GlobalEventBus.UnregisterForEvents(Self);
+  // Deregistrierung übernimmt TdmModuleTemplate.Destroy
 end;
 
 procedure TdmKunden.LoadData;
@@ -51,7 +52,12 @@ begin
   // frmKunden.SetData(...)
 end;
 
-procedure TdmKunden.OnOpenKunden(AEvent: IOpenKundenEvent);
+class function TdmKunden.GetInstance: TObject;
+begin
+  Result := dmKunden;
+end;
+
+procedure TdmKunden.OpenKunden;
 var
   LFrm: TfrmKunden;
 begin

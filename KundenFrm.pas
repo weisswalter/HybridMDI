@@ -1,4 +1,4 @@
-unit uFrmKunden;
+unit KundenFrm;
 
 // MDI-Child für Kunden. Hat keine Datenbanklogik — nur UI.
 // Kommuniziert ausschliesslich via EventBus zurück zum DataModule.
@@ -8,10 +8,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.StdCtrls, Vcl.ExtCtrls,
+  uFrmModuleTemplate;
 
 type
-  TfrmKunden = class(TForm)
+  TfrmKunden = class(TfrmTemplate)
     Panel1: TPanel;
     btnSpeichern: TButton;
     btnSchliessen: TButton;
