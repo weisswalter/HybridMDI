@@ -1,0 +1,41 @@
+# Zeilenenden festnageln.
+#
+# Am 29.07.2026 sind die Zeilenenden im Ordner mehrfach hin- und hergekippt,
+# weil Werkzeuge beim Lesen automatisch umgewandelt und beim Schreiben nicht
+# zurueckgetauscht haben. Ergebnis: riesige Diffs ohne inhaltliche Aenderung.
+# Ab hier entscheidet Git, nicht das jeweilige Werkzeug.
+#
+# Delphi-Quellen sind Windows-Dateien - CRLF, sowohl im Arbeitsverzeichnis
+# als auch im Repository. Das ist bewusst kein "eol=native": das Projekt
+# wird ausschliesslich unter Windows uebersetzt, und ein einheitlicher
+# Stand im Repository ist mehr wert als Plattformneutralitaet.
+
+* text=auto eol=crlf
+
+*.pas   text eol=crlf
+*.dfm   text eol=crlf
+*.dpr   text eol=crlf
+*.dpk   text eol=crlf
+*.dproj text eol=crlf
+*.sql   text eol=crlf
+*.cs    text eol=crlf
+
+# Python bleibt bei LF - das ist dort die Konvention und die Skripte laufen
+# auch auf dem Server.
+*.py    text eol=lf
+
+# Binaerdateien: Finger weg.
+*.res   binary
+*.dcu   binary
+*.exe   binary
+*.bpl   binary
+*.dcp   binary
+*.rsm   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.bmp   binary
+*.ico   binary
+*.pdf   binary
+*.docx  binary
+*.pptx  binary

@@ -724,40 +724,40 @@ object frmArtikelStamm: TfrmArtikelStamm
 
       end
 
-      object btnStkAdd: TButton
-
+      object btnStkAdd: TJvNavPanelButtonTop
         Left = 8
-
-        Top = 52
-
+        Top = 50
         Width = 130
-
-        Height = 25
-
+        Height = 28
         Caption = 'Hinzuf'#252'gen'
-
-        TabOrder = 2
-
+        Alignment = taCenter
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        StyleManager = PaneStyle1
+        ParentStyleManager = False
         OnClick = btnStkAddClick
-
       end
 
-      object btnStkDel: TButton
-
+      object btnStkDel: TJvNavPanelButtonTop
         Left = 144
-
-        Top = 52
-
+        Top = 50
         Width = 130
-
-        Height = 25
-
+        Height = 28
         Caption = 'Entfernen'
-
-        TabOrder = 3
-
+        Alignment = taCenter
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        StyleManager = PaneStyle1
+        ParentStyleManager = False
         OnClick = btnStkDelClick
-
       end
 
     end

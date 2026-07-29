@@ -126,7 +126,8 @@ type
 
     edtStkMenge: TEdit;
 
-    btnStkDel: TButton;
+    btnStkAdd: TJvNavPanelButtonTop;
+    btnStkDel: TJvNavPanelButtonTop;
 
     pnlBestand: TPanel;
     vstBestand: TVirtualStringTree;
@@ -152,6 +153,7 @@ type
       ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstStuecklisteInitChildren(Sender: TBaseVirtualTree;
       Node: PVirtualNode; var ChildCount: Cardinal);
+    procedure vstStuecklisteDblClick(Sender: TObject);
     procedure vstStuecklisteEditing(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure vstStuecklisteCreateEditor(Sender: TBaseVirtualTree;
@@ -646,6 +648,11 @@ begin
   vstStueckliste.OnGetText := vstStuecklisteGetText;
   vstStueckliste.OnEditing := vstStuecklisteEditing;
   vstStueckliste.OnCreateEditor := vstStuecklisteCreateEditor;
+  // Ohne das laesst sich die Bearbeitung im Baum gar nicht
+  // ausloesen - genau wie beim Bestandsbaum daneben.
+  vstStueckliste.OnDblClick := vstStuecklisteDblClick;
+  vstStueckliste.DefaultNodeHeight := 24;
+  vstStueckliste.Header.Height := 24;
   // toEditable ist Pflicht, sonst feuern OnEditing/OnCreateEditor nie.
   vstStueckliste.TreeOptions.MiscOptions :=
     vstStueckliste.TreeOptions.MiscOptions
@@ -965,7 +972,10 @@ begin
   // damit laesst sich auf jeder Ebene einbauen, nicht nur ganz oben.
   // Ohne Markierung gilt der Artikel aus der Liste links.
   LKnoten := GewaehlterStkKnoten;
-  if Assigned(LKnoten) then
+  if Assigned(LKnoten) and LKnoten.IstPlatzhalter then
+    // Platzhalter selbst hat keine Id - der Oberartikel ist sein Elternknoten
+    LOber := LKnoten.ElternId
+  else if Assigned(LKnoten) then
     LOber := LKnoten.Id
   else
     LOber := dmArtikelStamm.tblArtikel.FieldByName('artikel_id').AsInteger;
@@ -992,9 +1002,9 @@ begin
     ShowMessage('Bitte im Baum den Bestandteil markieren.');
     Exit;
   end;
-  if LKnoten.Ebene = 0 then
+  if LKnoten.IstPlatzhalter or (LKnoten.Ebene = 0) then
   begin
-    ShowMessage('Das ist der Artikel selbst.');
+    ShowMessage('Bitte einen echten Bestandteil markieren.');
     Exit;
   end;
   dmArtikelStamm.StuecklisteEntfernen(LKnoten.ElternId, LKnoten.Id);
@@ -1110,6 +1120,24 @@ procedure TfrmArtikelStamm.vstStuecklisteCreateEditor(
   out EditLink: IVTEditLink);
 begin
   EditLink := TStuecklisteEditLink.Create;
+end;
+
+// Doppelklick startet die Bearbeitung - auf einem Platzhalter oeffnet
+// das die Artikelauswahl, auf einem Bestandteil das Mengenfeld.
+procedure TfrmArtikelStamm.vstStuecklisteDblClick(Sender: TObject);
+var
+  LKnoten: IBaumKnoten;
+begin
+  if not Assigned(vstStueckliste.FocusedNode) then
+    Exit;
+  LKnoten := GewaehlterStkKnoten;
+  if not Assigned(LKnoten) then
+    Exit;
+  if LKnoten.IstPlatzhalter then
+    vstStueckliste.EditNode(vstStueckliste.FocusedNode, 0)
+  else if LKnoten.Ebene > 0 then
+    // Menge sitzt in Spalte 2
+    vstStueckliste.EditNode(vstStueckliste.FocusedNode, 2);
 end;
 
 end.
