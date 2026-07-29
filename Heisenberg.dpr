@@ -1,4 +1,4 @@
-﻿program Heisenberg;
+program Heisenberg;
 
 uses
   Vcl.Forms,
@@ -113,6 +113,9 @@ begin
   Application.CreateForm(TdmMail, dmMail);
   // Kurs — CreateForm noetig (RTTI-Dispatch)
   Application.CreateForm(TdmKurs, dmKurs);
+  // Lehrer - CreateForm noetig (RTTI-Dispatch), sonst linkt der
+  // Smart-Linker die Klasse weg und OpenGui findet sie nicht
+  Application.CreateForm(TdmLehrer, dmLehrer);
   // Anwesenheit — CreateForm noetig (RTTI-Dispatch)
   Application.CreateForm(TdmAnwesenheit, dmAnwesenheit);
   // Mitarbeiter — CreateForm noetig (RTTI-Dispatch)
