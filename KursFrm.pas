@@ -124,6 +124,8 @@ type
     btnGanttVor: TButton;
     btnGanttHeute: TButton;
     btnGanttAktualisieren: TButton;
+    lblGanttZoom: TLabel;
+    trkGanttZoom: TTrackBar;
     pnlTermineAdd: TPanel;
     lblStart: TLabel;
     edtStart: TEdit;
@@ -179,6 +181,7 @@ type
     procedure btnGanttVorClick(Sender: TObject);
     procedure btnGanttHeuteClick(Sender: TObject);
     procedure btnGanttAktualisierenClick(Sender: TObject);
+    procedure trkGanttZoomChange(Sender: TObject);
     procedure edtStartChange(Sender: TObject);
     procedure GanttBalkenClick(Sender: TObject; AZeile: TGanttZeile;
       ABalken: TGanttBalken);
@@ -271,6 +274,9 @@ begin
   FGantt.Align := alClient;
   FGantt.OnBalkenClick := GanttBalkenClick;
   FGanttTag := Date;
+  trkGanttZoom.Min := 10;
+  trkGanttZoom.Max := 200;
+  trkGanttZoom.Position := FGantt.PixelProStunde;
 end;
 
 procedure TfrmKurs.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -780,6 +786,17 @@ procedure TfrmKurs.btnGanttHeuteClick(Sender: TObject);
 begin
   FGanttTag := Date;
   GanttAufbauen;
+end;
+
+// Zoom der Zeitachse. Zusaetzlich geht im Gantt auch Strg+Mausrad -
+// der Regler macht es nur sichtbar und auffindbar.
+procedure TfrmKurs.trkGanttZoomChange(Sender: TObject);
+begin
+  if not Assigned(FGantt) then
+    Exit;
+  FGantt.PixelProStunde := trkGanttZoom.Position;
+  lblGanttZoom.Caption := Format('Zoom: %d px/Std',
+    [trkGanttZoom.Position]);
 end;
 
 procedure TfrmKurs.btnGanttAktualisierenClick(Sender: TObject);

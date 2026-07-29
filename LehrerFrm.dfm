@@ -238,7 +238,7 @@ object frmLehrer: TfrmLehrer
     Headers = <
       item
         Caption = 'Kompetenzen'
-        Width = 130
+        Width = 170
         Actions = ActionListRechts
         Buttons = <
           item

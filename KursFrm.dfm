@@ -972,6 +972,25 @@ object frmKurs: TfrmKurs
         TabOrder = 2
         OnClick = btnGanttHeuteClick
       end
+      object lblGanttZoom: TLabel
+        Left = 516
+        Top = 8
+        Width = 90
+        Height = 15
+        Caption = 'Zoom: 60 px/Std'
+      end
+      object trkGanttZoom: TTrackBar
+        Left = 612
+        Top = 1
+        Width = 180
+        Height = 30
+        Max = 200
+        Min = 10
+        Position = 60
+        TabOrder = 4
+        TickStyle = tsNone
+        OnChange = trkGanttZoomChange
+      end
       object btnGanttAktualisieren: TButton
         Left = 396
         Top = 3
