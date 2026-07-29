@@ -5,22 +5,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, JvGradient, JvExControls, JvButton,
-  JvNavigationPane, JvNavPanelButtonTop, Vcl.ComCtrls, Vcl.ExtCtrls;
+  JvNavigationPane, JvNavPanelButtonTop, Vcl.ComCtrls, Vcl.ExtCtrls,
+  JvRibbonPanel;
 
 type
   TForm2 = class(TForm)
-    pnlRibbon: TPanel;
-    pctrModule: TPageControl;
-    tsDatei: TTabSheet;
-    Adressen: TJvNavPanelHeader;
-    jvnvpnlhdr2: TJvNavPanelHeader;
-    jvnvpnlhdr3: TJvNavPanelHeader;
-    pnl1: TPanel;
-    NavPBtnTopMandantNeu: TJvNavPanelButtonTop;
-    NavPBtnTopMandantWaehlen: TJvNavPanelButtonTop;
-    jvgrdnt2: TJvGradient;
-    JvNavPanelButtonTop1: TJvNavPanelButtonTop;
-    NavPBtnTopMandantNeu1: TJvNavPanelButtonTop;
   private
     { Private-Deklarationen }
   public

@@ -130,6 +130,20 @@ begin
 
   if FileExists(GetJSONPath) then
     LoadProfilesFromJSON;
+
+  {$IFDEF DEBUG}
+  // Entwicklungsphase: automatisch mit der lokalen Heisenberg-DB verbinden,
+  // damit sich Module (ArtikelStamm, Personen, Lager, ...) ohne den manuellen
+  // PGManager-Schritt oeffnen lassen. NUR im Debug-Build aktiv — im
+  // Release-Build erfolgt die Verbindung ueber die PGManager-GUI/Profile.
+  try
+    ConnectDB('localhost', '5432', 'postgres', 'postgres', 'TRTHeisenberg');
+  except
+    // DB nicht erreichbar (z.B. Postgres nicht gestartet) -> stillschweigend
+    // weiter; der "Bitte zuerst verbinden"-Hinweis in den Modulen greift dann
+    // wie gehabt.
+  end;
+  {$ENDIF}
 end;
 
 procedure TdmPGManager.DataModuleDestroy(Sender: TObject);

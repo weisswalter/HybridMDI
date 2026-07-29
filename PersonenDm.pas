@@ -362,7 +362,20 @@ var
 begin
   LTbl := AStammDs.DataSet as TFDTable;
   if not (LTbl.State in dsEditModes) then
+  begin
+    // Inkonsistenter Zustand: eine Stamm+Bruecke-Neuanlage laeuft noch
+    // (FNeuTbl gesetzt), aber der Stamm selbst ist nicht mehr im Edit-Modus
+    // -> ohne diese Meldung wuerde hier still nichts gespeichert und
+    // anschliessend im Aufrufer (BtnNavClick) versucht, die noch offene
+    // Bruecke OHNE die zugehoerige Stamm-ID zu posten (fuehrte 2x zu einem
+    // NOT-NULL-Fehler in person_mandant/person_adresse, siehe Memory
+    // feedback_personendm_stamm_bruecke_bug). Hier auffaellig machen statt
+    // stillschweigend zu ignorieren, bis die eigentliche Ursache klar ist.
+    if FNeuTbl = LTbl then
+      ShowMessage('Stammdatensatz war nicht mehr im Bearbeitungsmodus -- ' +
+        'nicht gespeichert. Bitte pruefen und erneut versuchen.', '');
     Exit;
+  end;
 
   if (LTbl = tblEmailadresse) and (FNeuTbl = tblEmailadresse) then
   begin

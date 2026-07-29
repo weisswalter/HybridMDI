@@ -4,6 +4,7 @@ object frmMain: TfrmMain
   Caption = 'Heisenberg'
   ClientHeight = 625
   ClientWidth = 1064
+  WindowState = wsMaximized
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,37 +16,16 @@ object frmMain: TfrmMain
   OnDestroy = FormDestroy
   OnShow = FormShow
   TextHeight = 15
-  object pnlMandant: TPanel
-    Left = 0
-    Top = 570
-    Width = 1064
-    Height = 36
-    Align = alBottom
-    BevelOuter = bvNone
-    TabOrder = 0
-    object lblMandant: TLabel
-      Left = 8
-      Top = 10
-      Width = 51
-      Height = 15
-      Caption = 'Mandant:'
-    end
-    object cboMandant: TComboBox
-      Left = 84
-      Top = 6
-      Width = 260
-      Height = 23
-      Style = csDropDownList
-      TabOrder = 0
-      OnChange = cboMandantChange
-    end
-  end
   object sbrMain: TJvStatusBar
     Left = 0
     Top = 606
     Width = 1064
     Height = 19
-    Panels = <>
+    Panels = <
+      item
+        Text = 'Kein Mandant gew'#228'hlt'
+        Width = 250
+      end>
   end
   object pnlRibbon: TPanel
     Left = 0
@@ -58,13 +38,13 @@ object frmMain: TfrmMain
     Color = 12232890
     ParentBackground = False
     ShowCaption = False
-    TabOrder = 2
+    TabOrder = 1
     object pctrModule: TPageControl
       Left = 0
       Top = 0
       Width = 1064
       Height = 104
-      ActivePage = tsWerkzeuge
+      ActivePage = tsModule
       Align = alClient
       Style = tsFlatButtons
       TabOrder = 0
@@ -86,7 +66,7 @@ object frmMain: TfrmMain
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -105,7 +85,7 @@ object frmMain: TfrmMain
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -144,7 +124,7 @@ object frmMain: TfrmMain
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -165,7 +145,7 @@ object frmMain: TfrmMain
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -185,7 +165,7 @@ object frmMain: TfrmMain
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -206,7 +186,7 @@ object frmMain: TfrmMain
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -226,7 +206,7 @@ object frmMain: TfrmMain
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -235,15 +215,192 @@ object frmMain: TfrmMain
           ImageIndex = 5
           Images = ilstRibbonLI
         end
-        object jvgrdnt1: TJvGradient
+        object NavPBtnTopKunde: TJvNavPanelButtonTop
           Left = 466
           Top = 0
-          Width = 680
+          Width = 90
+          Height = 69
+          Action = cmdKunde
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+          ImageIndex = 0
+        end
+        object NavPBtnTopKlient: TJvNavPanelButtonTop
+          Left = 556
+          Top = 0
+          Width = 90
+          Height = 69
+          Action = cmdKlient
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+          ImageIndex = 0
+        end
+        object NavPBtnTopKundenBestellung: TJvNavPanelButtonTop
+          Left = 646
+          Top = 0
+          Width = 100
+          Height = 69
+          Action = cmdKundenBestellung
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+          ImageIndex = 0
+        end
+        object NavPBtnTopLieferantenBestellung: TJvNavPanelButtonTop
+          Left = 746
+          Top = 0
+          Width = 100
+          Height = 69
+          Action = cmdLieferantenBestellung
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+          ImageIndex = 0
+        end
+        object NavPBtnTopLagerEntnahme: TJvNavPanelButtonTop
+          Left = 846
+          Top = 0
+          Width = 100
+          Height = 69
+          Action = cmdLagerEntnahme
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+          ImageIndex = 0
+        end
+        object NavPBtnTopMitarbeiter: TJvNavPanelButtonTop
+          Left = 946
+          Top = 0
+          Width = 90
+          Height = 69
+          Action = cmdMitarbeiter
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+          ImageIndex = 0
+        end
+        object NavPBtnTopMail: TJvNavPanelButtonTop
+          Left = 1036
+          Top = 0
+          Width = 90
+          Height = 69
+          Action = cmdMail
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+        end
+        object NavPBtnTopLehrer: TJvNavPanelButtonTop
+          Left = 1326
+          Top = 0
+          Width = 90
+          Height = 69
+          Action = cmdLehrer
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+        end
+        object NavPBtnTopAnwesenheit: TJvNavPanelButtonTop
+          Left = 1216
+          Top = 0
+          Width = 110
+          Height = 69
+          Action = cmdAnwesenheit
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+        end
+        object NavPBtnTopKurs: TJvNavPanelButtonTop
+          Left = 1126
+          Top = 0
+          Width = 90
+          Height = 69
+          Action = cmdKurs
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+        end
+        object jvgrdnt1: TJvGradient
+          Left = 1036
+          Top = 0
+          Width = 20
           Height = 69
           Style = grVertical
           StartColor = 16245453
           EndColor = 15966336
           ExplicitLeft = 382
+          ExplicitWidth = 680
         end
       end
       object tsWerkzeuge: TTabSheet
@@ -265,7 +422,7 @@ object frmMain: TfrmMain
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -284,7 +441,7 @@ object frmMain: TfrmMain
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -15
+          Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -293,10 +450,28 @@ object frmMain: TfrmMain
           ImageIndex = 5
           Images = ilstRibbonLI
         end
-        object jvgrdnt3: TJvGradient
+        object NavPBtnTopEinstellungen: TJvNavPanelButtonTop
           Left = 212
           Top = 0
-          Width = 844
+          Width = 100
+          Height = 69
+          Action = cmdEinstellungen
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+          ImageIndex = 0
+        end
+        object jvgrdnt3: TJvGradient
+          Left = 312
+          Top = 0
+          Width = 744
           Height = 69
           Style = grVertical
           StartColor = 16245453
@@ -314,7 +489,7 @@ object frmMain: TfrmMain
       Caption = 'Datei'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindow
-      Font.Height = -20
+      Font.Height = -16
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
@@ -333,7 +508,7 @@ object frmMain: TfrmMain
       Caption = 'Module'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindow
-      Font.Height = -20
+      Font.Height = -16
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
@@ -352,7 +527,7 @@ object frmMain: TfrmMain
       Caption = 'Werkzeuge'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindow
-      Font.Height = -20
+      Font.Height = -16
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
@@ -1481,6 +1656,50 @@ object frmMain: TfrmMain
     object cmdMandantWaehlen: TAction
       Caption = 'Mandant ausw'#228'hlen'
       OnExecute = cmdMandantWaehlenExecute
+    end
+    object cmdKunde: TAction
+      Caption = 'Kunde'
+      OnExecute = cmdKundeExecute
+    end
+    object cmdKlient: TAction
+      Caption = 'Klienten'
+      OnExecute = cmdKlientExecute
+    end
+    object cmdKundenBestellung: TAction
+      Caption = 'Kd.-Bestellung'
+      OnExecute = cmdKundenBestellungExecute
+    end
+    object cmdLieferantenBestellung: TAction
+      Caption = 'Lief.-Bestellung'
+      OnExecute = cmdLieferantenBestellungExecute
+    end
+    object cmdLagerEntnahme: TAction
+      Caption = 'Lager-Entnahme'
+      OnExecute = cmdLagerEntnahmeExecute
+    end
+    object cmdEinstellungen: TAction
+      Caption = 'Einstellungen'
+      OnExecute = cmdEinstellungenExecute
+    end
+    object cmdMitarbeiter: TAction
+      Caption = 'Mitarbeiter'
+      OnExecute = cmdMitarbeiterExecute
+    end
+    object cmdMail: TAction
+      Caption = 'E-Mail'
+      OnExecute = cmdMailExecute
+    end
+    object cmdKurs: TAction
+      Caption = 'Kurse'
+      OnExecute = cmdKursExecute
+    end
+    object cmdAnwesenheit: TAction
+      Caption = 'Anwesenheit'
+      OnExecute = cmdAnwesenheitExecute
+    end
+    object cmdLehrer: TAction
+      Caption = 'Lehrer'
+      OnExecute = cmdLehrerExecute
     end
   end
   object ilstRibbonSI: TJvImageList

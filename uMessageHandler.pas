@@ -90,7 +90,8 @@ var
 implementation
 
 uses
-  Vcl.Dialogs;
+  Vcl.Dialogs,
+  CSharpDm;   // fuer den mtCSharp-Zweig in HandleMessage
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -152,6 +153,13 @@ begin
       end;
       raise Exception.CreateFmt('Module or Method not found: %s.%s', [AMessage, ASender]);
     end;
+    // C#-Seite ueber die Python-Bruecke (BridgePOC-Muster, siehe CSharpDm):
+    //   AMessage = Name des Python-Moduls (z.B. 'mail_caller')
+    //   ASender  = Name der Funktion darin (z.B. 'fetch_inbox')
+    //   AParams  = Argumente, nur Standardtypen (TValueToPyLiteral)
+    // Analog zu mtModulCall, nur dass die Arbeit in C# statt in Delphi passiert.
+    mtCSharp:
+      TdmCSharp(TdmCSharp.GetInstance).Call(AMessage, ASender, AParams);
     mtException:  raise Exception.CreateFmt('Es ist ein Fehler aufgetreten: %s.%s', [AMessage, ASender]);
   end;
 end;

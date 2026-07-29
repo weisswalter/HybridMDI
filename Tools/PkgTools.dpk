@@ -34,10 +34,13 @@ requires
   Jcl,
   JvCore,
   JvStdCtrls,
-  JvPageComps;
+  JvPageComps,
+  JvMM;
 
 contains
   JvNavPanelButtonTop in 'JvNavPanelButtonTop.pas',
-  JvRibbonPanel in 'JvRibbonPanel.pas';
+  JvRibbonPanel in 'JvRibbonPanel.pas',
+  RibbonPageControl in 'RibbonPageControl.pas',
+  GanttPanel in 'GanttPanel.pas';
 
 end.

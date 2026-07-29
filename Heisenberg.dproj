@@ -171,7 +171,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
-        <DCC_UnitSearchPath>C:\Users\weiss\source\DelphiTwain-main\units;C:\Users\weiss\source\repos\delphi-event-bus\source;C:\Users\weiss\source\repos\Python4Delphi\python4delphi\Source\vcl;C:\Users\weiss\source\repos\Python4Delphi\python4delphi\Source;C:\Users\weiss\source\repos\jvcl\jvcl\run;C:\Windows\SysWOW64\;C:\Users\weiss\Documents\Embarcadero\Studio\37.0\Imports;C:\Users\weiss\source\repos\Heisenberg\Tools;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>C:\Users\weiss\source\DelphiTwain-main\units;C:\Users\weiss\source\repos\delphi-event-bus\source;C:\Users\weiss\source\repos\Python4Delphi\python4delphi\Source\vcl;C:\Users\weiss\source\repos\Python4Delphi\python4delphi\Source;C:\Users\weiss\source\repos\jvcl\jvcl\run;C:\Windows\SysWOW64\;C:\Users\weiss\Documents\Embarcadero\Studio\37.0\Imports;C:\Users\weiss\source\repos\Heisenberg\Tools;C:\Users\weiss\source\repos\Virtual-TreeView\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
@@ -194,6 +194,9 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="uFrmModuleTemplate.pas">
             <Form>frmTemplate</Form>
         </DCCReference>
+        <DCCReference Include="uFrmGuiTemplate.pas">
+            <Form>frmGuiTemplate</Form>
+        </DCCReference>
         <DCCReference Include="uFrmRibbonTemplate.pas"/>
         <DCCReference Include="MandantDm.pas">
             <Form>dmMandant</Form>
@@ -212,13 +215,6 @@ $(PreBuildEvent)]]></PreBuildEvent>
         </DCCReference>
         <DCCReference Include="PersonenFrm.pas">
             <Form>frmPersonen</Form>
-        </DCCReference>
-        <DCCReference Include="LagerDm.pas">
-            <Form>dmLager</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="LagerFrm.pas">
-            <Form>frmLager</Form>
         </DCCReference>
         <DCCReference Include="PythonDm.pas">
             <Form>dmPython</Form>
@@ -252,6 +248,95 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="ArtikelFrm.pas">
             <Form>frmArtikel</Form>
         </DCCReference>
+        <DCCReference Include="ArtikelStammDm.pas">
+            <Form>dmArtikelStamm</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ArtikelStammFrm.pas">
+            <Form>frmArtikelStamm</Form>
+        </DCCReference>
+        <DCCReference Include="KundenBestellungDm.pas">
+            <Form>dmKundenBestellung</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="KundenBestellungFrm.pas">
+            <Form>frmKundenBestellung</Form>
+        </DCCReference>
+        <DCCReference Include="LieferantenBestellungDm.pas">
+            <Form>dmLieferantenBestellung</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="LieferantenBestellungFrm.pas">
+            <Form>frmLieferantenBestellung</Form>
+        </DCCReference>
+        <DCCReference Include="LagerEntnahmeDm.pas">
+            <Form>dmLagerEntnahme</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="LagerEntnahmeFrm.pas">
+            <Form>frmLagerEntnahme</Form>
+        </DCCReference>
+        <DCCReference Include="KlientDm.pas">
+            <Form>dmKlient</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="KlientFrm.pas">
+            <Form>frmKlient</Form>
+        </DCCReference>
+        <DCCReference Include="KundeDm.pas">
+            <Form>dmKunde</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="KundeFrm.pas">
+            <Form>frmKunde</Form>
+        </DCCReference>
+        <DCCReference Include="CSharpDm.pas">
+            <Form>dmCSharp</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="BaumKnotenData.pas"/>
+        <DCCReference Include="KursDm.pas">
+            <Form>dmKurs</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="KursFrm.pas">
+            <Form>frmKurs</Form>
+        </DCCReference>
+        <DCCReference Include="AnwesenheitDm.pas">
+            <Form>dmAnwesenheit</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="AnwesenheitFrm.pas">
+            <Form>frmAnwesenheit</Form>
+        </DCCReference>
+        <DCCReference Include="LehrerDm.pas">
+            <Form>dmLehrer</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="LehrerFrm.pas">
+            <Form>frmLehrer</Form>
+        </DCCReference>
+        <DCCReference Include="MailDm.pas">
+            <Form>dmMail</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="MailFrm.pas">
+            <Form>frmMail</Form>
+        </DCCReference>
+        <DCCReference Include="EinstellungenDm.pas">
+            <Form>dmEinstellungen</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="EinstellungenFrm.pas">
+            <Form>frmEinstellungen</Form>
+        </DCCReference>
+        <DCCReference Include="MitarbeiterDm.pas">
+            <Form>dmMitarbeiter</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="MitarbeiterFrm.pas">
+            <Form>frmMitarbeiter</Form>
+        </DCCReference>
         <DCCReference Include="DokumenteDm.pas">
             <Form>dmDokumente</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -273,11 +358,15 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="PGManagerFrm.pas">
             <Form>frmPGManager</Form>
         </DCCReference>
+        <DCCReference Include="LagerDm.pas">
+            <Form>dmLager</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="LagerFrm.pas">
+            <Form>frmLager</Form>
+        </DCCReference>
         <DCCReference Include="..\RibbonFramework\Lib\UIRibbon.pas">
             <Form>$R *.res</Form>
-        </DCCReference>
-        <DCCReference Include="Unit2.pas">
-            <Form>Form2</Form>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -127,6 +127,10 @@
             <Form>Form1</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="GanttPanel.pas"/>
+        <DCCReference Include="uFrmGanttTest.pas">
+            <Form>frmGanttTest</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

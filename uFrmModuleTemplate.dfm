@@ -13,22 +13,6 @@ object frmTemplate: TfrmTemplate
   OnClose = FormClose
   OnDestroy = FormDestroy
   TextHeight = 15
-  object Edit1: TEdit
-    Left = 120
-    Top = 128
-    Width = 121
-    Height = 23
-    TabOrder = 0
-    Text = 'Edit1'
-  end
-  object Edit2: TEdit
-    Left = 408
-    Top = 128
-    Width = 121
-    Height = 23
-    TabOrder = 1
-    Text = 'Edit2'
-  end
   object ActionList1: TActionList
     Left = 312
     Top = 312

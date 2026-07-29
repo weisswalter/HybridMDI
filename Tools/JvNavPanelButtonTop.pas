@@ -1,4 +1,4 @@
-unit JvNavPanelButtonTop;
+﻿unit JvNavPanelButtonTop;
 
 // Ableitung von TJvNavPanelButton: Icon OBEN (zentriert), Text darunter
 // (zentriert) � statt der im Original fest einprogrammierten Anordnung

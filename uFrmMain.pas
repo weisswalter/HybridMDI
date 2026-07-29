@@ -28,9 +28,6 @@ uses
 
 type
   TfrmMain = class(TForm)
-    pnlMandant: TPanel;
-    lblMandant: TLabel;
-    cboMandant: TComboBox;
     // Namen muessen exakt den Command-Names in HeisenbergRibbon.xml entsprechen
     cmdKunden: TAction;
     cmdArtikel: TAction;
@@ -41,6 +38,17 @@ type
     cmdPGManager: TAction;
     cmdMandantNeu: TAction;
     cmdMandantWaehlen: TAction;
+    cmdKunde: TAction;
+    cmdKlient: TAction;
+    cmdKundenBestellung: TAction;
+    cmdLieferantenBestellung: TAction;
+    cmdLagerEntnahme: TAction;
+    cmdEinstellungen: TAction;
+    cmdMitarbeiter: TAction;
+    cmdMail: TAction;
+    cmdKurs: TAction;
+    cmdAnwesenheit: TAction;
+    cmdLehrer: TAction;
     ilstRibbonLI: TJvImageList;
     ActionManager: TActionManager;
     sbrMain: TJvStatusBar; ilstRibbonSI: TJvImageList;
@@ -74,6 +82,17 @@ type
     procedure cmdPGManagerExecute(Sender: TObject);
     procedure cmdMandantNeuExecute(Sender: TObject);
     procedure cmdMandantWaehlenExecute(Sender: TObject);
+    procedure cmdKundeExecute(Sender: TObject);
+    procedure cmdKlientExecute(Sender: TObject);
+    procedure cmdKundenBestellungExecute(Sender: TObject);
+    procedure cmdLieferantenBestellungExecute(Sender: TObject);
+    procedure cmdLagerEntnahmeExecute(Sender: TObject);
+    procedure cmdEinstellungenExecute(Sender: TObject);
+    procedure cmdMitarbeiterExecute(Sender: TObject);
+    procedure cmdMailExecute(Sender: TObject);
+    procedure cmdKursExecute(Sender: TObject);
+    procedure cmdAnwesenheitExecute(Sender: TObject);
+    procedure cmdLehrerExecute(Sender: TObject);
     procedure mnuKundenClick(Sender: TObject);
     procedure mnuArtikelClick(Sender: TObject);
     procedure mnuPyKundenClick(Sender: TObject);
@@ -82,14 +101,15 @@ type
     procedure mnuPersonenClick(Sender: TObject);
     procedure mnuMandantNeuClick(Sender: TObject);
     procedure mnuPGManagerClick(Sender: TObject);
-    procedure cboMandantChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure jvnvpnlhdr1Click(Sender: TObject);
   private
     FRibbonImagesInit: Boolean;
-    procedure RefreshMandantCombo(ASelectMandantId: Integer = 0);
+    // Zeigt den aktuell gewaehlten Mandanten (TdmMandant.CurrentMandantName)
+    // in sbrMain an — einziger Ort, der die Statuszeile dafuer beschreibt.
+    procedure UpdateMandantStatus;
   public
     [Subscribe(TThreadMode.Main)]
     procedure OnKundenResult(AEvent: IKundenResultEvent);
@@ -108,42 +128,18 @@ implementation
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   GlobalEventBus.RegisterSubscriberForEvents(Self);
-  RefreshMandantCombo;
+  UpdateMandantStatus;
 end;
 
-// Befuellt die Mandanten-ComboBox neu. ASelectMandantId > 0: diesen Mandanten
-// danach auswaehlen (z.B. den gerade neu angelegten) — sonst den ersten.
-procedure TfrmMain.RefreshMandantCombo(ASelectMandantId: Integer = 0);
+procedure TfrmMain.UpdateMandantStatus;
 var
-  LDm: TdmMandant;
-  LMandantId: Integer;
-  i, LSelectIndex: Integer;
+  LName: string;
 begin
-  LDm := TdmMandant(TdmMandant.GetInstance);
-  LDm.LoadMandanten;
-  cboMandant.Items.Clear;
-  LSelectIndex := -1;
-  LDm.qryMandant.First;
-  while not LDm.qryMandant.Eof do
-  begin
-    LMandantId := LDm.qryMandant.FieldByName('mandant_id').AsInteger;
-    i := cboMandant.Items.AddObject(
-      LDm.qryMandant.FieldByName('mandanten_name').AsString,
-      TObject(LMandantId));
-    if LMandantId = ASelectMandantId then
-      LSelectIndex := i;
-    LDm.qryMandant.Next;
-  end;
-  if cboMandant.Items.Count > 0 then
-  begin
-    if LSelectIndex < 0 then
-      LSelectIndex := 0;
-    cboMandant.ItemIndex := LSelectIndex;
-    cboMandantChange(cboMandant);
-  end;
-  LDm.qryMandant.first;
-
-
+  LName := TdmMandant(TdmMandant.GetInstance).CurrentMandantName;
+  if LName = '' then
+    sbrMain.Panels[0].Text := 'Kein Mandant gewählt'
+  else
+    sbrMain.Panels[0].Text := 'Mandant: ' + LName;
 end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
@@ -195,7 +191,10 @@ end;
 
 procedure TfrmMain.cmdArtikelExecute(Sender: TObject);
 begin
-  TdmModuleTemplate.OpenGui('Artikel');
+  // Altes ArtikelDm/ArtikelFrm war nur der Python-Demo-Baustein ohne echte
+  // DB-Anbindung — der Ribbon-Button oeffnet jetzt direkt das echte
+  // ArtikelStamm-Modul (ArtikelStammDm/ArtikelStammFrm).
+  TdmModuleTemplate.OpenGui('ArtikelStamm');
 end;
 
 procedure TfrmMain.cmdDokumenteExecute(Sender: TObject);
@@ -221,6 +220,61 @@ end;
 procedure TfrmMain.cmdPGManagerExecute(Sender: TObject);
 begin
   TdmModuleTemplate.OpenGui('PGManager');
+end;
+
+procedure TfrmMain.cmdKundeExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Kunde');
+end;
+
+procedure TfrmMain.cmdKlientExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Klient');
+end;
+
+procedure TfrmMain.cmdKundenBestellungExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('KundenBestellung');
+end;
+
+procedure TfrmMain.cmdLieferantenBestellungExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('LieferantenBestellung');
+end;
+
+procedure TfrmMain.cmdLagerEntnahmeExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('LagerEntnahme');
+end;
+
+procedure TfrmMain.cmdEinstellungenExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Einstellungen');
+end;
+
+procedure TfrmMain.cmdMitarbeiterExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Mitarbeiter');
+end;
+
+procedure TfrmMain.cmdMailExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Mail');
+end;
+
+procedure TfrmMain.cmdKursExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Kurs');
+end;
+
+procedure TfrmMain.cmdAnwesenheitExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Anwesenheit');
+end;
+
+procedure TfrmMain.cmdLehrerExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Lehrer');
 end;
 
 procedure TfrmMain.mnuKundenClick(Sender: TObject);
@@ -275,7 +329,9 @@ begin
         Exit;
       end;
       LNewId := TdmMandant(TdmMandant.GetInstance).CreateMandant(LDlg.MandantenName);
-      RefreshMandantCombo(LNewId);
+      TdmMandant(TdmMandant.GetInstance).CurrentMandantId := LNewId;
+      TdmMandant(TdmMandant.GetInstance).CurrentMandantName := LDlg.MandantenName;
+      UpdateMandantStatus;
     end;
   finally
     LDlg.Free;
@@ -294,7 +350,8 @@ begin
     if LDlg.ShowModal = mrOk then
     begin
       TdmMandant(TdmMandant.GetInstance).CurrentMandantId := LDlg.SelectedMandantId;
-      RefreshMandantCombo(LDlg.SelectedMandantId);
+      TdmMandant(TdmMandant.GetInstance).CurrentMandantName := LDlg.SelectedMandantName;
+      UpdateMandantStatus;
     end;
   finally
     LDlg.Free;
@@ -304,15 +361,6 @@ end;
 procedure TfrmMain.mnuPGManagerClick(Sender: TObject);
 begin
   TdmModuleTemplate.OpenGui('PGManager');
-end;
-
-procedure TfrmMain.cboMandantChange(Sender: TObject);
-begin
-  if cboMandant.ItemIndex >= 0 then
-  begin
-   TdmMandant(TdmMandant.GetInstance).CurrentMandantId :=   1;
-    cboMandant.ItemIndex := 2
-  end;
 end;
 
 procedure TfrmMain.OnKundenResult(AEvent: IKundenResultEvent);

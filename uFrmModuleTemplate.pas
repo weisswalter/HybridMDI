@@ -9,8 +9,6 @@ uses
 
 type
   TfrmTemplate = class(TForm)
-    Edit1: TEdit;
-    Edit2: TEdit;
     ActionList1: TActionList;
     Action1: TAction;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);

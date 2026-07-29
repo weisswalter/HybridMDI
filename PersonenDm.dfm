@@ -25,12 +25,12 @@ object dmPersonen: TdmPersonen
     Top = 96
   end
   object qryEmails: TFDQuery
-    Left = 104
-    Top = 160
+    Left = 88
+    Top = 168
   end
   object dsEmails: TDataSource
-    Left = 176
-    Top = 160
+    Left = 152
+    Top = 168
   end
   object tblPerson: TFDTable
     AfterPost = tblPersonAfterPost

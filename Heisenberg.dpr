@@ -7,6 +7,7 @@ uses
   uMessageHandler in 'uMessageHandler.pas' {dmMessageHandler: TDataModule},
   udmModuleTemplate in 'udmModuleTemplate.pas' {dmModuleTemplate: TDataModule},
   uFrmModuleTemplate in 'uFrmModuleTemplate.pas' {frmTemplate},
+  uFrmGuiTemplate in 'uFrmGuiTemplate.pas' {frmGuiTemplate},
   uFrmRibbonTemplate in 'uFrmRibbonTemplate.pas',
   EventBus,
   EventBus.Core,
@@ -27,6 +28,32 @@ uses
   KundenFrm in 'KundenFrm.pas' {frmKunden},
   ArtikelDm in 'ArtikelDm.pas' {dmArtikel: TDataModule},
   ArtikelFrm in 'ArtikelFrm.pas' {frmArtikel},
+  ArtikelStammDm in 'ArtikelStammDm.pas' {dmArtikelStamm: TDataModule},
+  ArtikelStammFrm in 'ArtikelStammFrm.pas' {frmArtikelStamm},
+  KundenBestellungDm in 'KundenBestellungDm.pas' {dmKundenBestellung: TDataModule},
+  KundenBestellungFrm in 'KundenBestellungFrm.pas' {frmKundenBestellung},
+  LieferantenBestellungDm in 'LieferantenBestellungDm.pas' {dmLieferantenBestellung: TDataModule},
+  LieferantenBestellungFrm in 'LieferantenBestellungFrm.pas' {frmLieferantenBestellung},
+  LagerEntnahmeDm in 'LagerEntnahmeDm.pas' {dmLagerEntnahme: TDataModule},
+  LagerEntnahmeFrm in 'LagerEntnahmeFrm.pas' {frmLagerEntnahme},
+  KlientDm in 'KlientDm.pas' {dmKlient: TDataModule},
+  KlientFrm in 'KlientFrm.pas' {frmKlient},
+  KundeDm in 'KundeDm.pas' {dmKunde: TDataModule},
+  KundeFrm in 'KundeFrm.pas' {frmKunde},
+  CSharpDm in 'CSharpDm.pas' {dmCSharp: TDataModule},
+  BaumKnotenData in 'BaumKnotenData.pas',
+  KursDm in 'KursDm.pas' {dmKurs: TDataModule},
+  KursFrm in 'KursFrm.pas' {frmKurs},
+  AnwesenheitDm in 'AnwesenheitDm.pas' {dmAnwesenheit: TDataModule},
+  AnwesenheitFrm in 'AnwesenheitFrm.pas' {frmAnwesenheit},
+  LehrerDm in 'LehrerDm.pas' {dmLehrer: TDataModule},
+  LehrerFrm in 'LehrerFrm.pas' {frmLehrer},
+  MailDm in 'MailDm.pas' {dmMail: TDataModule},
+  MailFrm in 'MailFrm.pas' {frmMail},
+  EinstellungenDm in 'EinstellungenDm.pas' {dmEinstellungen: TDataModule},
+  EinstellungenFrm in 'EinstellungenFrm.pas' {frmEinstellungen},
+  MitarbeiterDm in 'MitarbeiterDm.pas' {dmMitarbeiter: TDataModule},
+  MitarbeiterFrm in 'MitarbeiterFrm.pas' {frmMitarbeiter},
   DokumenteDm in 'DokumenteDm.pas' {dmDokumente: TDataModule},
   DokumenteFrm in 'DokumenteFrm.pas' {frmDokumente},
   ScannerDm in 'ScannerDm.pas' {dmScanner: TDataModule},
@@ -35,9 +62,7 @@ uses
   PGManagerFrm in 'PGManagerFrm.pas' {frmPGManager},
   LagerDm in 'LagerDm.pas' {dmLager: TDataModule},
   LagerFrm in 'LagerFrm.pas' {frmLager},
-
-  UIRibbon in '..\RibbonFramework\Lib\UIRibbon.pas' {$R *.res},
-  Unit2 in 'Unit2.pas' {Form2};
+  UIRibbon in '..\RibbonFramework\Lib\UIRibbon.pas' {$R *.res};
 
 {$R *.res}
 
@@ -46,12 +71,15 @@ begin
   Application.MainFormOnTaskbar := True;
   // dmMandant zuerst: frmMain.FormCreate greift beim Erzeugen direkt darauf zu
   Application.CreateForm(TdmMandant, dmMandant);
+  //Application.CreateForm(TForm3, Form3);
   //AApplication.CreateForm(TForm2, Form2);
   // Reihenfolge wichtig: MDI-Frame zuerst, dann DataModules
   Application.CreateForm(TfrmMain, frmMain);
   // MessageHandler muss früh erstellen damit er beim EventBus registriert ist
   Application.CreateForm(TdmMessageHandler, dmMessageHandler);
   Application.CreateForm(TdmPython, dmPython);
+  // CSharp-Bruecke — MUSS nach dmPython kommen (nutzt dessen Engine)
+  Application.CreateForm(TdmCSharp, dmCSharp);
   Application.CreateForm(TdmPyKunden, dmPyKunden);
   Application.CreateForm(TdmPyArtikel, dmPyArtikel);
   Application.CreateForm(TdmKunden, dmKunden);
@@ -64,5 +92,30 @@ begin
   Application.CreateForm(TdmPersonen, dmPersonen);
   // Lager — CreateForm noetig (RTTI-Dispatch, sonst linkt der Smart-Linker die Klasse weg)
   Application.CreateForm(TdmLager, dmLager);
+  // ArtikelStamm — CreateForm noetig (RTTI-Dispatch); braucht dmPGManager,
+  // das oben bereits erzeugt ist
+  Application.CreateForm(TdmArtikelStamm, dmArtikelStamm);
+  // Rechnungstyp — CreateForm noetig (RTTI-Dispatch); braucht dmPGManager/dmMandant,
+  // die oben bereits erzeugt sind
+  // KundenBestellung — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmKundenBestellung, dmKundenBestellung);
+  // LieferantenBestellung — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmLieferantenBestellung, dmLieferantenBestellung);
+  // LagerEntnahme — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmLagerEntnahme, dmLagerEntnahme);
+  // Klient — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmKlient, dmKlient);
+  // Kunde — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmKunde, dmKunde);
+  // Einstellungen — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmEinstellungen, dmEinstellungen);
+  // Mail — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmMail, dmMail);
+  // Kurs — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmKurs, dmKurs);
+  // Anwesenheit — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmAnwesenheit, dmAnwesenheit);
+  // Mitarbeiter — CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmMitarbeiter, dmMitarbeiter);
   Application.Run;
 end.

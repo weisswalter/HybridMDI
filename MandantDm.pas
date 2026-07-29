@@ -29,6 +29,7 @@ type
     procedure DataModuleDestroy(Sender: TObject);
   private
     FCurrentMandantId: Integer;
+    FCurrentMandantName: string;
     procedure SetupConnection;
   public
     class function GetInstance: TObject;
@@ -38,6 +39,9 @@ type
     // Legt einen neuen Mandanten an und gibt dessen mandant_id zurueck.
     function CreateMandant(const AName: string): Integer;
     property CurrentMandantId: Integer read FCurrentMandantId write FCurrentMandantId;
+    // Name des aktuell gewaehlten Mandanten — von frmMain fuer die Statuszeile
+    // genutzt, damit andere Module nicht extra nachfragen muessen.
+    property CurrentMandantName: string read FCurrentMandantName write FCurrentMandantName;
   end;
 
 var

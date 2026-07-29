@@ -1,20 +1,25 @@
-﻿unit PersonenFrm;
+unit PersonenFrm;
 
 // MDI-Child: Personenverwaltung.
-// Aufbau nach dem Muster Unit2 / pnlRibbon aus frmMain — alles designtime
-// im DFM (keine Laufzeit-Erzeugung):
-//  Links: Personen-Stammdaten mit Buttonleiste im Ribbon-Stil
-//    (TJvNavPanelButtonTop + TJvGradient-Fueller). Navigiert wird ueber die
-//    Bruecke person_mandant (dstblPersonMandant), die Eingabefelder binden
-//    an die aufgeloeste Person (dstblPerson).
-//  Rechts: pnlRibbon wie in frmMain — TJvNavPanelHeader-Buttons ueberlagern
-//    ein PageControl (Style tsFlatButtons, Tabs mit Margins.Top=25 und
-//    TabVisible=False): Adressen, Emails, Telefon, Beziehungen sowie die
-//    Typ-Tabellen. Jedes Tabsheet traegt dieselbe Buttonleiste wie links.
-//  Die Typ-Seiten pflegen genau die Daten, die vorne in den
-//  JvDBLookupCombo-Boxen zur Auswahl stehen.
-// Alle Beschriftungen werden in SetzeBeschriftungen aus resourcestrings
-// gesetzt (Buttons ueber ihren Tag) und sind damit uebersetzbar.
+//  Links: Personen-Stammdaten mit eigener Buttonleiste im Ribbon-Stil
+//    (TJvNavPanelButtonTop + TJvGradient-Fueller, alles designtime im DFM).
+//    Navigiert wird ueber die Bruecke person_mandant (dstblPersonMandant),
+//    die Eingabefelder binden an die aufgeloeste Person (dstblPerson).
+//  Rechts: TJvRibbonPanel (Tools\JvRibbonPanel.pas) mit vier Reitern —
+//    Adressen, Emails, Telefon, Beziehungen. Jeder Reiter traegt seine eigene
+//    Buttonleiste (dieselben neun Aktionen wie links, ActionTag = TNavAktion)
+//    und ein ContentPanel mit Eingabefeldern (oben) und Grid (Rest).
+//
+//  Die Typ-Reiter (Personentyp/Rollentyp/Adresstyp/Emailtyp/Telefonnummertyp)
+//  sind hier bewusst ENTFALLEN — sie werden zentral im Einstellungen-Fenster
+//  gepflegt (EinstellungenFrm, Werkzeuge-Reiter im Hauptfenster), damit dieses
+//  Formular nicht ueberfrachtet ist.
+//
+//  Beschriftungen kommen aus resourcestrings: die Buttons der Ribbon-Leisten
+//  entstehen erst zur Laufzeit und gehoeren dem Ribbon-Panel (nicht diesem
+//  Formular), werden deshalb in SetzeBeschriftungen rekursiv gesucht und
+//  ueber ihren Tag beschriftet — genauso die Header-Buttons ueber ihren
+//  Reiter-Index.
 
 interface
 
@@ -25,28 +30,32 @@ uses
   Vcl.ExtDlgs, Vcl.Imaging.jpeg, Vcl.Imaging.pngimage,
   Data.DB, Vcl.StdCtrls, Vcl.Mask,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvDBControls, JvDBLookup,
+  JvRibbonPanel, JvDBControls, JvDBLookup,
   uFrmModuleTemplate, JvComponentBase, JvExMask, JvToolEdit, JvMaskEdit;
 
 type
-  // Reihenfolge = Tag der Buttons in jeder Leiste
+  // Reihenfolge = Tag bzw. ActionTag der Buttons in jeder Leiste
   TNavAktion = (naErster, naZurueck, naWeiter, naLetzter,
     naNeu, naBearbeiten, naSpeichern, naAbbrechen, naAktualisieren);
 
+  // Je Ribbon-Reiter: welche Datasource navigiert wird und wo die
+  // aufgeloeste Stammtabelle liegt (nil, wenn es keine Bruecke gibt).
+  // Zugeordnet ueber den Reiter-Index, den TJvRibbonPanel.OnButtonClick
+  // mitliefert — frueher lief das ueber die Parent-Kette zum TTabSheet,
+  // das es zur Entwurfszeit nicht mehr gibt.
   TSeitenInfo = record
-    Seite: TTabSheet;
-    NavDs: TDataSource;      // Datasource fuer Grid und Navigation
-    StammDs: TDataSource;    // aufgeloeste Stammtabelle (nil bei Typ-Seiten)
+    NavDs: TDataSource;
+    StammDs: TDataSource;
   end;
 
   TfrmPersonen = class(TfrmTemplate)
     PaneStyle1: TJvNavPaneStyleManager;
-    PaneStyle2: TJvNavPaneStyleManager;
     pnlStamm: TPanel;
     pnlStammButtons: TPanel;
     btnErsterStamm, btnZurueckStamm, btnWeiterStamm, btnLetzterStamm,
     btnNeuStamm, btnAendernStamm, btnSpeichernStamm, btnAbbrechenStamm,
     btnNeuLadenStamm: TJvNavPanelButtonTop;
+    grdtStamm: TJvGradient;
     pnlStammFelder: TPanel;
     lblNr: TLabel;
     txtNr: TDBText;
@@ -65,13 +74,9 @@ type
     imgPhoto: TDBImage;
     btnPhotoLaden: TButton;
     dlgPhoto: TOpenPictureDialog;
-    pnlRibbon: TPanel;
-    pctrModule: TPageControl;
-    tsAdressen: TTabSheet;
-    pnlBtnAdr: TPanel;
-    btnErsterAdr, btnZurueckAdr, btnWeiterAdr, btnLetzterAdr,
-    btnNeuAdr, btnAendernAdr, btnSpeichernAdr, btnAbbrechenAdr,
-    btnNeuLadenAdr: TJvNavPanelButtonTop;
+    JvRibbonPanel1: TJvRibbonPanel;
+    // Reiter 0: Adressen
+    pnlAdressen: TPanel;
     pnlFldAdressen: TPanel;
     lblStrasse: TLabel;
     edtStrasse: TJvDBMaskEdit;
@@ -90,33 +95,24 @@ type
     lblBezirk: TLabel;
     cboBezirk: TJvDBLookupCombo;
     grdAdressen: TDBGrid;
-    tsEmails: TTabSheet;
-    pnlBtnEml: TPanel;
-    btnErsterEml, btnZurueckEml, btnWeiterEml, btnLetzterEml,
-    btnNeuEml, btnAendernEml, btnSpeichernEml, btnAbbrechenEml,
-    btnNeuLadenEml: TJvNavPanelButtonTop;
+    // Reiter 1: Emails
+    pnlEmails: TPanel;
     pnlFldEmails: TPanel;
     lblEmail: TLabel;
     cboEmailAdr: TDBComboBox;
     lblEmailTyp: TLabel;
     cboEmailTyp: TJvDBLookupCombo;
     grdEmails: TDBGrid;
-    tsTelefon: TTabSheet;
-    pnlBtnTel: TPanel;
-    btnErsterTel, btnZurueckTel, btnWeiterTel, btnLetzterTel,
-    btnNeuTel, btnAendernTel, btnSpeichernTel, btnAbbrechenTel,
-    btnNeuLadenTel: TJvNavPanelButtonTop;
+    // Reiter 2: Telefon
+    pnlTelefon: TPanel;
     pnlFldTelefon: TPanel;
     lblNummer: TLabel;
     cboTelefonNr: TDBComboBox;
     lblTelefonTyp: TLabel;
     cboTelefonTyp: TJvDBLookupCombo;
     grdTelefon: TDBGrid;
-    tsBeziehungen: TTabSheet;
-    pnlBtnBez: TPanel;
-    btnErsterBez, btnZurueckBez, btnWeiterBez, btnLetzterBez,
-    btnNeuBez, btnAendernBez, btnSpeichernBez, btnAbbrechenBez,
-    btnNeuLadenBez: TJvNavPanelButtonTop;
+    // Reiter 3: Beziehungen
+    pnlBeziehungen: TPanel;
     pnlFldBeziehungen: TPanel;
     lblRolle: TLabel;
     cboRolle: TJvDBLookupCombo;
@@ -125,61 +121,26 @@ type
     cbxMitarbeiter: TDBCheckBox;
     cbxKunde: TDBCheckBox;
     cbxKontakt: TDBCheckBox;
+    cbxLehrer: TDBCheckBox;
+    cbxKlient: TDBCheckBox;
     grdBeziehungen: TDBGrid;
-    tsPersonTypen: TTabSheet;
-    pnlBtnPTyp: TPanel;
-    btnErsterPTyp, btnZurueckPTyp, btnWeiterPTyp, btnLetzterPTyp,
-    btnNeuPTyp, btnAendernPTyp, btnSpeichernPTyp, btnAbbrechenPTyp,
-    btnNeuLadenPTyp: TJvNavPanelButtonTop;
-    grdPersonTypen: TDBGrid;
-    tsRollen: TTabSheet;
-    pnlBtnRol: TPanel;
-    btnErsterRol, btnZurueckRol, btnWeiterRol, btnLetzterRol,
-    btnNeuRol, btnAendernRol, btnSpeichernRol, btnAbbrechenRol,
-    btnNeuLadenRol: TJvNavPanelButtonTop;
-    grdRollen: TDBGrid;
-    tsAdressTypen: TTabSheet;
-    pnlBtnATyp: TPanel;
-    btnErsterATyp, btnZurueckATyp, btnWeiterATyp, btnLetzterATyp,
-    btnNeuATyp, btnAendernATyp, btnSpeichernATyp, btnAbbrechenATyp,
-    btnNeuLadenATyp: TJvNavPanelButtonTop;
-    grdAdressTypen: TDBGrid;
-    tsEmailTypen: TTabSheet;
-    pnlBtnETyp: TPanel;
-    btnErsterETyp, btnZurueckETyp, btnWeiterETyp, btnLetzterETyp,
-    btnNeuETyp, btnAendernETyp, btnSpeichernETyp, btnAbbrechenETyp,
-    btnNeuLadenETyp: TJvNavPanelButtonTop;
-    grdEmailTypen: TDBGrid;
-    tsTelefonTypen: TTabSheet;
-    pnlBtnTTyp: TPanel;
-    btnErsterTTyp, btnZurueckTTyp, btnWeiterTTyp, btnLetzterTTyp,
-    btnNeuTTyp, btnAendernTTyp, btnSpeichernTTyp, btnAbbrechenTTyp,
-    btnNeuLadenTTyp: TJvNavPanelButtonTop;
-    grdTelefonTypen: TDBGrid;
-    grdtStamm, grdtAdr, grdtEml, grdtTel, grdtBez, grdtPTyp, grdtRol,
-    grdtATyp, grdtETyp, grdtTTyp: TJvGradient;
-    hdrAdressen: TJvNavPanelHeader;
-    hdrEmails: TJvNavPanelHeader;
-    hdrTelefon: TJvNavPanelHeader;
-    hdrBeziehungen: TJvNavPanelHeader;
-    hdrPersonTypen: TJvNavPanelHeader;
-    hdrRollen: TJvNavPanelHeader;
-    hdrAdressTypen: TJvNavPanelHeader;
-    hdrEmailTypen: TJvNavPanelHeader;
-    hdrTelefonTypen: TJvNavPanelHeader;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure KopfClick(Sender: TObject);
     procedure BtnNavClick(Sender: TObject);
+    procedure RibbonButtonClick(Sender: TJvRibbonPanel;
+      ATabIndex, AButtonTag: Integer);
     procedure btnPhotoLadenClick(Sender: TObject);
   private
     FSeiten: array of TSeitenInfo;
-    FKoepfe: array of TJvNavPanelHeader;
     procedure BaueSeiten;
     procedure SetzeBeschriftungen;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    function KontextZuButton(AButton: TControl;
-      out ANavDs, AStammDs: TDataSource): Boolean;
+    // Fuehrt eine Navigations-/Bearbeitungsaktion auf dem uebergebenen
+    // Kontext aus. Frueher direkt in BtnNavClick — jetzt geteilt, weil es
+    // zwei Aufrufer gibt: die Buttonleiste links (BtnNavClick) und die
+    // Ribbon-Leisten rechts (RibbonButtonClick).
+    procedure FuehreNavAktion(AAktion: TNavAktion;
+      ANavDs, AStammDs: TDataSource);
   public
   end;
 
@@ -195,7 +156,7 @@ uses
 
 resourcestring
   SFormCaption      = 'Personen';
-  // Buttonleiste (links und auf jedem Tabsheet)
+  // Buttonleiste (links und auf jedem Reiter)
   SBtnErster        = 'Erster';
   SBtnZurueck       = 'Zur'#252'ck';
   SBtnWeiter        = 'Weiter';
@@ -210,11 +171,6 @@ resourcestring
   SKopfEmails       = 'Emails';
   SKopfTelefon      = 'Telefon';
   SKopfBeziehungen  = 'Beziehungen';
-  SKopfPersonTypen  = 'Personentypen';
-  SKopfRollen       = 'Rollen';
-  SKopfAdressTypen  = 'Adresstypen';
-  SKopfEmailTypen   = 'Emailtypen';
-  SKopfTelefonTypen = 'Telefontypen';
   // Feldbeschriftungen
   SLblNr            = 'Nr.';
   SLblVorname       = 'Vorname';
@@ -253,18 +209,27 @@ begin
   end;
 end;
 
+function KopfCaption(AIndex: Integer): string;
+begin
+  case AIndex of
+    0: Result := SKopfAdressen;
+    1: Result := SKopfEmails;
+    2: Result := SKopfTelefon;
+    3: Result := SKopfBeziehungen;
+  else
+    Result := '';
+  end;
+end;
+
 procedure TfrmPersonen.FormCreate(Sender: TObject);
 begin
-  SetzeBeschriftungen;
   BaueSeiten;
-  FKoepfe := [hdrAdressen, hdrEmails, hdrTelefon, hdrBeziehungen,
-    hdrPersonTypen, hdrRollen, hdrAdressTypen, hdrEmailTypen, hdrTelefonTypen];
+  SetzeBeschriftungen;
   // Dropdown der Email-/Telefon-Combos mit den vorhandenen (poolweiten) Werten
   // fuellen, damit man einen bestehenden (geteilten) Satz waehlen oder neu
   // tippen kann. Bei Adressen uebernimmt cboBestAdresse denselben Zweck.
   dmPersonen.FuelleEmailAdressen(cboEmailAdr.Items);
   dmPersonen.FuelleTelefonNummern(cboTelefonNr.Items);
-  KopfClick(hdrAdressen);
   KeyPreview := True;
   OnKeyDown := FormKeyDown;   // WICHTIG!
 end;
@@ -285,26 +250,42 @@ begin
   frmPersonen := nil;
 end;
 
-// Alle Beschriftungen aus resourcestrings — die Buttons ueber ihren Tag,
-// damit die 10 Leisten nicht einzeln gepflegt werden muessen.
+// Alle Beschriftungen aus resourcestrings. Die Buttons der linken Leiste sind
+// normale DFM-Komponenten (Components[] dieses Formulars); die Buttons und
+// Header der Ribbon-Reiter erzeugt TJvRibbonPanel dagegen zur Laufzeit mit
+// sich selbst als Owner — die findet man nur ueber die Control-Hierarchie,
+// deshalb der rekursive Durchlauf.
 procedure TfrmPersonen.SetzeBeschriftungen;
+
+  procedure Durchlaufe(AParent: TWinControl);
+  var
+    I: Integer;
+    C: TControl;
+  begin
+    for I := 0 to AParent.ControlCount - 1 do
+    begin
+      C := AParent.Controls[I];
+      if C is TJvNavPanelButtonTop then
+        TJvNavPanelButtonTop(C).Caption := NavCaption(TNavAktion(C.Tag))
+      else if C is TJvNavPanelHeader then
+        TJvNavPanelHeader(C).Caption := KopfCaption(C.Tag);
+      if C is TWinControl then
+        Durchlaufe(TWinControl(C));
+    end;
+  end;
+
 var
   I: Integer;
 begin
   Caption := SFormCaption;
+  // linke Leiste: normale DFM-Buttons
   for I := 0 to ComponentCount - 1 do
     if Components[I] is TJvNavPanelButtonTop then
       TJvNavPanelButtonTop(Components[I]).Caption :=
         NavCaption(TNavAktion(Components[I].Tag));
-  hdrAdressen.Caption     := SKopfAdressen;
-  hdrEmails.Caption       := SKopfEmails;
-  hdrTelefon.Caption      := SKopfTelefon;
-  hdrBeziehungen.Caption  := SKopfBeziehungen;
-  hdrPersonTypen.Caption  := SKopfPersonTypen;
-  hdrRollen.Caption       := SKopfRollen;
-  hdrAdressTypen.Caption  := SKopfAdressTypen;
-  hdrEmailTypen.Caption   := SKopfEmailTypen;
-  hdrTelefonTypen.Caption := SKopfTelefonTypen;
+  // rechte Leisten + Header: zur Laufzeit erzeugt
+  Durchlaufe(JvRibbonPanel1);
+
   lblNr.Caption         := SLblNr;
   lblVorname.Caption    := SLblVorname;
   lblNachname.Caption   := SLblNachname;
@@ -326,126 +307,107 @@ begin
   lblBezirk.Caption     := SLblBezirk;
 end;
 
-// Seiten-Metadaten: welcher Tab haengt an welcher Datasource, und wo ist
+// Reiter-Metadaten: welcher Reiter haengt an welcher Datasource, und wo ist
 // die aufgeloeste Stammtabelle (fuer Neu/Speichern ueber die Bruecke).
+// Reihenfolge = Reihenfolge der Headers in JvRibbonPanel1.
 procedure TfrmPersonen.BaueSeiten;
 
-  procedure S(AIndex: Integer; ASeite: TTabSheet;
-    ANavDs, AStammDs: TDataSource);
+  procedure S(AIndex: Integer; ANavDs, AStammDs: TDataSource);
   begin
-    FSeiten[AIndex].Seite   := ASeite;
     FSeiten[AIndex].NavDs   := ANavDs;
     FSeiten[AIndex].StammDs := AStammDs;
   end;
 
 begin
-  SetLength(FSeiten, 9);
-  S(0, tsAdressen,     dmPersonen.dstblPersonAdresse,       dmPersonen.dstblAdresse);
-  S(1, tsEmails,       dmPersonen.dstblPersonEmail,         dmPersonen.dstblEmailadresse);
-  S(2, tsTelefon,      dmPersonen.dstblPersonTelefonnummer, dmPersonen.dstblTelefonnummer);
-  S(3, tsBeziehungen,  dmPersonen.dstblPersonBeziehung,     nil);
-  S(4, tsPersonTypen,  dmPersonen.dstblPersonTyp,           nil);
-  S(5, tsRollen,       dmPersonen.dstblRolleTyp,            nil);
-  S(6, tsAdressTypen,  dmPersonen.dstblAdressentyp,         nil);
-  S(7, tsEmailTypen,   dmPersonen.dstblEmailtyp,            nil);
-  S(8, tsTelefonTypen, dmPersonen.dstblTelefonnummertyp,    nil);
+  SetLength(FSeiten, 4);
+  S(0, dmPersonen.dstblPersonAdresse,       dmPersonen.dstblAdresse);
+  S(1, dmPersonen.dstblPersonEmail,         dmPersonen.dstblEmailadresse);
+  S(2, dmPersonen.dstblPersonTelefonnummer, dmPersonen.dstblTelefonnummer);
+  S(3, dmPersonen.dstblPersonBeziehung,     nil);
 end;
 
-// Header-Klick wie jvnvpnlhdr1Click in frmMain: aktiver Header PaneStyle1,
-// alle anderen PaneStyle2, Tag = Seitenindex.
-procedure TfrmPersonen.KopfClick(Sender: TObject);
-var
-  I: Integer;
-begin
-  for I := 0 to High(FKoepfe) do
-    FKoepfe[I].StyleManager := PaneStyle2;
-  (Sender as TJvNavPanelHeader).StyleManager := PaneStyle1;
-  pctrModule.ActivePageIndex := (Sender as TJvNavPanelHeader).Tag;
-end;
-
-// Kontext eines Buttons bestimmen: liegt er auf einem Tabsheet, gelten die
-// Datasources dieser Seite; liegt er im linken Stammbereich, gelten
-// person_mandant (Navigation) und person (Bearbeitung).
-function TfrmPersonen.KontextZuButton(AButton: TControl;
-  out ANavDs, AStammDs: TDataSource): Boolean;
-var
-  LParent: TControl;
-  I: Integer;
-begin
-  Result   := False;
-  ANavDs   := nil;
-  AStammDs := nil;
-  LParent  := AButton;
-  while LParent <> nil do
-  begin
-    if LParent is TTabSheet then
-    begin
-      for I := 0 to High(FSeiten) do
-        if FSeiten[I].Seite = LParent then
-        begin
-          ANavDs   := FSeiten[I].NavDs;
-          AStammDs := FSeiten[I].StammDs;
-          Exit(True);
-        end;
-      Exit(False);
-    end;
-    if LParent = pnlStamm then
-    begin
-      ANavDs   := dmPersonen.dstblPersonMandant;
-      AStammDs := dmPersonen.dstblPerson;
-      Exit(True);
-    end;
-    LParent := LParent.Parent;
-  end;
-end;
-
-// Gemeinsamer Handler aller Leisten-Buttons; die Aktion steckt im Tag.
+// Buttonleiste LINKS (pnlStamm): Kontext ist immer person_mandant
+// (Navigation) und person (Bearbeitung).
 procedure TfrmPersonen.BtnNavClick(Sender: TObject);
-var
-  LNavDs, LStammDs, LZielDs: TDataSource;
 begin
-  if not KontextZuButton(Sender as TControl, LNavDs, LStammDs) then
+  FuehreNavAktion(TNavAktion((Sender as TComponent).Tag),
+    dmPersonen.dstblPersonMandant, dmPersonen.dstblPerson);
+end;
+
+// Buttonleisten RECHTS: TJvRibbonPanel liefert Reiter-Index und den
+// ActionTag des Buttons gleich mit — kein Aufloesen ueber die Parent-Kette
+// mehr noetig.
+procedure TfrmPersonen.RibbonButtonClick(Sender: TJvRibbonPanel;
+  ATabIndex, AButtonTag: Integer);
+begin
+  if (ATabIndex < 0) or (ATabIndex > High(FSeiten)) then
     Exit;
-  if (LNavDs = nil) or (LNavDs.DataSet = nil) or not LNavDs.DataSet.Active then
+  FuehreNavAktion(TNavAktion(AButtonTag),
+    FSeiten[ATabIndex].NavDs, FSeiten[ATabIndex].StammDs);
+end;
+
+// Gemeinsame Logik beider Leisten (unveraendert aus dem bisherigen
+// BtnNavClick uebernommen).
+procedure TfrmPersonen.FuehreNavAktion(AAktion: TNavAktion;
+  ANavDs, AStammDs: TDataSource);
+var
+  LZielDs: TDataSource;
+begin
+  if (ANavDs = nil) or (ANavDs.DataSet = nil) or not ANavDs.DataSet.Active then
     Exit;  // z.B. person_beziehung noch nicht angelegt
 
-  case TNavAktion((Sender as TComponent).Tag) of
-    naErster:  LNavDs.DataSet.First;
-    naZurueck: LNavDs.DataSet.Prior;
-    naWeiter:  LNavDs.DataSet.Next;
-    naLetzter: LNavDs.DataSet.Last;
+  case AAktion of
+    naErster:  ANavDs.DataSet.First;
+    naZurueck: ANavDs.DataSet.Prior;
+    naWeiter:  ANavDs.DataSet.Next;
+    naLetzter: ANavDs.DataSet.Last;
     naNeu:
-      if LStammDs <> nil then
-        dmPersonen.StammNeu(LStammDs, LNavDs)  // Stamm + Bruecke gleich mit im Insert
+      if AStammDs <> nil then
+        dmPersonen.StammNeu(AStammDs, ANavDs)  // Stamm + Bruecke gleich mit im Insert
       else
-        LNavDs.DataSet.Append;            // Typ-Seiten/Beziehungen: direkt
+        ANavDs.DataSet.Append;            // Beziehungen: direkt
     naBearbeiten:
       begin
-        if LStammDs <> nil then
-          LZielDs := LStammDs
+        if AStammDs <> nil then
+          LZielDs := AStammDs
         else
-          LZielDs := LNavDs;
+          LZielDs := ANavDs;
         if (LZielDs.DataSet <> nil) and LZielDs.DataSet.Active
           and not LZielDs.DataSet.IsEmpty then
           LZielDs.DataSet.Edit;
       end;
     naSpeichern:
       begin
-        if (LStammDs <> nil) and (LStammDs.DataSet <> nil) then
-          dmPersonen.StammSpeichern(LStammDs);  // Post + Email-Resolve, AfterPost verknuepft
-        if LNavDs.DataSet.State in dsEditModes then
-          LNavDs.DataSet.Post;              // Bruecke posten, falls nicht schon geschehen
+        // Bei Stamm+Bruecke (AStammDs <> nil) darf ein noch OFFENER
+        // dsInsert-Satz der Bruecke NUR ueber die AfterPost-Kaskade
+        // (StammVerknuepfen) gepostet werden -- der stammt aus einer noch
+        // unvollstaendigen Stamm-Neuanlage (StammNeu haengt Stamm+Bruecke
+        // gleichzeitig an) und haette noch keine Fremdschluessel-ID
+        // (person_id/adresse_id), siehe feedback_personendm_stamm_bruecke_bug.
+        // EIN BESTEHENDER Bruecken-Satz (dsEdit -- z.B. nur das
+        // Hauptperson-Haekchen an einer schon verknuepften person_mandant-
+        // Zeile geaendert, OHNE die Person selbst anzufassen) ist dagegen
+        // schon korrekt verknuepft und muss trotzdem gepostet werden, sonst
+        // geht genau diese Aenderung verloren.
+        if (AStammDs <> nil) and (AStammDs.DataSet <> nil) then
+        begin
+          dmPersonen.StammSpeichern(AStammDs);  // Post + Email-Resolve, AfterPost verknuepft die Bruecke
+          if ANavDs.DataSet.State = dsEdit then
+            ANavDs.DataSet.Post;
+        end
+        else if ANavDs.DataSet.State in dsEditModes then
+          ANavDs.DataSet.Post;  // reine Bruecken-Bearbeitung ohne Stamm-Neuanlage
       end;
     naAbbrechen:
       begin
-        if LStammDs <> nil then
-          dmPersonen.StammAbbrechen(LStammDs);
-        if LNavDs.DataSet.State in dsEditModes then
-          LNavDs.DataSet.Cancel;
+        if AStammDs <> nil then
+          dmPersonen.StammAbbrechen(AStammDs);
+        if ANavDs.DataSet.State in dsEditModes then
+          ANavDs.DataSet.Cancel;
       end;
     naAktualisieren:
-      if LNavDs.DataSet.State = dsBrowse then
-        LNavDs.DataSet.Refresh;
+      if ANavDs.DataSet.State = dsBrowse then
+        ANavDs.DataSet.Refresh;
   end;
 end;
 
