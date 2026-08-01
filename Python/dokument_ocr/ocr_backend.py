@@ -92,13 +92,20 @@ class EasyOcrBackend(OcrBackend):
                     'EasyOCR ist nicht installiert. Installation:\n'
                     '    pip install easyocr\n'
                     'Achtung: zieht PyTorch nach (~2 GB).')
-            # Beim ersten Mal werden die Modelle geladen.
-            self._leser = easyocr.Reader(self.sprachen, gpu=self.gpu)
+            # verbose=False ist hier NICHT Kosmetik: EasyOCR zeichnet seinen
+            # Fortschrittsbalken mit dem Blockzeichen U+2588. Die Windows-
+            # Konsole laeuft unter cp1252 und kann das nicht ausgeben -- der
+            # Lauf stirbt dann mit UnicodeEncodeError, obwohl die Erkennung
+            # selbst in Ordnung waere. Beim Einbetten in Delphi gibt es
+            # ueberdies gar kein brauchbares stdout.
+            self._leser = easyocr.Reader(self.sprachen, gpu=self.gpu,
+                                         verbose=False)
         return self._leser
 
     def erkennen(self, bild):
         leser = self._leser_holen()
-        roh = leser.readtext(bild)
+        # detail=1 liefert (Koordinaten, Text, Zuversicht) je Fund.
+        roh = leser.readtext(bild, detail=1)
 
         bloecke = []
         teile = []

@@ -20,6 +20,8 @@ from datetime import datetime
 
 from .kategorisierung import Kategorisierer, UNBEKANNT
 from . import ocr_backend as backends
+from . import extraktion
+from . import pdf_leser
 
 try:
     import cv2
@@ -125,13 +127,32 @@ class DokumentPipeline(object):
 
     def text_erkennen(self, pfad):
         """Liefert (OcrErgebnis, protokoll)."""
+        protokoll = {}
+
+        # PDFs zuerst: steckt der Text schon drin, ist jede Erkennung
+        # ueberfluessig -- und das Ergebnis obendrein fehlerfrei.
+        if pdf_leser.ist_pdf(pfad):
+            if not pdf_leser.pypdf_verfuegbar():
+                raise RuntimeError(
+                    'PDF erkannt, aber pypdf fehlt: pip install pypdf')
+            text, seiten = pdf_leser.text_lesen(pfad)
+            protokoll['pdf_seiten'] = seiten
+            if text.strip():
+                protokoll['pdf_quelle'] = 'eingebetteter Text'
+                return backends.OcrErgebnis(text, [(text, 1.0)]), protokoll
+            # Kein Text drin -> Scan. Rendern braucht Poppler, das wird
+            # hier bewusst nicht vorausgesetzt.
+            protokoll['pdf_quelle'] = 'kein Text eingebettet (Scan)'
+            raise RuntimeError(
+                'PDF enthaelt keinen Text (vermutlich ein Scan). Zum '
+                'Erkennen muessen die Seiten gerendert werden -- dafuer '
+                'fehlt pdf2image + Poppler.')
+
         if self.backend is None:
             raise RuntimeError(
                 'Kein OCR-Backend gesetzt. Fuer den Normalbetrieb:\n'
                 '    from dokument_ocr import ocr_backend\n'
                 '    pipeline.backend = ocr_backend.standard_backend()')
-
-        protokoll = {}
 
         # Backends, die gar kein Bild brauchen (z.B. Textdatei)
         if isinstance(self.backend, (backends.TextDateiBackend,
@@ -166,7 +187,7 @@ class DokumentPipeline(object):
         if os.path.exists(pfad):
             groesse_kb = int(round(os.path.getsize(pfad) / 1024.0))
 
-        return {
+        auswertung = {
             'datei': pfad,
             'titel': titel_vorschlagen(pfad, text),
             'ocr_text': text,
@@ -183,6 +204,11 @@ class DokumentPipeline(object):
             'aufbereitung': protokoll,
             'fehler': fehler,
         }
+
+        # Betrag, Datum, Rechnungsnummer, IBAN, QR-Referenz. Fehlende Werte
+        # sind None -- es wird nichts geraten, was nicht im Text steht.
+        auswertung.update(extraktion.daten_ziehen(text))
+        return auswertung
 
     def ordner_verarbeiten(self, ordner, endungen=BILD_ENDUNGEN):
         """Alle passenden Dateien eines Ordners. Liefert eine Liste."""

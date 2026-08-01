@@ -52,11 +52,68 @@ Der erste Lauf lädt zusätzlich die Sprachmodelle (~100 MB) nach
 |---|---|
 | `kategorien.json` | Das Regelwerk. Hier werden Kategorien gepflegt – ohne Code. |
 | `kategorisierung.py` | Wendet die Regeln an, liefert Kategorie samt Begründung. |
+| `extraktion.py` | Zieht Betrag, Datum, Rechnungsnummer, IBAN, QR-Referenz. |
 | `bildvorbereitung.py` | Graustufen, Schattenausgleich, Entzerren, Hochskalieren. |
 | `ocr_backend.py` | Austauschbare Texterkennung (EasyOCR, Textdatei, Test). |
+| `pdf_leser.py` | Text aus durchsuchbaren PDFs, erkennt Scans. |
 | `pipeline.py` | Führt alles zusammen, liefert ein `dict` je Dokument. |
 | `demo.py` | Vorführung. |
 | `../ocr_caller.py` | Einstiegspunkt für Delphi, liefert JSON. |
+
+## Extrahierte Daten
+
+Aus dem erkannten Text werden zusätzlich die harten Werte gezogen:
+
+| Feld | Beispiel |
+|---|---|
+| `betrag`, `betrag_waehrung` | `1240.0`, `CHF` |
+| `datum` | `2026-07-12` |
+| `rechnungsnummer` | `2026-4711` |
+| `iban` | `CH4431999123000889012` |
+| `qr_referenz` | 27-stellig, ohne Leerzeichen |
+
+Der **Betrag** ist der interessante Fall. Ein einfaches `Total: (\d+)` scheitert,
+weil die Texterkennung Zeilen zerreisst — aus
+
+```
+Total inkl. MWST      CHF 1240.00
+```
+
+wird real
+
+```
+Total inkl:. MWST
+CHF 1240.00
+```
+
+Schlüsselwort und Betrag landen in getrennten Zeilen, und im Schlüsselwort steckt
+ein Erkennungsfehler. Deshalb werden **alle** Beträge eingesammelt und nach ihrem
+Umfeld bewertet: `total` zählt +5, `chf` +3, `netto` −3, `menge` −4. Der Betrag mit
+den meisten Punkten gewinnt, und die Begründung steht im Ergebnis:
+
+```
+betrag       : 1240.0 CHF
+betrag_grund : +5 total, +3 \bchf\b, +2 inkl, +1 mwst, -3 netto
+```
+
+Die 124.00 aus der Positionszeile verliert damit gegen den Endbetrag. Findet sich
+gar kein Hinweis, wird `None` geliefert statt einer Zufallszahl.
+
+Schweizer Formate sind abgedeckt: Hochkomma-Tausender (`1'240.00`), QR-Referenz in
+Fünferblöcken, IBAN für CH und LI.
+
+## PDF
+
+Durchsuchbare PDFs brauchen **kein OCR** — der Text wird direkt ausgelesen, das ist
+schnell und fehlerfrei. Die Pipeline erkennt das selbst; ein solches PDF läuft sogar
+ohne gesetztes OCR-Backend durch.
+
+Gescannte PDFs enthalten nur Bilder. Dafür müssten die Seiten gerendert werden, was
+`pdf2image` **und Poppler als Systeminstallation** braucht — das ist bewusst nicht
+eingebaut. Stattdessen meldet die Pipeline verständlich, dass es sich um einen Scan
+handelt. Vorab prüfen lässt sich das mit `ocr_caller.pdf_pruefen(pfad)`.
+
+Braucht `pypdf` (installiert, klein, keine weiteren Abhängigkeiten).
 
 ## Von Delphi aus
 

@@ -157,6 +157,63 @@ def gesamtlauf_zeigen():
         print('  %-22s %s' % (feld + ':', ergebnis.get(feld)))
 
 
+def extraktion_zeigen():
+    trennlinie('4. Extrahierte Daten (braucht keinerlei Installation)')
+    from dokument_ocr import extraktion
+
+    # Genau so hat EasyOCR den Testbeleg am 01.08.2026 gelesen:
+    # zerrissene Tabellenzeilen und ein Tippfehler im Schluesselwort.
+    ocr_text = """Muster AG, 9658 Wildhaus
+RECHNUNG Nr. 2026-4711
+Rechnungsdatum: 12.07.2026
+Pos
+Artikel
+Menge
+Preis
+1
+Metallplatte 5mm
+10
+124.00
+Zahlbar bis 30 Tage netto
+Total inkl:. MWST
+CHF 1240.00"""
+
+    print('Eingabe ist echter OCR-Text -- Zeilen zerrissen, "inkl:." verlesen.')
+    print()
+    d = extraktion.daten_ziehen(ocr_text)
+    for feld in ('betrag', 'betrag_waehrung', 'datum', 'rechnungsnummer',
+                 'iban', 'qr_referenz'):
+        print('  %-18s %s' % (feld + ':', d[feld]))
+    print('  %-18s %s' % ('warum:', d['betrag_begruendung']))
+    print()
+    print('  Beachte: 124.00 aus der Positionszeile verliert gegen den')
+    print('  Endbetrag 1240.00 -- entschieden ueber das Umfeld, nicht ueber')
+    print('  die Zeilenstruktur.')
+    print()
+
+    alle = extraktion.betraege_finden(ocr_text)
+    print('  Alle gefundenen Betraege, nach Punkten sortiert:')
+    for b in alle[:5]:
+        print('    %10.2f  %3d Punkte  %s' % (b['wert'], b['punkte'],
+                                              b['begruendung']))
+
+
+def pdf_zeigen():
+    trennlinie('5. PDF')
+    from dokument_ocr import pdf_leser
+    if pdf_leser.pypdf_verfuegbar():
+        print('pypdf installiert: ja')
+        print()
+        print('Durchsuchbare PDFs werden direkt gelesen -- ohne Texterkennung,')
+        print('also schnell und fehlerfrei. Gescannte PDFs werden als solche')
+        print('gemeldet; sie zu rendern braeuchte Poppler als System-')
+        print('installation und ist bewusst nicht eingebaut.')
+        print()
+        print('Vorab pruefen:  ocr_caller.pdf_pruefen(pfad)')
+    else:
+        print('pypdf fehlt: pip install pypdf')
+
+
 def hinweise():
     trennlinie('Naechste Schritte')
     print("""\
@@ -183,6 +240,8 @@ def main():
     kategorien_zeigen()
     bildaufbereitung_zeigen()
     gesamtlauf_zeigen()
+    extraktion_zeigen()
+    pdf_zeigen()
     hinweise()
 
 

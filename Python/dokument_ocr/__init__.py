@@ -35,7 +35,10 @@ from .pipeline import (
     nur_text_kategorisieren,
     als_json,
 )
+from .extraktion import daten_ziehen, betrag_finden, datum_finden
 from . import ocr_backend
+from . import extraktion
+from . import pdf_leser
 
 __all__ = [
     'Kategorisierer',
@@ -45,7 +48,12 @@ __all__ = [
     'DokumentPipeline',
     'nur_text_kategorisieren',
     'als_json',
+    'daten_ziehen',
+    'betrag_finden',
+    'datum_finden',
     'ocr_backend',
+    'extraktion',
+    'pdf_leser',
 ]
 
 __version__ = '0.1.0'

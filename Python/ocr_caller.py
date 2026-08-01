@@ -83,15 +83,33 @@ def text_einordnen(text):
     """Nur kategorisieren, ohne Bild. Braucht kein EasyOCR.
 
     Gedacht fuer Dokumente, deren Text schon vorliegt -- durchsuchbare PDFs
-    oder E-Mail-Text aus dem Mailmodul.
+    oder E-Mail-Text aus dem Mailmodul. Liefert zusaetzlich die aus dem Text
+    gezogenen Daten (Betrag, Datum, Rechnungsnummer, IBAN, QR-Referenz).
     """
     try:
+        from dokument_ocr import daten_ziehen
         e = nur_text_kategorisieren(text)
         d = e.als_dict()
+        d.update(daten_ziehen(text))
         d['ok'] = True
         return json.dumps(d, ensure_ascii=False)
     except Exception as ex:
         return _fehler_als_json(ex)
+
+
+def pdf_pruefen(pfad):
+    """Sagt vorab, ob ein PDF Text enthaelt oder ein Scan ist.
+
+    Damit kann die Delphi-Seite entscheiden, ob der schnelle Weg
+    (Text auslesen) genuegt oder die langsame Erkennung noetig ist.
+    """
+    try:
+        from dokument_ocr import pdf_leser
+        d = pdf_leser.pdf_auswerten(pfad)
+        d['ok'] = True
+        return json.dumps(d, ensure_ascii=False)
+    except Exception as e:
+        return _fehler_als_json(e)
 
 
 def kategorien_auflisten():
