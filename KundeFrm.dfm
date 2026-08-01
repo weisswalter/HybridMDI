@@ -189,38 +189,35 @@ object frmKunde: TfrmKunde
       end
     end
   end
-  object JvRibbonPanel1: TJvRibbonPanel
+  object JvRibbonPanel1: TRibbonPanel
     Left = 565
     Top = 0
     Width = 435
     Height = 650
-    Headers = <
+    Align = alClient
+    BevelOuter = bvNone
+    ShowCaption = False
+    TabOrder = 1
+    HeaderButtons = <
       item
         Caption = 'Kontakte'
         Width = 110
-        Actions = ActionListRechts
-        Buttons = <
-          item
-            Action = actErsterR
-          end
-          item
-            Action = actZurueckR
-            Width = 75
-          end
-          item
-            Action = actWeiterR
-            Width = 70
-          end
-          item
-            Action = actLetzterR
-            Width = 75
-          end>
-        ContentPanel = pnlKontakte
       end
       item
         Caption = 'Kontaktdaten'
         Width = 140
-        Actions = ActionListRechts
+      end>
+    object tsKontakte: TTabSheet
+      Caption = 'Kontakte'
+      object barKontakte: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 435
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
         Buttons = <
           item
             Action = actErsterR
@@ -237,85 +234,105 @@ object frmKunde: TfrmKunde
             Action = actLetzterR
             Width = 75
           end>
-        ContentPanel = pnlKontaktdaten
-      end>
-    Align = alClient
-    TabOrder = 1
-    object pnlKontaktdaten: TPanel
-      Left = 4
-      Top = 75
-      Width = 427
-      Height = 571
-      BevelOuter = bvNone
-      Caption = 'pnlKontaktdaten'
-      ShowCaption = False
-      TabOrder = 3
-      Visible = False
-      object dbgrdEmail: TDBGrid
-        Left = 0
-        Top = 0
-        Width = 427
-        Height = 110
-        Align = alTop
-        DataSource = dmKunde.dstblEmailUebersicht
-        TabOrder = 0
-        TitleFont.Charset = DEFAULT_CHARSET
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -12
-        TitleFont.Name = 'Segoe UI'
-        TitleFont.Style = []
       end
-      object dbgrdTelefon: TDBGrid
-        Left = 0
-        Top = 110
-        Width = 427
-        Height = 110
-        Align = alTop
-        DataSource = dmKunde.dstblTelefonUebersicht
-        TabOrder = 1
-        TitleFont.Charset = DEFAULT_CHARSET
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -12
-        TitleFont.Name = 'Segoe UI'
-        TitleFont.Style = []
-      end
-      object dbgrdAdresse: TDBGrid
-        Left = 0
-        Top = 220
-        Width = 427
-        Height = 351
+      object pnlKontakte: TPanel
         Align = alClient
-        DataSource = dmKunde.dstblAdresseUebersicht
+        BevelOuter = bvNone
+        Caption = 'pnlKontakte'
+        ShowCaption = False
         TabOrder = 2
-        TitleFont.Charset = DEFAULT_CHARSET
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -12
-        TitleFont.Name = 'Segoe UI'
-        TitleFont.Style = []
+        object dbgrdKontakte: TDBGrid
+          Left = 0
+          Top = 0
+          Width = 427
+          Height = 571
+          Align = alClient
+          DataSource = dmKunde.dstblKontakte
+          TabOrder = 0
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
       end
     end
-    object pnlKontakte: TPanel
-      Left = 4
-      Top = 75
-      Width = 427
-      Height = 571
-      BevelOuter = bvNone
-      Caption = 'pnlKontakte'
-      ShowCaption = False
-      TabOrder = 2
-      object dbgrdKontakte: TDBGrid
+    object tsKontaktdaten: TTabSheet
+      Caption = 'Kontaktdaten'
+      object barKontaktdaten: TRibbonButtonBar
         Left = 0
         Top = 0
-        Width = 427
-        Height = 571
-        Align = alClient
-        DataSource = dmKunde.dstblKontakte
+        Width = 435
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
         TabOrder = 0
-        TitleFont.Charset = DEFAULT_CHARSET
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -12
-        TitleFont.Name = 'Segoe UI'
-        TitleFont.Style = []
+        Buttons = <
+          item
+            Action = actErsterR
+          end
+          item
+            Action = actZurueckR
+            Width = 75
+          end
+          item
+            Action = actWeiterR
+            Width = 70
+          end
+          item
+            Action = actLetzterR
+            Width = 75
+          end>
+      end
+      object pnlKontaktdaten: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlKontaktdaten'
+        ShowCaption = False
+        TabOrder = 3
+        object dbgrdEmail: TDBGrid
+          Left = 0
+          Top = 0
+          Width = 427
+          Height = 110
+          Align = alTop
+          DataSource = dmKunde.dstblEmailUebersicht
+          TabOrder = 0
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
+        object dbgrdTelefon: TDBGrid
+          Left = 0
+          Top = 110
+          Width = 427
+          Height = 110
+          Align = alTop
+          DataSource = dmKunde.dstblTelefonUebersicht
+          TabOrder = 1
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
+        object dbgrdAdresse: TDBGrid
+          Left = 0
+          Top = 220
+          Width = 427
+          Height = 351
+          Align = alClient
+          DataSource = dmKunde.dstblAdresseUebersicht
+          TabOrder = 2
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
       end
     end
   end

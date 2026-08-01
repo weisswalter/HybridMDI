@@ -381,641 +381,642 @@ object frmPersonen: TfrmPersonen
       end
     end
   end
-  object JvRibbonPanel1: TJvRibbonPanel
+  object JvRibbonPanel1: TRibbonPanel
     Left = 330
     Top = 0
     Width = 1096
     Height = 640
     Align = alClient
+    BevelOuter = bvNone
+    ShowCaption = False
     TabOrder = 1
     ActiveTheme = nptXPBlue
     InactiveTheme = nptXPSilver
-    Headers = <
+    ActivePageIndex = 0
+    HeaderButtons = <
       item
         Caption = 'Adressen'
         Width = 120
-        Buttons = <
-          item
-            ActionTag = 0
-            Width = 64
-          end
-          item
-            ActionTag = 1
-            Width = 70
-          end
-          item
-            ActionTag = 2
-            Width = 66
-          end
-          item
-            ActionTag = 3
-            Width = 70
-          end
-          item
-            ActionTag = 4
-            Width = 50
-          end
-          item
-            ActionTag = 5
-            Width = 66
-          end
-          item
-            ActionTag = 6
-            Width = 84
-          end
-          item
-            ActionTag = 7
-            Width = 84
-          end
-          item
-            ActionTag = 8
-            Width = 84
-          end>
-        ContentPanel = pnlAdressen
       end
       item
         Caption = 'Emails'
         Width = 110
-        Buttons = <
-          item
-            ActionTag = 0
-            Width = 64
-          end
-          item
-            ActionTag = 1
-            Width = 70
-          end
-          item
-            ActionTag = 2
-            Width = 66
-          end
-          item
-            ActionTag = 3
-            Width = 70
-          end
-          item
-            ActionTag = 4
-            Width = 50
-          end
-          item
-            ActionTag = 5
-            Width = 66
-          end
-          item
-            ActionTag = 6
-            Width = 84
-          end
-          item
-            ActionTag = 7
-            Width = 84
-          end
-          item
-            ActionTag = 8
-            Width = 84
-          end>
-        ContentPanel = pnlEmails
       end
       item
         Caption = 'Telefon'
         Width = 110
-        Buttons = <
-          item
-            ActionTag = 0
-            Width = 64
-          end
-          item
-            ActionTag = 1
-            Width = 70
-          end
-          item
-            ActionTag = 2
-            Width = 66
-          end
-          item
-            ActionTag = 3
-            Width = 70
-          end
-          item
-            ActionTag = 4
-            Width = 50
-          end
-          item
-            ActionTag = 5
-            Width = 66
-          end
-          item
-            ActionTag = 6
-            Width = 84
-          end
-          item
-            ActionTag = 7
-            Width = 84
-          end
-          item
-            ActionTag = 8
-            Width = 84
-          end>
-        ContentPanel = pnlTelefon
       end
       item
         Caption = 'Beziehungen'
         Width = 130
+      end>
+    object tsAdressen: TTabSheet
+      Caption = 'Adressen'
+      object barAdressen: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 1096
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        ButtonWidth = 70
         Buttons = <
           item
-            ActionTag = 0
-            Width = 64
+            Action = actPersErster
           end
           item
-            ActionTag = 1
-            Width = 70
+            Action = actPersZurueck
           end
           item
-            ActionTag = 2
-            Width = 66
+            Action = actPersWeiter
           end
           item
-            ActionTag = 3
-            Width = 70
+            Action = actPersLetzter
           end
           item
-            ActionTag = 4
-            Width = 50
+            Action = actPersNeu
           end
           item
-            ActionTag = 5
-            Width = 66
+            Action = actPersBearbeiten
           end
           item
-            ActionTag = 6
-            Width = 84
+            Action = actPersSpeichern
           end
           item
-            ActionTag = 7
-            Width = 84
+            Action = actPersAbbrechen
           end
           item
-            ActionTag = 8
-            Width = 84
+            Action = actPersAktualisieren
           end>
-        ContentPanel = pnlBeziehungen
-      end>
-    ActivePageIndex = 0
-    OnButtonClick = RibbonButtonClick
-  end
-  object pnlAdressen: TPanel
-    Left = 8
-    Top = 700
-    Width = 1088
-    Height = 567
-    BevelOuter = bvNone
-    Caption = 'pnlAdressen'
-    ShowCaption = False
-    TabOrder = 2
-    Visible = False
-    object pnlFldAdressen: TPanel
-      Left = 0
-      Top = 0
-      Width = 1088
-      Height = 84
-      Align = alTop
-      BevelOuter = bvNone
-      ShowCaption = False
-      TabOrder = 1
-      object lblStrasse: TLabel
-        Left = 8
-        Top = 4
-        Width = 33
-        Height = 15
-        Caption = 'Stra'#223'e'
       end
-      object lblHausNr: TLabel
-        Left = 216
-        Top = 4
-        Width = 16
-        Height = 15
-        Caption = 'Nr.'
-      end
-      object lblPlz: TLabel
-        Left = 276
-        Top = 4
-        Width = 20
-        Height = 15
-        Caption = 'PLZ'
-      end
-      object lblOrt: TLabel
-        Left = 348
-        Top = 4
-        Width = 17
-        Height = 15
-        Caption = 'Ort'
-      end
-      object lblAdressTyp: TLabel
-        Left = 512
-        Top = 4
-        Width = 52
-        Height = 15
-        Caption = 'Adresstyp'
-      end
-      object lblBestAdresse: TLabel
-        Left = 8
-        Top = 54
-        Width = 129
-        Height = 15
-        Caption = 'oder bestehende w'#228'hlen'
-      end
-      object lblLand: TLabel
-        Left = 680
-        Top = 4
-        Width = 26
-        Height = 15
-        Caption = 'Land'
-      end
-      object lblBezirk: TLabel
-        Left = 840
-        Top = 4
-        Width = 31
-        Height = 15
-        Caption = 'Bezirk'
-      end
-      object edtStrasse: TJvDBMaskEdit
-        Left = 8
-        Top = 22
-        Width = 200
-        Height = 23
-        DataField = 'strasse'
-        DataSource = dmPersonen.dstblAdresse
-        TabOrder = 0
-        EditMask = ''
-      end
-      object edtHausNr: TJvDBMaskEdit
-        Left = 216
-        Top = 22
-        Width = 52
-        Height = 23
-        DataField = 'hausnummer'
-        DataSource = dmPersonen.dstblAdresse
-        TabOrder = 1
-        EditMask = ''
-      end
-      object edtPlz: TJvDBMaskEdit
-        Left = 276
-        Top = 22
-        Width = 64
-        Height = 23
-        DataField = 'plz'
-        DataSource = dmPersonen.dstblAdresse
+      object pnlAdressen: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlAdressen'
+        ShowCaption = False
         TabOrder = 2
-        EditMask = ''
+        object pnlFldAdressen: TPanel
+          Left = 0
+          Top = 0
+          Width = 1088
+          Height = 84
+          Align = alTop
+          BevelOuter = bvNone
+          ShowCaption = False
+          TabOrder = 1
+          object lblStrasse: TLabel
+            Left = 8
+            Top = 4
+            Width = 33
+            Height = 15
+            Caption = 'Stra'#223'e'
+          end
+          object lblHausNr: TLabel
+            Left = 216
+            Top = 4
+            Width = 16
+            Height = 15
+            Caption = 'Nr.'
+          end
+          object lblPlz: TLabel
+            Left = 276
+            Top = 4
+            Width = 20
+            Height = 15
+            Caption = 'PLZ'
+          end
+          object lblOrt: TLabel
+            Left = 348
+            Top = 4
+            Width = 17
+            Height = 15
+            Caption = 'Ort'
+          end
+          object lblAdressTyp: TLabel
+            Left = 512
+            Top = 4
+            Width = 52
+            Height = 15
+            Caption = 'Adresstyp'
+          end
+          object lblBestAdresse: TLabel
+            Left = 8
+            Top = 54
+            Width = 129
+            Height = 15
+            Caption = 'oder bestehende w'#228'hlen'
+          end
+          object lblLand: TLabel
+            Left = 680
+            Top = 4
+            Width = 26
+            Height = 15
+            Caption = 'Land'
+          end
+          object lblBezirk: TLabel
+            Left = 840
+            Top = 4
+            Width = 31
+            Height = 15
+            Caption = 'Bezirk'
+          end
+          object edtStrasse: TJvDBMaskEdit
+            Left = 8
+            Top = 22
+            Width = 200
+            Height = 23
+            DataField = 'strasse'
+            DataSource = dmPersonen.dstblAdresse
+            TabOrder = 0
+            EditMask = ''
+          end
+          object edtHausNr: TJvDBMaskEdit
+            Left = 216
+            Top = 22
+            Width = 52
+            Height = 23
+            DataField = 'hausnummer'
+            DataSource = dmPersonen.dstblAdresse
+            TabOrder = 1
+            EditMask = ''
+          end
+          object edtPlz: TJvDBMaskEdit
+            Left = 276
+            Top = 22
+            Width = 64
+            Height = 23
+            DataField = 'plz'
+            DataSource = dmPersonen.dstblAdresse
+            TabOrder = 2
+            EditMask = ''
+          end
+          object edtOrt: TJvDBMaskEdit
+            Left = 348
+            Top = 22
+            Width = 156
+            Height = 23
+            DataField = 'ort'
+            DataSource = dmPersonen.dstblAdresse
+            TabOrder = 3
+            EditMask = ''
+          end
+          object cboAdressTyp: TJvDBLookupCombo
+            Left = 512
+            Top = 22
+            Width = 150
+            Height = 23
+            DataField = 'adressentyp_id'
+            DataSource = dmPersonen.dstblPersonAdresse
+            LookupField = 'adressentyp_id'
+            LookupDisplay = 'bezeichnung'
+            LookupSource = dmPersonen.dstblAdressentyp
+            TabOrder = 4
+          end
+          object cboBestAdresse: TJvDBLookupCombo
+            Left = 160
+            Top = 51
+            Width = 502
+            Height = 23
+            DataField = 'adresse_id'
+            DataSource = dmPersonen.dstblPersonAdresse
+            LookupField = 'adresse_id'
+            LookupDisplay = 'anzeige'
+            LookupSource = dmPersonen.dsAdressen
+            TabOrder = 5
+          end
+          object cboLand: TJvDBLookupCombo
+            Left = 680
+            Top = 22
+            Width = 150
+            Height = 23
+            DataField = 'land_id'
+            DataSource = dmPersonen.dstblAdresse
+            LookupField = 'land_id'
+            LookupDisplay = 'land_name'
+            LookupSource = dmPersonen.dstblLand
+            TabOrder = 6
+          end
+          object cboBezirk: TJvDBLookupCombo
+            Left = 840
+            Top = 22
+            Width = 150
+            Height = 23
+            DataField = 'bezirk_id'
+            DataSource = dmPersonen.dstblAdresse
+            LookupField = 'bezirk_id'
+            LookupDisplay = 'bezirk_name'
+            LookupSource = dmPersonen.dstblBezirk
+            TabOrder = 7
+          end
+        end
+        object grdAdressen: TDBGrid
+          Left = 0
+          Top = 122
+          Width = 1088
+          Height = 483
+          Align = alClient
+          DataSource = dmPersonen.dstblPersonAdresse
+          Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
+          TabOrder = 2
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
       end
-      object edtOrt: TJvDBMaskEdit
-        Left = 348
-        Top = 22
-        Width = 156
-        Height = 23
-        DataField = 'ort'
-        DataSource = dmPersonen.dstblAdresse
+    end
+    object tsEmails: TTabSheet
+      Caption = 'Emails'
+      object barEmails: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 1096
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        ButtonWidth = 70
+        Buttons = <
+          item
+            Action = actPersErster
+          end
+          item
+            Action = actPersZurueck
+          end
+          item
+            Action = actPersWeiter
+          end
+          item
+            Action = actPersLetzter
+          end
+          item
+            Action = actPersNeu
+          end
+          item
+            Action = actPersBearbeiten
+          end
+          item
+            Action = actPersSpeichern
+          end
+          item
+            Action = actPersAbbrechen
+          end
+          item
+            Action = actPersAktualisieren
+          end>
+      end
+      object pnlEmails: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlEmails'
+        ShowCaption = False
         TabOrder = 3
-        EditMask = ''
+        object pnlFldEmails: TPanel
+          Left = 0
+          Top = 0
+          Width = 1088
+          Height = 52
+          Align = alTop
+          BevelOuter = bvNone
+          ShowCaption = False
+          TabOrder = 1
+          object lblEmail: TLabel
+            Left = 8
+            Top = 4
+            Width = 80
+            Height = 15
+            Caption = 'E-Mail-Adresse'
+          end
+          object lblEmailTyp: TLabel
+            Left = 324
+            Top = 4
+            Width = 46
+            Height = 15
+            Caption = 'Emailtyp'
+          end
+          object cboEmailAdr: TDBComboBox
+            Left = 8
+            Top = 22
+            Width = 300
+            Height = 23
+            DataField = 'email_adresse'
+            DataSource = dmPersonen.dstblEmailadresse
+            TabOrder = 0
+          end
+          object cboEmailTyp: TJvDBLookupCombo
+            Left = 324
+            Top = 22
+            Width = 160
+            Height = 23
+            DataField = 'emailtyp_id'
+            DataSource = dmPersonen.dstblPersonEmail
+            LookupField = 'emailtyp_id'
+            LookupDisplay = 'bezeichnung'
+            LookupSource = dmPersonen.dstblEmailtyp
+            TabOrder = 1
+          end
+        end
+        object grdEmails: TDBGrid
+          Left = 0
+          Top = 90
+          Width = 1088
+          Height = 515
+          Align = alClient
+          DataSource = dmPersonen.dstblPersonEmail
+          Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
+          TabOrder = 2
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
       end
-      object cboAdressTyp: TJvDBLookupCombo
-        Left = 512
-        Top = 22
-        Width = 150
-        Height = 23
-        DataField = 'adressentyp_id'
-        DataSource = dmPersonen.dstblPersonAdresse
-        LookupField = 'adressentyp_id'
-        LookupDisplay = 'bezeichnung'
-        LookupSource = dmPersonen.dstblAdressentyp
+    end
+    object tsTelefon: TTabSheet
+      Caption = 'Telefon'
+      object barTelefon: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 1096
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        ButtonWidth = 70
+        Buttons = <
+          item
+            Action = actPersErster
+          end
+          item
+            Action = actPersZurueck
+          end
+          item
+            Action = actPersWeiter
+          end
+          item
+            Action = actPersLetzter
+          end
+          item
+            Action = actPersNeu
+          end
+          item
+            Action = actPersBearbeiten
+          end
+          item
+            Action = actPersSpeichern
+          end
+          item
+            Action = actPersAbbrechen
+          end
+          item
+            Action = actPersAktualisieren
+          end>
+      end
+      object pnlTelefon: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlTelefon'
+        ShowCaption = False
         TabOrder = 4
+        object pnlFldTelefon: TPanel
+          Left = 0
+          Top = 0
+          Width = 1088
+          Height = 52
+          Align = alTop
+          BevelOuter = bvNone
+          ShowCaption = False
+          TabOrder = 1
+          object lblNummer: TLabel
+            Left = 8
+            Top = 4
+            Width = 48
+            Height = 15
+            Caption = 'Nummer'
+          end
+          object lblTelefonTyp: TLabel
+            Left = 224
+            Top = 4
+            Width = 56
+            Height = 15
+            Caption = 'Telefontyp'
+          end
+          object cboTelefonNr: TDBComboBox
+            Left = 8
+            Top = 22
+            Width = 200
+            Height = 23
+            DataField = 'nummer'
+            DataSource = dmPersonen.dstblTelefonnummer
+            TabOrder = 0
+          end
+          object cboTelefonTyp: TJvDBLookupCombo
+            Left = 224
+            Top = 22
+            Width = 160
+            Height = 23
+            DataField = 'telefonnummertyp_id'
+            DataSource = dmPersonen.dstblPersonTelefonnummer
+            LookupField = 'telefonnummertyp_id'
+            LookupDisplay = 'bezeichnung'
+            LookupSource = dmPersonen.dstblTelefonnummertyp
+            TabOrder = 1
+          end
+        end
+        object grdTelefon: TDBGrid
+          Left = 0
+          Top = 90
+          Width = 1088
+          Height = 515
+          Align = alClient
+          DataSource = dmPersonen.dstblPersonTelefonnummer
+          Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
+          TabOrder = 2
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
       end
-      object cboBestAdresse: TJvDBLookupCombo
-        Left = 160
-        Top = 51
-        Width = 502
-        Height = 23
-        DataField = 'adresse_id'
-        DataSource = dmPersonen.dstblPersonAdresse
-        LookupField = 'adresse_id'
-        LookupDisplay = 'anzeige'
-        LookupSource = dmPersonen.dsAdressen
+    end
+    object tsBeziehungen: TTabSheet
+      Caption = 'Beziehungen'
+      object barBeziehungen: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 1096
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        ButtonWidth = 70
+        Buttons = <
+          item
+            Action = actPersErster
+          end
+          item
+            Action = actPersZurueck
+          end
+          item
+            Action = actPersWeiter
+          end
+          item
+            Action = actPersLetzter
+          end
+          item
+            Action = actPersNeu
+          end
+          item
+            Action = actPersBearbeiten
+          end
+          item
+            Action = actPersSpeichern
+          end
+          item
+            Action = actPersAbbrechen
+          end
+          item
+            Action = actPersAktualisieren
+          end>
+      end
+      object pnlBeziehungen: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlBeziehungen'
+        ShowCaption = False
         TabOrder = 5
+        object pnlFldBeziehungen: TPanel
+          Left = 0
+          Top = 0
+          Width = 1088
+          Height = 52
+          Align = alTop
+          BevelOuter = bvNone
+          ShowCaption = False
+          TabOrder = 1
+          object lblRolle: TLabel
+            Left = 8
+            Top = 4
+            Width = 26
+            Height = 15
+            Caption = 'Rolle'
+          end
+          object lblZielPerson: TLabel
+            Left = 244
+            Top = 4
+            Width = 55
+            Height = 15
+            Caption = 'Zielperson'
+          end
+          object cboRolle: TJvDBLookupCombo
+            Left = 8
+            Top = 22
+            Width = 220
+            Height = 23
+            DataField = 'rolle_id'
+            DataSource = dmPersonen.dstblPersonBeziehung
+            LookupField = 'rolle_id'
+            LookupDisplay = 'rollen_bezeichnung'
+            LookupSource = dmPersonen.dstblRolleTyp
+            TabOrder = 0
+          end
+          object cboZielPerson: TJvDBLookupCombo
+            Left = 244
+            Top = 22
+            Width = 300
+            Height = 23
+            DataField = 'ziel_person_id'
+            DataSource = dmPersonen.dstblPersonBeziehung
+            LookupField = 'person_id'
+            LookupDisplay = 'anzeige'
+            LookupSource = dmPersonen.dsPersonen
+            TabOrder = 1
+          end
+          object cbxMitarbeiter: TDBCheckBox
+            Left = 564
+            Top = 24
+            Width = 100
+            Height = 17
+            Caption = 'Mitarbeiter'
+            DataField = 'ist_mitarbeiter'
+            DataSource = dmPersonen.dstblPersonBeziehung
+            TabOrder = 2
+            ValueChecked = 'True'
+            ValueUnchecked = 'False'
+          end
+          object cbxKunde: TDBCheckBox
+            Left = 672
+            Top = 24
+            Width = 80
+            Height = 17
+            Caption = 'Kunde'
+            DataField = 'ist_kunde'
+            DataSource = dmPersonen.dstblPersonBeziehung
+            TabOrder = 3
+            ValueChecked = 'True'
+            ValueUnchecked = 'False'
+          end
+          object cbxKontakt: TDBCheckBox
+            Left = 760
+            Top = 24
+            Width = 90
+            Height = 17
+            Caption = 'Kontakt'
+            DataField = 'ist_kontakt'
+            DataSource = dmPersonen.dstblPersonBeziehung
+            TabOrder = 4
+            ValueChecked = 'True'
+            ValueUnchecked = 'False'
+          end
+          object cbxLehrer: TDBCheckBox
+            Left = 856
+            Top = 24
+            Width = 80
+            Height = 17
+            Caption = 'Lehrer'
+            DataField = 'ist_lehrer'
+            DataSource = dmPersonen.dstblPersonBeziehung
+            TabOrder = 5
+            ValueChecked = 'True'
+            ValueUnchecked = 'False'
+          end
+          object cbxKlient: TDBCheckBox
+            Left = 944
+            Top = 24
+            Width = 80
+            Height = 17
+            Caption = 'Klient'
+            DataField = 'ist_klient'
+            DataSource = dmPersonen.dstblPersonBeziehung
+            TabOrder = 6
+            ValueChecked = 'True'
+            ValueUnchecked = 'False'
+          end
+        end
+        object grdBeziehungen: TDBGrid
+          Left = 0
+          Top = 90
+          Width = 1088
+          Height = 515
+          Align = alClient
+          DataSource = dmPersonen.dstblPersonBeziehung
+          Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
+          TabOrder = 2
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
       end
-      object cboLand: TJvDBLookupCombo
-        Left = 680
-        Top = 22
-        Width = 150
-        Height = 23
-        DataField = 'land_id'
-        DataSource = dmPersonen.dstblAdresse
-        LookupField = 'land_id'
-        LookupDisplay = 'land_name'
-        LookupSource = dmPersonen.dstblLand
-        TabOrder = 6
-      end
-      object cboBezirk: TJvDBLookupCombo
-        Left = 840
-        Top = 22
-        Width = 150
-        Height = 23
-        DataField = 'bezirk_id'
-        DataSource = dmPersonen.dstblAdresse
-        LookupField = 'bezirk_id'
-        LookupDisplay = 'bezirk_name'
-        LookupSource = dmPersonen.dstblBezirk
-        TabOrder = 7
-      end
-    end
-    object grdAdressen: TDBGrid
-      Left = 0
-      Top = 122
-      Width = 1088
-      Height = 483
-      Align = alClient
-      DataSource = dmPersonen.dstblPersonAdresse
-      Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-      TabOrder = 2
-      TitleFont.Charset = DEFAULT_CHARSET
-      TitleFont.Color = clWindowText
-      TitleFont.Height = -12
-      TitleFont.Name = 'Segoe UI'
-      TitleFont.Style = []
-    end
-  end
-  object pnlEmails: TPanel
-    Left = 8
-    Top = 1300
-    Width = 1088
-    Height = 567
-    BevelOuter = bvNone
-    Caption = 'pnlEmails'
-    ShowCaption = False
-    TabOrder = 3
-    Visible = False
-    object pnlFldEmails: TPanel
-      Left = 0
-      Top = 0
-      Width = 1088
-      Height = 52
-      Align = alTop
-      BevelOuter = bvNone
-      ShowCaption = False
-      TabOrder = 1
-      object lblEmail: TLabel
-        Left = 8
-        Top = 4
-        Width = 80
-        Height = 15
-        Caption = 'E-Mail-Adresse'
-      end
-      object lblEmailTyp: TLabel
-        Left = 324
-        Top = 4
-        Width = 46
-        Height = 15
-        Caption = 'Emailtyp'
-      end
-      object cboEmailAdr: TDBComboBox
-        Left = 8
-        Top = 22
-        Width = 300
-        Height = 23
-        DataField = 'email_adresse'
-        DataSource = dmPersonen.dstblEmailadresse
-        TabOrder = 0
-      end
-      object cboEmailTyp: TJvDBLookupCombo
-        Left = 324
-        Top = 22
-        Width = 160
-        Height = 23
-        DataField = 'emailtyp_id'
-        DataSource = dmPersonen.dstblPersonEmail
-        LookupField = 'emailtyp_id'
-        LookupDisplay = 'bezeichnung'
-        LookupSource = dmPersonen.dstblEmailtyp
-        TabOrder = 1
-      end
-    end
-    object grdEmails: TDBGrid
-      Left = 0
-      Top = 90
-      Width = 1088
-      Height = 515
-      Align = alClient
-      DataSource = dmPersonen.dstblPersonEmail
-      Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-      TabOrder = 2
-      TitleFont.Charset = DEFAULT_CHARSET
-      TitleFont.Color = clWindowText
-      TitleFont.Height = -12
-      TitleFont.Name = 'Segoe UI'
-      TitleFont.Style = []
-    end
-  end
-  object pnlTelefon: TPanel
-    Left = 8
-    Top = 1900
-    Width = 1088
-    Height = 567
-    BevelOuter = bvNone
-    Caption = 'pnlTelefon'
-    ShowCaption = False
-    TabOrder = 4
-    Visible = False
-    object pnlFldTelefon: TPanel
-      Left = 0
-      Top = 0
-      Width = 1088
-      Height = 52
-      Align = alTop
-      BevelOuter = bvNone
-      ShowCaption = False
-      TabOrder = 1
-      object lblNummer: TLabel
-        Left = 8
-        Top = 4
-        Width = 48
-        Height = 15
-        Caption = 'Nummer'
-      end
-      object lblTelefonTyp: TLabel
-        Left = 224
-        Top = 4
-        Width = 56
-        Height = 15
-        Caption = 'Telefontyp'
-      end
-      object cboTelefonNr: TDBComboBox
-        Left = 8
-        Top = 22
-        Width = 200
-        Height = 23
-        DataField = 'nummer'
-        DataSource = dmPersonen.dstblTelefonnummer
-        TabOrder = 0
-      end
-      object cboTelefonTyp: TJvDBLookupCombo
-        Left = 224
-        Top = 22
-        Width = 160
-        Height = 23
-        DataField = 'telefonnummertyp_id'
-        DataSource = dmPersonen.dstblPersonTelefonnummer
-        LookupField = 'telefonnummertyp_id'
-        LookupDisplay = 'bezeichnung'
-        LookupSource = dmPersonen.dstblTelefonnummertyp
-        TabOrder = 1
-      end
-    end
-    object grdTelefon: TDBGrid
-      Left = 0
-      Top = 90
-      Width = 1088
-      Height = 515
-      Align = alClient
-      DataSource = dmPersonen.dstblPersonTelefonnummer
-      Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-      TabOrder = 2
-      TitleFont.Charset = DEFAULT_CHARSET
-      TitleFont.Color = clWindowText
-      TitleFont.Height = -12
-      TitleFont.Name = 'Segoe UI'
-      TitleFont.Style = []
-    end
-  end
-  object pnlBeziehungen: TPanel
-    Left = 8
-    Top = 2500
-    Width = 1088
-    Height = 567
-    BevelOuter = bvNone
-    Caption = 'pnlBeziehungen'
-    ShowCaption = False
-    TabOrder = 5
-    Visible = False
-    object pnlFldBeziehungen: TPanel
-      Left = 0
-      Top = 0
-      Width = 1088
-      Height = 52
-      Align = alTop
-      BevelOuter = bvNone
-      ShowCaption = False
-      TabOrder = 1
-      object lblRolle: TLabel
-        Left = 8
-        Top = 4
-        Width = 26
-        Height = 15
-        Caption = 'Rolle'
-      end
-      object lblZielPerson: TLabel
-        Left = 244
-        Top = 4
-        Width = 55
-        Height = 15
-        Caption = 'Zielperson'
-      end
-      object cboRolle: TJvDBLookupCombo
-        Left = 8
-        Top = 22
-        Width = 220
-        Height = 23
-        DataField = 'rolle_id'
-        DataSource = dmPersonen.dstblPersonBeziehung
-        LookupField = 'rolle_id'
-        LookupDisplay = 'rollen_bezeichnung'
-        LookupSource = dmPersonen.dstblRolleTyp
-        TabOrder = 0
-      end
-      object cboZielPerson: TJvDBLookupCombo
-        Left = 244
-        Top = 22
-        Width = 300
-        Height = 23
-        DataField = 'ziel_person_id'
-        DataSource = dmPersonen.dstblPersonBeziehung
-        LookupField = 'person_id'
-        LookupDisplay = 'anzeige'
-        LookupSource = dmPersonen.dsPersonen
-        TabOrder = 1
-      end
-      object cbxMitarbeiter: TDBCheckBox
-        Left = 564
-        Top = 24
-        Width = 100
-        Height = 17
-        Caption = 'Mitarbeiter'
-        DataField = 'ist_mitarbeiter'
-        DataSource = dmPersonen.dstblPersonBeziehung
-        TabOrder = 2
-        ValueChecked = 'True'
-        ValueUnchecked = 'False'
-      end
-      object cbxKunde: TDBCheckBox
-        Left = 672
-        Top = 24
-        Width = 80
-        Height = 17
-        Caption = 'Kunde'
-        DataField = 'ist_kunde'
-        DataSource = dmPersonen.dstblPersonBeziehung
-        TabOrder = 3
-        ValueChecked = 'True'
-        ValueUnchecked = 'False'
-      end
-      object cbxKontakt: TDBCheckBox
-        Left = 760
-        Top = 24
-        Width = 90
-        Height = 17
-        Caption = 'Kontakt'
-        DataField = 'ist_kontakt'
-        DataSource = dmPersonen.dstblPersonBeziehung
-        TabOrder = 4
-        ValueChecked = 'True'
-        ValueUnchecked = 'False'
-      end
-      object cbxLehrer: TDBCheckBox
-        Left = 856
-        Top = 24
-        Width = 80
-        Height = 17
-        Caption = 'Lehrer'
-        DataField = 'ist_lehrer'
-        DataSource = dmPersonen.dstblPersonBeziehung
-        TabOrder = 5
-        ValueChecked = 'True'
-        ValueUnchecked = 'False'
-      end
-      object cbxKlient: TDBCheckBox
-        Left = 944
-        Top = 24
-        Width = 80
-        Height = 17
-        Caption = 'Klient'
-        DataField = 'ist_klient'
-        DataSource = dmPersonen.dstblPersonBeziehung
-        TabOrder = 6
-        ValueChecked = 'True'
-        ValueUnchecked = 'False'
-      end
-    end
-    object grdBeziehungen: TDBGrid
-      Left = 0
-      Top = 90
-      Width = 1088
-      Height = 515
-      Align = alClient
-      DataSource = dmPersonen.dstblPersonBeziehung
-      Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-      TabOrder = 2
-      TitleFont.Charset = DEFAULT_CHARSET
-      TitleFont.Color = clWindowText
-      TitleFont.Height = -12
-      TitleFont.Name = 'Segoe UI'
-      TitleFont.Style = []
     end
   end
   object PaneStyle1: TJvNavPaneStyleManager
@@ -1029,5 +1030,53 @@ object frmPersonen: TfrmPersonen
       'Dateien (*.*)|*.*'
     Left = 208
     Top = 592
+  end
+  object actlstPersonen: TActionList
+    Left = 640
+    Top = 560
+    object actPersErster: TAction
+      Caption = 'Erster'
+      OnExecute = PersNavExecute
+    end
+    object actPersZurueck: TAction
+      Tag = 1
+      Caption = 'Zurück'
+      OnExecute = PersNavExecute
+    end
+    object actPersWeiter: TAction
+      Tag = 2
+      Caption = 'Weiter'
+      OnExecute = PersNavExecute
+    end
+    object actPersLetzter: TAction
+      Tag = 3
+      Caption = 'Letzter'
+      OnExecute = PersNavExecute
+    end
+    object actPersNeu: TAction
+      Tag = 4
+      Caption = 'Neu'
+      OnExecute = PersNavExecute
+    end
+    object actPersBearbeiten: TAction
+      Tag = 5
+      Caption = 'Ändern'
+      OnExecute = PersNavExecute
+    end
+    object actPersSpeichern: TAction
+      Tag = 6
+      Caption = 'Speichern'
+      OnExecute = PersNavExecute
+    end
+    object actPersAbbrechen: TAction
+      Tag = 7
+      Caption = 'Abbrechen'
+      OnExecute = PersNavExecute
+    end
+    object actPersAktualisieren: TAction
+      Tag = 8
+      Caption = 'Neu laden'
+      OnExecute = PersNavExecute
+    end
   end
 end

@@ -3,7 +3,7 @@ object frmGuiTemplate: TfrmGuiTemplate
   Top = 0
   Caption = 'GUI-Vorlage'
   ClientHeight = 600
-  ClientWidth = 900
+  ClientWidth = 1048
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,15 +14,16 @@ object frmGuiTemplate: TfrmGuiTemplate
   Visible = True
   TextHeight = 15
   object Splitter1: TSplitter
-    Left = 470
+    Left = 313
     Top = 0
     Width = 5
     Height = 600
+    ExplicitLeft = 470
   end
   object pnlStamm: TPanel
     Left = 0
     Top = 0
-    Width = 470
+    Width = 313
     Height = 600
     Align = alLeft
     BevelOuter = bvNone
@@ -31,7 +32,7 @@ object frmGuiTemplate: TfrmGuiTemplate
     object pnlStammButtons: TPanel
       Left = 0
       Top = 0
-      Width = 470
+      Width = 313
       Height = 38
       Align = alTop
       BevelOuter = bvNone
@@ -47,7 +48,7 @@ object frmGuiTemplate: TfrmGuiTemplate
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -12
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -65,7 +66,7 @@ object frmGuiTemplate: TfrmGuiTemplate
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -12
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -83,7 +84,7 @@ object frmGuiTemplate: TfrmGuiTemplate
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -12
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -101,7 +102,7 @@ object frmGuiTemplate: TfrmGuiTemplate
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -12
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -119,7 +120,7 @@ object frmGuiTemplate: TfrmGuiTemplate
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -12
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -137,7 +138,7 @@ object frmGuiTemplate: TfrmGuiTemplate
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -12
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -155,7 +156,7 @@ object frmGuiTemplate: TfrmGuiTemplate
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -12
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -173,7 +174,7 @@ object frmGuiTemplate: TfrmGuiTemplate
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -12
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -191,7 +192,7 @@ object frmGuiTemplate: TfrmGuiTemplate
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -15
+        Font.Height = -12
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -203,7 +204,7 @@ object frmGuiTemplate: TfrmGuiTemplate
     object pnlStammFelder: TPanel
       Left = 0
       Top = 38
-      Width = 470
+      Width = 313
       Height = 562
       Align = alClient
       BevelOuter = bvNone
@@ -211,15 +212,35 @@ object frmGuiTemplate: TfrmGuiTemplate
       TabOrder = 1
     end
   end
-  object JvRibbonPanel1: TJvRibbonPanel
-    Left = 475
+  object rbnpnl1: TRibbonPanel
+    Left = 648
     Top = 0
-    Width = 425
+    Width = 400
     Height = 600
-    Align = alClient
+    Align = alRight
+    BevelOuter = bvNone
+    Caption = 'rbnpnl1'
+    ShowCaption = False
     TabOrder = 1
-    ActiveTheme = nptXPBlue
-    InactiveTheme = nptXPSilver
+    TopPanel.Left = 0
+    TopPanel.Top = 0
+    TopPanel.Width = 400
+    TopPanel.Height = 31
+    TopPanel.Align = alTop
+    TopPanel.BevelOuter = bvNone
+    TopPanel.Caption = 'TopPanel'
+    TopPanel.ShowCaption = False
+    TopPanel.TabOrder = 1
+    PageControl.Left = -1
+    PageControl.Top = 29
+    PageControl.Width = 402
+    PageControl.Height = 572
+    PageControl.Anchors = [akLeft, akTop, akRight, akBottom]
+    PageControl.TabOrder = 0
+    HeaderButtons = <>
+    DesignSize = (
+      400
+      600)
   end
   object PaneStyle1: TJvNavPaneStyleManager
     Theme = nptXPBlue
@@ -235,7 +256,6 @@ object frmGuiTemplate: TfrmGuiTemplate
     Left = 208
     Top = 552
     object actErsterL: TAction
-      Tag = 0
       Caption = 'Erster'
       OnExecute = ActionLinksExecute
     end
@@ -284,7 +304,6 @@ object frmGuiTemplate: TfrmGuiTemplate
     Left = 288
     Top = 552
     object actErsterR: TAction
-      Tag = 0
       Caption = 'Erster'
       OnExecute = ActionRechtsExecute
     end

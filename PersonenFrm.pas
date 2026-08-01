@@ -5,7 +5,7 @@ unit PersonenFrm;
 //    (TJvNavPanelButtonTop + TJvGradient-Fueller, alles designtime im DFM).
 //    Navigiert wird ueber die Bruecke person_mandant (dstblPersonMandant),
 //    die Eingabefelder binden an die aufgeloeste Person (dstblPerson).
-//  Rechts: TJvRibbonPanel (Tools\JvRibbonPanel.pas) mit vier Reitern —
+//  Rechts: TRibbonPanel (Tools\RibbonPanel.pas) mit vier Reitern —
 //    Adressen, Emails, Telefon, Beziehungen. Jeder Reiter traegt seine eigene
 //    Buttonleiste (dieselben neun Aktionen wie links, ActionTag = TNavAktion)
 //    und ein ContentPanel mit Eingabefeldern (oben) und Grid (Rest).
@@ -29,8 +29,10 @@ uses
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids,
   Vcl.ExtDlgs, Vcl.Imaging.jpeg, Vcl.Imaging.pngimage,
   Data.DB, Vcl.StdCtrls, Vcl.Mask,
+  System.Actions, Vcl.ActnList,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel, JvDBControls, JvDBLookup,
+  RibbonPanel, RibbonPageControl, RibbonButtonBar,
+  JvDBControls, JvDBLookup,
   uFrmModuleTemplate, JvComponentBase, JvExMask, JvToolEdit, JvMaskEdit;
 
 type
@@ -40,7 +42,7 @@ type
 
   // Je Ribbon-Reiter: welche Datasource navigiert wird und wo die
   // aufgeloeste Stammtabelle liegt (nil, wenn es keine Bruecke gibt).
-  // Zugeordnet ueber den Reiter-Index, den TJvRibbonPanel.OnButtonClick
+  // Zugeordnet ueber den Reiter-Index, den die Action mitbringt
   // mitliefert — frueher lief das ueber die Parent-Kette zum TTabSheet,
   // das es zur Entwurfszeit nicht mehr gibt.
   TSeitenInfo = record
@@ -74,7 +76,28 @@ type
     imgPhoto: TDBImage;
     btnPhotoLaden: TButton;
     dlgPhoto: TOpenPictureDialog;
-    JvRibbonPanel1: TJvRibbonPanel;
+    JvRibbonPanel1: TRibbonPanel;
+    tsAdressen: TTabSheet;
+    tsEmails: TTabSheet;
+    tsTelefon: TTabSheet;
+    tsBeziehungen: TTabSheet;
+    barAdressen: TRibbonButtonBar;
+    barEmails: TRibbonButtonBar;
+    barTelefon: TRibbonButtonBar;
+    barBeziehungen: TRibbonButtonBar;
+    // Neun Aktionen fuer die Navigation, Tag = TNavAktion. Welcher Reiter
+    // gemeint ist, kommt aus JvRibbonPanel1.ActivePageIndex -- genau wie
+    // frueher, wo das alte Ribbon den Reiter-Index mitgeliefert hat.
+    actlstPersonen: TActionList;
+    actPersErster: TAction;
+    actPersZurueck: TAction;
+    actPersWeiter: TAction;
+    actPersLetzter: TAction;
+    actPersNeu: TAction;
+    actPersBearbeiten: TAction;
+    actPersSpeichern: TAction;
+    actPersAbbrechen: TAction;
+    actPersAktualisieren: TAction;
     // Reiter 0: Adressen
     pnlAdressen: TPanel;
     pnlFldAdressen: TPanel;
@@ -127,8 +150,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnNavClick(Sender: TObject);
-    procedure RibbonButtonClick(Sender: TJvRibbonPanel;
-      ATabIndex, AButtonTag: Integer);
+    procedure PersNavExecute(Sender: TObject);
     procedure btnPhotoLadenClick(Sender: TObject);
   private
     FSeiten: array of TSeitenInfo;
@@ -252,7 +274,7 @@ end;
 
 // Alle Beschriftungen aus resourcestrings. Die Buttons der linken Leiste sind
 // normale DFM-Komponenten (Components[] dieses Formulars); die Buttons und
-// Header der Ribbon-Reiter erzeugt TJvRibbonPanel dagegen zur Laufzeit mit
+// Header der Ribbon-Reiter erzeugt TRibbonPanel dagegen zur Laufzeit mit
 // sich selbst als Owner — die findet man nur ueber die Control-Hierarchie,
 // deshalb der rekursive Durchlauf.
 procedure TfrmPersonen.SetzeBeschriftungen;
@@ -283,8 +305,17 @@ begin
     if Components[I] is TJvNavPanelButtonTop then
       TJvNavPanelButtonTop(Components[I]).Caption :=
         NavCaption(TNavAktion(Components[I].Tag));
-  // rechte Leisten + Header: zur Laufzeit erzeugt
-  Durchlaufe(JvRibbonPanel1);
+  // Rechte Leisten: die Schaltflaechen haengen jetzt an Actions und holen
+  // ihre Beschriftung von dort -- es genuegt, die Action zu beschriften.
+  // Der Tag der Action ist die TNavAktion.
+  for I := 0 to actlstPersonen.ActionCount - 1 do
+    if actlstPersonen.Actions[I] is TCustomAction then
+      TCustomAction(actlstPersonen.Actions[I]).Caption :=
+        NavCaption(TNavAktion(actlstPersonen.Actions[I].Tag));
+
+  // Reiterbeschriftungen des Ribbons
+  for I := 0 to JvRibbonPanel1.HeaderButtons.Count - 1 do
+    JvRibbonPanel1.HeaderButtons[I].Caption := KopfCaption(I);
 
   lblNr.Caption         := SLblNr;
   lblVorname.Caption    := SLblVorname;
@@ -309,7 +340,7 @@ end;
 
 // Reiter-Metadaten: welcher Reiter haengt an welcher Datasource, und wo ist
 // die aufgeloeste Stammtabelle (fuer Neu/Speichern ueber die Bruecke).
-// Reihenfolge = Reihenfolge der Headers in JvRibbonPanel1.
+// Reihenfolge = Reihenfolge der HeaderButtons in JvRibbonPanel1.
 procedure TfrmPersonen.BaueSeiten;
 
   procedure S(AIndex: Integer; ANavDs, AStammDs: TDataSource);
@@ -334,16 +365,21 @@ begin
     dmPersonen.dstblPersonMandant, dmPersonen.dstblPerson);
 end;
 
-// Buttonleisten RECHTS: TJvRibbonPanel liefert Reiter-Index und den
-// ActionTag des Buttons gleich mit — kein Aufloesen ueber die Parent-Kette
-// mehr noetig.
-procedure TfrmPersonen.RibbonButtonClick(Sender: TJvRibbonPanel;
-  ATabIndex, AButtonTag: Integer);
+// Buttonleisten RECHTS: eine Action je Navigationsschritt, der Reiter
+// kommt aus ActivePageIndex.
+procedure TfrmPersonen.PersNavExecute(Sender: TObject);
+var
+  LSeite: Integer;
 begin
-  if (ATabIndex < 0) or (ATabIndex > High(FSeiten)) then
+  // Frueher lieferte das alte Ribbon den Reiter-Index im Ereignis mit.
+  // Die neue Buttonleiste kennt nur Actions, also wird der sichtbare
+  // Reiter direkt abgefragt -- fachlich dasselbe: die Leiste, die man
+  // anklickt, gehoert immer zum sichtbaren Reiter.
+  LSeite := JvRibbonPanel1.ActivePageIndex;
+  if (LSeite < 0) or (LSeite > High(FSeiten)) then
     Exit;
-  FuehreNavAktion(TNavAktion(AButtonTag),
-    FSeiten[ATabIndex].NavDs, FSeiten[ATabIndex].StammDs);
+  FuehreNavAktion(TNavAktion((Sender as TComponent).Tag),
+    FSeiten[LSeite].NavDs, FSeiten[LSeite].StammDs);
 end;
 
 // Gemeinsame Logik beider Leisten (unveraendert aus dem bisherigen

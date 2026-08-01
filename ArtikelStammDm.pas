@@ -42,6 +42,8 @@ type
     dsStuecklisteBaum: TDataSource;
     qryArtikelAuswahl: TFDQuery;
     dsArtikelAuswahl: TDataSource;
+    qryVariantenBaum: TFDQuery;
+    dsVariantenBaum: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure tblArtikelNewRecord(DataSet: TDataSet);
     procedure tblArtikelFachNewRecord(DataSet: TDataSet);
@@ -52,6 +54,15 @@ type
     // zentrale Stelle gibt (siehe dmMandant) — bis dahin fester Platzhalter,
     // analog zum bisherigen Stand von PersonenDm/LagerDm vor der Umstellung.
     FMandantId: Integer;
+    // artikel_foto hat kein Namensfeld. Fuer die Navigation im Fotogitter
+    // reicht "Foto 1".."Foto n" -- umgesetzt als Anzeigeformat auf
+    // "reihenfolge", ohne Eingriff in die Feldstruktur.
+    procedure FotoAnzeigeEinrichten(DataSet: TDataSet);
+    procedure FotoBezeichnungGetText(Sender: TField; var Text: string;
+      DisplayText: Boolean);
+    // Hilfsabfrage fuer die Varianten-Funktionen. Eine eigene Query je
+    // Aufruf, damit die offene Baumabfrage nicht angefasst wird.
+    function NeueQuery: TFDQuery;
   public
     class function GetInstance: TObject;
     procedure OpenArtikelStamm;
@@ -68,6 +79,29 @@ type
     // Mehrstufig und selbstbezueglich - eine Abfrage je Ebene waere ein
     // Rundlauf zur Datenbank pro Ebene.
     procedure LadeStuecklisteBaum(AArtikelId: Integer);
+
+    // ── Varianten ───────────────────────────────────────────────────────
+    // Merkmalsbaum des Mandanten (Groesse > Deutsch > 50, Farbe, ...).
+    // Liegt bewusst NICHT am Artikel: die Auspraegungen werden einmal
+    // gepflegt und von allen Artikeln benutzt.
+    procedure LadeVariantenBaum;
+    // Fuellt eine Stringliste mit allen Auspraegungen (Blaettern) des
+    // Mandanten; die ID haengt am Objects-Zeiger -- Muster wie bei
+    // FuelleArtikelListe. Fuer die beiden Aequivalenz-ComboBoxen.
+    procedure FuelleAuspraegungsListe(AItems: TStrings);
+    // Legt einen Knoten an und haengt ihn gleich unter AElternId ein.
+    // AElternId = 0 legt ein neues Merkmal auf oberster Ebene an.
+    // Rueckgabe: leer bei Erfolg, sonst Klartextmeldung.
+    function VarianteAnlegen(const AName: string; AElternId: Integer;
+      out ANeueId: Integer): string;
+    function VarianteUmbenennen(AVarianteId: Integer;
+      const AName: string): string;
+    // Loescht nur, wenn keine Kinder und keine Verwendung dranhaengen --
+    // sonst risse es Artikelvarianten mit.
+    function VarianteLoeschen(AVarianteId: Integer): string;
+    // Zwei Auspraegungen als gleichwertig eintragen (46 = L).
+    function VarianteGleichsetzen(AIdA, AIdB: Integer): string;
+    function AequivalenzAufheben(AIdA, AIdB: Integer): string;
     // Fuellt eine Stringliste mit allen Artikeln des Mandanten, die ID
     // haengt am Objects-Zeiger - Muster wie im Bestand-Baum.
     procedure FuelleArtikelListe(AItems: TStrings);
@@ -130,6 +164,9 @@ begin
   tblArtikel.Connection      := PGManagerDm.dmPGManager.FDConnection1;
   tblArtikelFach.Connection  := PGManagerDm.dmPGManager.FDConnection1;
   tblArtikelFoto.Connection  := PGManagerDm.dmPGManager.FDConnection1;
+  // Die Felder entstehen erst beim Open neu, deshalb hier nur den Handler
+  // eintragen (der ID-Hook der Basisklasse sichert ihn und ruft ihn mit auf).
+  tblArtikelFoto.AfterOpen := FotoAnzeigeEinrichten;
   qryBestandBaum.Connection  := PGManagerDm.dmPGManager.FDConnection1;
   qryBestandBaum.SQL.Text    := 'SELECT * FROM fn_lagerort_bestand(:artikel_id)';
 
@@ -147,6 +184,11 @@ begin
   qryArtikelAuswahl.SQL.Text :=
     'SELECT artikel_id, artikel_nr, artikelname FROM artikel ' +
     'WHERE mandant_id = :m ORDER BY artikelname';
+
+  // Merkmalsbaum des Mandanten -- liefert Ebene und Sortpfad, den Aufbau
+  // macht BaueBaumAusEbenen wie beim Stuecklistenbaum.
+  qryVariantenBaum.Connection := PGManagerDm.dmPGManager.FDConnection1;
+  qryVariantenBaum.SQL.Text := 'SELECT * FROM fn_variante_baum(:m)';
   qryStuecklisteBaum.SQL.Text :=
     'SELECT * FROM fn_artikel_stueckliste(:a)';
 
@@ -196,6 +238,245 @@ procedure TdmArtikelStamm.tblArtikelFotoNewRecord(DataSet: TDataSet);
 begin
   // artikel_id belegt die Master-Detail-Kopplung vor, mandant_id explizit.
   DataSet.FieldByName('mandant_id').AsInteger := FMandantId;
+end;
+
+// artikel_foto hat kein Namensfeld. Statt dafuer persistente Felder oder ein
+// berechnetes Feld anzulegen -- beides zwingt FireDAC dazu, KEINE dynamischen
+// Felder mehr zu erzeugen, wodurch foto_id verschwindet und AutoIncFields
+// scheitert -- bekommt das vorhandene Feld "reihenfolge" nur eine andere
+// Darstellung. Der gespeicherte Wert bleibt die Zahl, angezeigt wird
+// "Foto 1".."Foto n" bzw. die Beschreibung, wenn eine gepflegt ist.
+// ── Varianten ───────────────────────────────────────────────────────────────
+
+function TdmArtikelStamm.NeueQuery: TFDQuery;
+begin
+  Result := TFDQuery.Create(nil);
+  Result.Connection := PGManagerDm.dmPGManager.FDConnection1;
+end;
+
+procedure TdmArtikelStamm.LadeVariantenBaum;
+begin
+  qryVariantenBaum.Close;
+  qryVariantenBaum.ParamByName('m').AsInteger := FMandantId;
+  qryVariantenBaum.Open;
+end;
+
+procedure TdmArtikelStamm.FuelleAuspraegungsListe(AItems: TStrings);
+var
+  LQry: TFDQuery;
+begin
+  AItems.BeginUpdate;
+  try
+    AItems.Clear;
+    LQry := NeueQuery;
+    try
+      // Nur Blaetter: zwischen Gruppen ("Deutsch = Englisch") waere
+      // Gleichheit sinnlos.
+      LQry.SQL.Text :=
+        'SELECT variante_id, pfad, aequivalenzen FROM fn_variante_baum(:m) ' +
+        'WHERE NOT hat_kinder AND aktiv ORDER BY sortpfad';
+      LQry.ParamByName('m').AsInteger := FMandantId;
+      LQry.Open;
+      while not LQry.Eof do
+      begin
+        // Der Pfad statt nur des Namens: "50" allein ist mehrdeutig,
+        // "Groesse > Deutsch > 50" nicht.
+        AItems.AddObject(LQry.FieldByName('pfad').AsString,
+          TObject(LQry.FieldByName('variante_id').AsInteger));
+        LQry.Next;
+      end;
+    finally
+      LQry.Free;
+    end;
+  finally
+    AItems.EndUpdate;
+  end;
+end;
+
+function TdmArtikelStamm.VarianteAnlegen(const AName: string;
+  AElternId: Integer; out ANeueId: Integer): string;
+var
+  LQry: TFDQuery;
+begin
+  Result := EmptyStr;
+  ANeueId := 0;
+  if Trim(AName) = '' then
+    Exit('Bitte eine Bezeichnung eingeben.');
+
+  LQry := NeueQuery;
+  try
+    try
+      LQry.SQL.Text := 'SELECT fn_variante_anlegen(:m, :n, :e) AS neu';
+      LQry.ParamByName('m').AsInteger := FMandantId;
+      LQry.ParamByName('n').AsString := Trim(AName);
+      // 0 heisst "oberste Ebene" -- die Funktion erwartet dafuer NULL.
+      if AElternId > 0 then
+        LQry.ParamByName('e').AsInteger := AElternId
+      else
+        LQry.ParamByName('e').Clear;
+      LQry.Open;
+      ANeueId := LQry.FieldByName('neu').AsInteger;
+    except
+      // Zyklus- und Namenspruefung liegen als Trigger in der Datenbank.
+      // Deren Meldungen sind bereits fuer Menschen geschrieben.
+      on E: Exception do
+        Result := E.Message;
+    end;
+  finally
+    LQry.Free;
+  end;
+end;
+
+function TdmArtikelStamm.VarianteUmbenennen(AVarianteId: Integer;
+  const AName: string): string;
+var
+  LQry: TFDQuery;
+begin
+  Result := EmptyStr;
+  if Trim(AName) = '' then
+    Exit('Bitte eine Bezeichnung eingeben.');
+
+  LQry := NeueQuery;
+  try
+    try
+      LQry.SQL.Text := 'UPDATE variante SET name = :n WHERE variante_id = :v';
+      LQry.ParamByName('n').AsString := Trim(AName);
+      LQry.ParamByName('v').AsInteger := AVarianteId;
+      LQry.ExecSQL;
+    except
+      on E: Exception do
+        Result := E.Message;
+    end;
+  finally
+    LQry.Free;
+  end;
+end;
+
+function TdmArtikelStamm.VarianteLoeschen(AVarianteId: Integer): string;
+var
+  LQry: TFDQuery;
+begin
+  Result := EmptyStr;
+  LQry := NeueQuery;
+  try
+    try
+      // Erst pruefen, dann loeschen: ein ON DELETE CASCADE auf
+      // variante_variante wuerde stillschweigend den ganzen Ast mitnehmen.
+      LQry.SQL.Text :=
+        'SELECT (SELECT count(*) FROM variante_variante ' +
+        '         WHERE nach_id = :v AND bezug = ''child'') AS kinder, ' +
+        '       (SELECT count(*) FROM artikel_variante_wert ' +
+        '         WHERE variante_id = :v2) AS benutzt';
+      LQry.ParamByName('v').AsInteger := AVarianteId;
+      LQry.ParamByName('v2').AsInteger := AVarianteId;
+      LQry.Open;
+
+      if LQry.FieldByName('kinder').AsInteger > 0 then
+        Exit('Der Eintrag hat noch Unterelemente. Diese zuerst entfernen.');
+      if LQry.FieldByName('benutzt').AsInteger > 0 then
+        Exit('Der Eintrag wird von Artikelvarianten verwendet.');
+
+      LQry.Close;
+      LQry.SQL.Text := 'DELETE FROM variante WHERE variante_id = :v';
+      LQry.ParamByName('v').AsInteger := AVarianteId;
+      LQry.ExecSQL;
+    except
+      on E: Exception do
+        Result := E.Message;
+    end;
+  finally
+    LQry.Free;
+  end;
+end;
+
+function TdmArtikelStamm.VarianteGleichsetzen(AIdA, AIdB: Integer): string;
+var
+  LQry: TFDQuery;
+begin
+  Result := EmptyStr;
+  LQry := NeueQuery;
+  try
+    try
+      LQry.SQL.Text := 'SELECT fn_variante_gleichsetzen(:m, :a, :b)';
+      LQry.ParamByName('m').AsInteger := FMandantId;
+      LQry.ParamByName('a').AsInteger := AIdA;
+      LQry.ParamByName('b').AsInteger := AIdB;
+      LQry.Open;
+    except
+      on E: Exception do
+        Result := E.Message;
+    end;
+  finally
+    LQry.Free;
+  end;
+end;
+
+function TdmArtikelStamm.AequivalenzAufheben(AIdA, AIdB: Integer): string;
+var
+  LQry: TFDQuery;
+begin
+  Result := EmptyStr;
+  LQry := NeueQuery;
+  try
+    try
+      // Beide Richtungen loeschen: erfasst wurde nur eine, welche ist
+      // von aussen nicht erkennbar.
+      LQry.SQL.Text :=
+        'DELETE FROM variante_variante ' +
+        ' WHERE bezug = ''aequivalenz'' ' +
+        '   AND ((von_id = :a AND nach_id = :b) ' +
+        '     OR (von_id = :b2 AND nach_id = :a2))';
+      LQry.ParamByName('a').AsInteger := AIdA;
+      LQry.ParamByName('b').AsInteger := AIdB;
+      LQry.ParamByName('a2').AsInteger := AIdA;
+      LQry.ParamByName('b2').AsInteger := AIdB;
+      LQry.ExecSQL;
+    except
+      on E: Exception do
+        Result := E.Message;
+    end;
+  finally
+    LQry.Free;
+  end;
+end;
+
+procedure TdmArtikelStamm.FotoAnzeigeEinrichten(DataSet: TDataSet);
+var
+  LFeld: TField;
+begin
+  LFeld := DataSet.FindField('reihenfolge');
+  if Assigned(LFeld) then
+    LFeld.OnGetText := FotoBezeichnungGetText;
+end;
+
+procedure TdmArtikelStamm.FotoBezeichnungGetText(Sender: TField;
+  var Text: string; DisplayText: Boolean);
+var
+  LNr: Integer;
+  LBeschreibung: string;
+begin
+  if not DisplayText then
+  begin
+    // Beim Bearbeiten/Kopieren die nackte Zahl liefern
+    Text := Sender.AsString;
+    Exit;
+  end;
+
+  LBeschreibung := Trim(Sender.DataSet.FieldByName('beschreibung').AsString);
+  if LBeschreibung <> '' then
+  begin
+    LBeschreibung := StringReplace(LBeschreibung, #13#10, ' ', [rfReplaceAll]);
+    LBeschreibung := StringReplace(LBeschreibung, #10, ' ', [rfReplaceAll]);
+    if Length(LBeschreibung) > 40 then
+      LBeschreibung := Copy(LBeschreibung, 1, 37) + '...';
+    Text := LBeschreibung;
+    Exit;
+  end;
+
+  LNr := Sender.AsInteger;
+  if LNr <= 0 then
+    LNr := Sender.DataSet.RecNo;
+  Text := Format('Foto %d', [LNr]);
 end;
 
 // Haelt den Bestand-Baum (Fotos-Pendant fuer die Bestand-Seite) synchron zum
@@ -500,6 +781,12 @@ begin
   qryArtikelAuswahl.Open;
 
   tblArtikelAfterScroll(tblArtikel);  // AfterScroll feuert bei Open nicht von selbst
+
+  // Merkmalsbaum haengt am Mandanten, nicht am Artikel -- einmal beim
+  // Oeffnen laden reicht. Erst NACH dem Erzeugen des Formulars, sonst ist
+  // der AfterOpen-Handler noch nicht gesetzt und der Baum bleibt leer.
+  frmArtikelStamm.VariantenNeuLaden;
+
   frmArtikelStamm.Show;
 end;
 

@@ -1,4 +1,4 @@
-unit uFrmGuiTemplate;
+﻿unit uFrmGuiTemplate;
 
 // Vererbbare Basis-Vorlage fuer alle Stammdaten-Fenster mit Ribbon-Detail
 // (z.B. ArtikelStamm, kuenftige KundenStamm, LieferantenStamm, ...).
@@ -14,14 +14,14 @@ unit uFrmGuiTemplate;
 //    Labels/DBEdits HINEIN ziehen — ein geerbtes TPanel darf man mit neuen
 //    Kindkontrollen befuellen).
 //  - Splitter1: linke Spalte in der Breite verstellbar.
-//  - JvRibbonPanel1 (rechts): OHNE vordefinierte Headers — die legt jedes
+//  - rbnpnl1 (rechts): OHNE vordefinierte Headers — die legt jedes
 //    Modul selbst im Object Inspector an (Headers/Buttons/ContentPanel,
-//    siehe Tools/JvRibbonPanel.pas).
+//    siehe Tools/RibbonPanel.pas).
 //
 // WICHTIG fuer Nachfahren: GetStammDataSource / GetDetailDataSource sind
 // abstract — jedes Modul MUSS sie ueberschreiben und auf sein eigenes
 // DataModule zeigen. GetDetailDataSource bekommt den Ribbon-Tab-Index
-// (0-basiert = JvRibbonPanel1.Headers[i]), damit Module mit mehreren Tabs
+// (0-basiert = rbnpnl1.HeaderButtons[i]), damit Module mit mehreren Tabs
 // je Tab eine andere DataSource liefern koennen (analog
 // PersonenFrm.KontextZuButton, nur generisch ueber den Tab-Index statt
 // Parent-Kette).
@@ -34,8 +34,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ComCtrls, Vcl.ExtCtrls, Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
-  uFrmModuleTemplate, JvComponentBase;
+  uFrmModuleTemplate, JvComponentBase, RibbonPanel;
 
 type
   // Reihenfolge = Tag der Actions in beiden Leisten
@@ -52,7 +51,6 @@ type
     btnNeuLadenStamm: TJvNavPanelButtonTop;
     pnlStammFelder: TPanel;
     Splitter1: TSplitter;
-    JvRibbonPanel1: TJvRibbonPanel;
     ActionListLinks: TActionList;
     actErsterL: TAction;
     actZurueckL: TAction;
@@ -73,6 +71,7 @@ type
     actSpeichernR: TAction;
     actAbbrechenR: TAction;
     actNeuLadenR: TAction;
+    rbnpnl1: TRibbonPanel;
     procedure ActionLinksExecute(Sender: TObject);
     procedure ActionRechtsExecute(Sender: TObject);
   protected
@@ -121,7 +120,7 @@ procedure TfrmGuiTemplate.ActionRechtsExecute(Sender: TObject);
 var
   LDs: TDataSource;
 begin
-  LDs := GetDetailDataSource(JvRibbonPanel1.ActivePageIndex);
+ // LDs := GetDetailDataSource(rbnpnl1.ActivePageIndex);
   if (LDs = nil) or (LDs.DataSet = nil) or not LDs.DataSet.Active then
     Exit;
   case TNavAktion((Sender as TComponent).Tag) of

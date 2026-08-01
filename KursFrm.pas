@@ -1,8 +1,8 @@
-unit KursFrm;
+﻿unit KursFrm;
 
 // Kursmodul — Oberflaeche.
 //   links  Kursliste (Curriculum) + Stammfelder
-//   rechts TJvRibbonPanel mit sechs Reitern:
+//   rechts TRibbonPanel (rbnKurs) mit sechs Reitern:
 //     Unterkurse    — Baukasten (kurs_kurs)
 //     Kompetenzen   — was der Lehrer koennen muss / was vermittelt wird /
 //                     was vorausgesetzt wird
@@ -24,11 +24,12 @@ uses
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Vcl.Mask,
   Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
+  RibbonPanel, RibbonPageControl, RibbonButtonBar,
   GanttPanel,
   VirtualTrees, VirtualTrees.Types, VirtualTrees.BaseTree,
-  BaumKnotenData,
-  uFrmModuleTemplate, JvComponentBase;
+  BaumKnotenData, BaumBedienung,
+  uFrmModuleTemplate, JvComponentBase, VirtualTrees.BaseAncestorVCL,
+  VirtualTrees.AncestorVCL;
 
 type
   TfrmKurs = class(TfrmTemplate)
@@ -38,11 +39,25 @@ type
     actAendern: TAction;
     actSpeichern: TAction;
     actAbbrechen: TAction;
-    ActionListRechts: TActionList;
-    actErsterR: TAction;
-    actZurueckR: TAction;
-    actWeiterR: TAction;
-    actLetzterR: TAction;
+    // Eine Liste fuer alle Reiter -- aber je Reiter eigene Aktionen, damit
+    // Beschriftung und Verhalten pro Seite passen und niemand ueber
+    // ActivePageIndex verzweigen muss.
+    actlstRechts: TActionList;
+    // Termine: Tagesnavigation im Gantt
+    actTagVorher: TAction;
+    actTagNext: TAction;
+    actHeute: TAction;
+    actTermineAktualisieren: TAction;
+    // Kompetenzen
+    actKompetenzErster: TAction;
+    actKompetenzZurueck: TAction;
+    actKompetenzWeiter: TAction;
+    actKompetenzLetzter: TAction;
+    // Teilnehmer
+    actTeilnehmerErster: TAction;
+    actTeilnehmerZurueck: TAction;
+    actTeilnehmerWeiter: TAction;
+    actTeilnehmerLetzter: TAction;
     pnlLeft: TPanel;
     dbgrdKurse: TDBGrid;
     pnlEdit: TPanel;
@@ -69,7 +84,20 @@ type
     lblBeschreibung: TLabel;
     memBeschreibung: TDBMemo;
     Splitter1: TSplitter;
-    JvRibbonPanel1: TJvRibbonPanel;
+    // Seit 01.08.2026 auf TRibbonPanel: die sechs Seiten sind echte
+    // Tabsheets, die Panels liegen darin alClient. Kein ContentPanel-
+    // Umhaengen zur Laufzeit mehr, dafuer zur Entwurfszeit bearbeitbar.
+    rbnKurs: TRibbonPanel;
+    tsUnterkurse: TTabSheet;
+    tsKompetenzen: TTabSheet;
+    tsMaterial: TTabSheet;
+    tsDurchfuehrung: TTabSheet;
+    tsTermine: TTabSheet;
+    tsTeilnehmer: TTabSheet;
+    barUnterkurse: TRibbonButtonBar;
+    barKompetenzen: TRibbonButtonBar;
+    barTermine: TRibbonButtonBar;
+    barTeilnehmer: TRibbonButtonBar;
     // Reiter 0: Unterkurse
     pnlUnterkurse: TPanel;
     vstUnterkurse: TVirtualStringTree;
@@ -120,10 +148,6 @@ type
     pnlTermine: TPanel;
     pnlGanttKopf: TPanel;
     lblGanttTag: TLabel;
-    btnGanttZurueck: TButton;
-    btnGanttVor: TButton;
-    btnGanttHeute: TButton;
-    btnGanttAktualisieren: TButton;
     lblGanttZoom: TLabel;
     trkGanttZoom: TTrackBar;
     pnlTermineAdd: TPanel;
@@ -148,6 +172,8 @@ type
     cboPerson: TDBLookupComboBox;
     btnTnAdd: TButton;
     btnTnDel: TButton;
+    RibbonButtonBar1: TRibbonButtonBar;
+    RibbonButtonBar2: TRibbonButtonBar;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure dbgrdKurseCellClick(Column: TColumn);
@@ -177,28 +203,50 @@ type
     procedure btnTerminDelClick(Sender: TObject);
     procedure btnTnAddClick(Sender: TObject);
     procedure btnTnDelClick(Sender: TObject);
-    procedure btnGanttZurueckClick(Sender: TObject);
-    procedure btnGanttVorClick(Sender: TObject);
     procedure btnGanttHeuteClick(Sender: TObject);
     procedure btnGanttAktualisierenClick(Sender: TObject);
     procedure trkGanttZoomChange(Sender: TObject);
     procedure edtStartChange(Sender: TObject);
     procedure GanttBalkenClick(Sender: TObject; AZeile: TGanttZeile;
       ABalken: TGanttBalken);
+    procedure actTagNextExecute(Sender: TObject);
+    procedure actHeuteExecute(Sender: TObject);
+    procedure actTermineAktualisierenExecute(Sender: TObject);
+    // Je Seite ein eigener Handler: so kann jede Seite ihre eigene
+    // Datenmenge bedienen, ohne ueber ActivePageIndex zu verzweigen.
+    // Die Richtung steckt im Tag der Action (0..3).
+    procedure KompetenzNavExecute(Sender: TObject);
+    procedure TeilnehmerNavExecute(Sender: TObject);
+  private
+    procedure DatenmengeBewegen(ADataSet: TDataSet; ATag: Integer);
+  published
   private
     // Wurzelknoten des Baukasten-Baums. Haelt die Interface-Kette am
     // Leben - der VST raeumt seine Knoten per Refcounting selbst auf.
     FBaukastenWurzeln: TList<IBaumKnoten>;
+    // Einheitliche Tastaturbedienung des Baums (F2/Entf/Einfg).
+    FBaukastenBedienung: TBaumBedienung;
     // Die Belegungsansicht ersetzt das fruehere Termine-Grid. Zur Laufzeit
     // erzeugt, damit das Formular unabhaengig davon compiliert, ob das
     // Package mit der Komponente gerade in der IDE installiert ist.
     FGantt: TGanttPanel;
     FGanttTag: TDate;
+    // Rueckrufe der Baumbedienung -- schreiben in die Datenbank, Rueckgabe
+    // ist die Meldung fuer den Anwender ('' = hat geklappt).
+    function UnterkursAnhaengen(const AKnoten: IBaumKnoten;
+      const AText: string): string;
+    function UnterkursWegnehmen(const AKnoten: IBaumKnoten): string;
+    procedure BaukastenGeaendert(Sender: TObject);
     procedure BaukastenBaumAufbauen;
     // Der im Baum markierte Knoten - Bezugsgroesse fuer Hinzufuegen
     // und Entfernen, nicht mehr die Kursliste links.
     function GewaehlterBaumKnoten: IBaumKnoten;
-    procedure GanttAufbauen;
+    // ATagFolgtBedarf: Steht im Formular eine Startzeit, springt die Ansicht
+    // normalerweise auf den geplanten Termin -- das ist beim Planen gewollt.
+    // Beim Blaettern mit < > und "Heute" waere es falsch: der Tag ist dann
+    // vom Anwender vorgegeben und darf nicht ueberschrieben werden. Genau
+    // das liess die Blaetter-Schaltflaechen wirkungslos erscheinen.
+    procedure GanttAufbauen(ATagFolgtBedarf: Boolean = True);
     // Liest Startzeit und Dauer aus der Eingabezeile und legt daraus das
     // Bedarfsband. Liefert False, wenn die Eingabe (noch) unvollstaendig ist.
     function BedarfLesen(out AVon, ABis: TDateTime): Boolean;
@@ -263,6 +311,17 @@ begin
   vstUnterkurse.OnInitChildren := vstUnterkurseInitChildren;
   vstUnterkurse.OnInitNode := vstUnterkurseInitNode;
   vstUnterkurse.OnGetText := vstUnterkurseGetText;
+
+  // Entf entfernt den Unterkurs, Einfg bzw. der Platzhalter haengt einen
+  // neuen ein. NeuFragtText ist False: hier wird kein Name eingetippt,
+  // sondern ein VORHANDENER Kurs aus der Auswahlliste eingehaengt.
+  // F2 bleibt ungenutzt -- ein Unterkurs ist ein eigener Kurs und wird
+  // links in der Liste bearbeitet, nicht hier im Baum.
+  FBaukastenBedienung := TBaumBedienung.Create(vstUnterkurse);
+  FBaukastenBedienung.NeuFragtText := False;
+  FBaukastenBedienung.AufNeu := UnterkursAnhaengen;
+  FBaukastenBedienung.AufLoeschen := UnterkursWegnehmen;
+  FBaukastenBedienung.NachAenderung := BaukastenGeaendert;
 
   // Baum gleich beim Oeffnen fuellen - dmKurs.OpenKurs hat die Daten
   // vor dem Erzeugen des Formulars schon geladen. Ohne das bleibt der
@@ -333,6 +392,11 @@ begin
 end;
 
 // ── Stammdaten ─────────────────────────────────────────────────────────────
+procedure TfrmKurs.actTermineAktualisierenExecute(Sender: TObject);
+begin
+  GanttAufbauen;
+end;
+
 procedure TfrmKurs.actNeuExecute(Sender: TObject);
 begin
   dmKurs.tblKurs.Append;
@@ -350,6 +414,18 @@ begin
     dmKurs.tblKurs.Post;
 end;
 
+procedure TfrmKurs.actHeuteExecute(Sender: TObject);
+begin
+  FGanttTag := Date;
+  GanttAufbauen(False);
+end;
+
+procedure TfrmKurs.actTagNextExecute(Sender: TObject);
+begin
+  FGanttTag := IncDay(FGanttTag, 1);
+  GanttAufbauen(False);
+end;
+
 procedure TfrmKurs.actAbbrechenExecute(Sender: TObject);
 begin
   if dmKurs.tblKurs.State in dsEditModes then
@@ -357,29 +433,34 @@ begin
 end;
 
 procedure TfrmKurs.ActionRechtsExecute(Sender: TObject);
-var
-  LDs: TDataSet;
 begin
-  case JvRibbonPanel1.ActivePageIndex of
-    0: LDs := dmKurs.qryUnterkurse;
-    1: LDs := dmKurs.qryKompetenzen;
-    2: LDs := dmKurs.qryMaterial;
-    3: LDs := dmKurs.qryDurchfuehrungen;
-    4: LDs := dmKurs.qryTermine;
-    5: LDs := dmKurs.qryTeilnehmer;
-  else
-    LDs := nil;
-  end;
-  if (LDs = nil) or not LDs.Active then
+  FGanttTag := IncDay(FGanttTag, -1);
+  GanttAufbauen(False);
+end;
+
+// Bewegt eine Datenmenge in die Richtung, die im Tag der Action steht.
+// Gemeinsam genutzt von den Navigationsleisten der einzelnen Seiten --
+// welche Datenmenge gemeint ist, entscheidet der jeweilige Aufrufer.
+procedure TfrmKurs.DatenmengeBewegen(ADataSet: TDataSet; ATag: Integer);
+begin
+  if (ADataSet = nil) or not ADataSet.Active then
     Exit;
-  case (Sender as TComponent).Tag of
-    0: LDs.First;
-    1: LDs.Prior;
-    2: LDs.Next;
-    3: LDs.Last;
+  case ATag of
+    0: ADataSet.First;
+    1: ADataSet.Prior;
+    2: ADataSet.Next;
+    3: ADataSet.Last;
   end;
-  if LDs = dmKurs.qryDurchfuehrungen then
-    dbgrdDurchfuehrungCellClick(nil);
+end;
+
+procedure TfrmKurs.KompetenzNavExecute(Sender: TObject);
+begin
+  DatenmengeBewegen(dmKurs.qryKompetenzen, (Sender as TComponent).Tag);
+end;
+
+procedure TfrmKurs.TeilnehmerNavExecute(Sender: TObject);
+begin
+  DatenmengeBewegen(dmKurs.qryTeilnehmer, (Sender as TComponent).Tag);
 end;
 
 // ── Unterkurse ─────────────────────────────────────────────────────────────
@@ -424,6 +505,50 @@ end;
 
 // Haengt den markierten Knoten von SEINEM Elternknoten aus. Der Kurs
 // selbst bleibt bestehen.
+// ── Rueckrufe der Baumbedienung ─────────────────────────────────────────
+// Schreiben unmittelbar in die Datenbank. Rueckgabe leer = hat geklappt,
+// sonst die Meldung, die der Anwender sehen soll; der Baum wird dann NICHT
+// neu geladen, damit sichtbar bleibt, dass nichts gespeichert wurde.
+
+function TfrmKurs.UnterkursAnhaengen(const AKnoten: IBaumKnoten;
+  const AText: string): string;
+var
+  LEltern: Integer;
+begin
+  Result := '';
+  if LookupId(cboUnterkurs) = 0 then
+    Exit('Bitte unten einen Kurs w' + #228 + 'hlen.');
+
+  // Der Platzhalter haengt UNTER seinem Knoten -- eingehaengt wird also
+  // dort, nicht unter dem Platzhalter selbst.
+  if AKnoten = nil then
+    LEltern := AktuellerKurs
+  else if AKnoten.IstPlatzhalter then
+    LEltern := AKnoten.ElternId
+  else
+    LEltern := AKnoten.Id;
+
+  if LEltern = 0 then
+    Exit('Bitte im Baum den Kurs markieren, unter dem eingeh' + #228 +
+         'ngt werden soll.');
+
+  dmKurs.UnterkursHinzufuegen(LEltern, LookupId(cboUnterkurs),
+    cbxPflicht.Checked);
+end;
+
+function TfrmKurs.UnterkursWegnehmen(const AKnoten: IBaumKnoten): string;
+begin
+  Result := '';
+  if AKnoten.Ebene = 0 then
+    Exit('Das ist der Hauptkurs selbst.');
+  dmKurs.UnterkursEntfernen(AKnoten.ElternId, AKnoten.Id);
+end;
+
+procedure TfrmKurs.BaukastenGeaendert(Sender: TObject);
+begin
+  BaukastenBaumAufbauen;
+end;
+
 procedure TfrmKurs.btnUnterkursDelClick(Sender: TObject);
 var
   LKnoten: IBaumKnoten;
@@ -634,9 +759,13 @@ begin
   LHatBedarf := BedarfLesen(LVon, LBis) and (LKurs > 0);
   if LHatBedarf then
   begin
-    // Der Tag richtet sich nach dem geplanten Termin, nicht umgekehrt
-    FGanttTag := Trunc(LVon);
-    lblGanttTag.Caption := FormatDateTime('dddd, dd.mm.yyyy', FGanttTag);
+    // Der Tag richtet sich nach dem geplanten Termin, nicht umgekehrt --
+    // ausser der Anwender hat den Tag selbst gewaehlt (< >, Heute).
+    if ATagFolgtBedarf then
+    begin
+      FGanttTag := Trunc(LVon);
+      lblGanttTag.Caption := FormatDateTime('dddd, dd.mm.yyyy', FGanttTag);
+    end;
     dmKurs.LadeEignung(LKurs, LVon, LBis);
   end;
 
@@ -752,8 +881,15 @@ begin
 
   if LHatBedarf then
   begin
+    // Das Bedarfsband bleibt sichtbar, auch wenn man an einem anderen Tag
+    // blaettert -- es zeigt ja, wann der Kurs stattfinden soll.
     FGantt.BedarfSetzen(LVon, LBis);
-    FGantt.ZeigeZeit(LVon);
+    if ATagFolgtBedarf then
+      FGantt.ZeigeZeit(LVon)
+    else
+      // Beim Blaettern auf den gewaehlten Tag scrollen, sonst zieht es die
+      // Ansicht sofort wieder zum geplanten Termin zurueck.
+      FGantt.ZeigeZeit(Trunc(FGanttTag) + EncodeTime(8, 0, 0, 0));
   end
   else
   begin
@@ -766,26 +902,15 @@ end;
 // rechnet die Eignung neu - deshalb haengen beide Felder hier drauf.
 procedure TfrmKurs.edtStartChange(Sender: TObject);
 begin
-  if JvRibbonPanel1.ActivePageIndex = 4 then
+  if rbnKurs.ActivePageIndex = 4 then
     GanttAufbauen;
 end;
 
-procedure TfrmKurs.btnGanttZurueckClick(Sender: TObject);
-begin
-  FGanttTag := IncDay(FGanttTag, -1);
-  GanttAufbauen;
-end;
-
-procedure TfrmKurs.btnGanttVorClick(Sender: TObject);
-begin
-  FGanttTag := IncDay(FGanttTag, 1);
-  GanttAufbauen;
-end;
-
+// Der Tag kommt hier vom Anwender -- deshalb False, sonst zieht ihn der
+// geplante Termin sofort wieder zurueck und die Anzeige bleibt stehen.
 procedure TfrmKurs.btnGanttHeuteClick(Sender: TObject);
 begin
-  FGanttTag := Date;
-  GanttAufbauen;
+
 end;
 
 // Zoom der Zeitachse. Zusaetzlich geht im Gantt auch Strg+Mausrad -
@@ -801,7 +926,7 @@ end;
 
 procedure TfrmKurs.btnGanttAktualisierenClick(Sender: TObject);
 begin
-  GanttAufbauen;
+
 end;
 
 // Klick auf einen Balken springt in der Terminliste auf den Satz - so
@@ -826,7 +951,9 @@ begin
       'kurs_id', 'ebene',
       ['bezeichnung', 'kurs_nr', 'unterrichtsstunden', 'stunden_summe',
        'pflicht'],
-      'ist_zyklus');
+      'ist_zyklus',
+      // Wie in Stueckliste und Bestand: direkt im Baum einhaengen
+      '+ Unterkurs...');
     if Assigned(FBaukastenWurzeln) then
       vstUnterkurse.RootNodeCount := FBaukastenWurzeln.Count;
   finally

@@ -16,7 +16,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
+  RibbonPanel, RibbonPageControl, RibbonButtonBar,
   uFrmModuleTemplate, JvComponentBase;
 
 type
@@ -47,7 +47,9 @@ type
     lblRolle: TLabel;
     cboRolle: TDBLookupComboBox;
     Splitter1: TSplitter;
-    JvRibbonPanel1: TJvRibbonPanel;
+    JvRibbonPanel1: TRibbonPanel;
+    tsKontaktdaten: TTabSheet;
+    barKontaktdaten: TRibbonButtonBar;
     ActionListRechts: TActionList;
     actErsterR: TAction;
     actZurueckR: TAction;

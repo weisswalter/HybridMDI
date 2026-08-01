@@ -3,13 +3,13 @@
         <ProjectGuid>{34FB616A-1775-43D4-8778-36929CDCFE9D}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
+        <Projects Include="Tools\PkgTools.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="Heisenberg.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Tools\PrjTool.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="Tools\PkgTools.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -20,6 +20,15 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+    <Target Name="PkgTools">
+        <MSBuild Projects="Tools\PkgTools.dproj"/>
+    </Target>
+    <Target Name="PkgTools:Clean">
+        <MSBuild Projects="Tools\PkgTools.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PkgTools:Make">
+        <MSBuild Projects="Tools\PkgTools.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Heisenberg">
         <MSBuild Projects="Heisenberg.dproj"/>
     </Target>
@@ -38,23 +47,14 @@
     <Target Name="PrjTool:Make">
         <MSBuild Projects="Tools\PrjTool.dproj" Targets="Make"/>
     </Target>
-    <Target Name="PkgTools">
-        <MSBuild Projects="Tools\PkgTools.dproj"/>
-    </Target>
-    <Target Name="PkgTools:Clean">
-        <MSBuild Projects="Tools\PkgTools.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="PkgTools:Make">
-        <MSBuild Projects="Tools\PkgTools.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Heisenberg;PrjTool;PkgTools"/>
+        <CallTarget Targets="PkgTools;Heisenberg;PrjTool"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Heisenberg:Clean;PrjTool:Clean;PkgTools:Clean"/>
+        <CallTarget Targets="PkgTools:Clean;Heisenberg:Clean;PrjTool:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Heisenberg:Make;PrjTool:Make;PkgTools:Make"/>
+        <CallTarget Targets="PkgTools:Make;Heisenberg:Make;PrjTool:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

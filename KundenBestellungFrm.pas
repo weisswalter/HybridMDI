@@ -5,7 +5,7 @@ unit KundenBestellungFrm;
 //   siehe dmKundenBestellung.qryPersonAuswahl), Beleg-Nr., Datum, Rechnungstyp
 //   (Lookup, Kette Angebot..Rechnung -- vorgangsart selbst ist NICHT wählbar,
 //   die kommt fest aus dem Modul), Status, Bemerkung.
-// Rechts (JvRibbonPanel1): ein Tab "Positionen" -- Grid ueber beleg_position
+// Rechts (rbnpnl1): ein Tab "Positionen" -- Grid ueber beleg_position
 //   + kleines Anlage-Panel darunter (Artikel/Leistung waehlen, Menge,
 //   Einzelpreis, Button "Position hinzufuegen"). Artikel koennen auch
 //   Leistungen sein (siehe beleg_position-CHECK in sql/rechnungstyp_beleg.sql) --
@@ -20,8 +20,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
-  uFrmGuiTemplate, uFrmModuleTemplate, JvComponentBase;
+  uFrmGuiTemplate, uFrmModuleTemplate, JvComponentBase, RibbonPanel;
 
 type
   TfrmKundenBestellung = class(TfrmGuiTemplate)

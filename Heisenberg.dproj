@@ -368,6 +368,7 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="..\RibbonFramework\Lib\UIRibbon.pas">
             <Form>$R *.res</Form>
         </DCCReference>
+        <DCCReference Include="Unit1.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

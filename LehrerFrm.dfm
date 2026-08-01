@@ -226,42 +226,38 @@ object frmLehrer: TfrmLehrer
     Width = 5
     Height = 700
   end
-  object JvRibbonPanel1: TJvRibbonPanel
+  object JvRibbonPanel1: TRibbonPanel
     Left = 625
     Top = 0
     Width = 575
     Height = 700
     Align = alClient
+    BevelOuter = bvNone
+    ShowCaption = False
     TabOrder = 1
     ActiveTheme = nptXPBlue
     InactiveTheme = nptXPSilver
-    Headers = <
+    ActivePageIndex = 0
+    HeaderButtons = <
       item
         Caption = 'Kompetenzen'
         Width = 170
-        Actions = ActionListRechts
-        Buttons = <
-          item
-            Action = actErsterR
-          end
-          item
-            Action = actZurueckR
-            Width = 75
-          end
-          item
-            Action = actWeiterR
-            Width = 70
-          end
-          item
-            Action = actLetzterR
-            Width = 75
-          end>
-        ContentPanel = pnlKompetenzen
       end
       item
         Caption = 'Kurse'
         Width = 100
-        Actions = ActionListRechts
+      end>
+    object tsKompetenzen: TTabSheet
+      Caption = 'Kompetenzen'
+      object barKompetenzen: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 575
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
         Buttons = <
           item
             Action = actErsterR
@@ -278,178 +274,198 @@ object frmLehrer: TfrmLehrer
             Action = actLetzterR
             Width = 75
           end>
-        ContentPanel = pnlKurse
-      end>
-    ActivePageIndex = 0
-  end
-  object pnlKompetenzen: TPanel
-    Left = 8
-    Top = 780
-    Width = 560
-    Height = 560
-    BevelOuter = bvNone
-    ShowCaption = False
-    TabOrder = 2
-    Visible = False
-    object pnlKompetenzAdd: TPanel
-      Left = 0
-      Top = 420
-      Width = 560
-      Height = 140
-      Align = alBottom
-      BevelOuter = bvNone
-      ShowCaption = False
-      TabOrder = 0
-      object lblKompetenz: TLabel
-        Left = 8
-        Top = 8
-        Width = 65
-        Height = 15
-        Caption = 'Kompetenz'
       end
-      object lblErworben: TLabel
-        Left = 8
-        Top = 56
-        Width = 78
-        Height = 15
-        Caption = 'Erworben am'
-      end
-      object lblGueltigBis: TLabel
-        Left = 140
-        Top = 56
-        Width = 56
-        Height = 15
-        Caption = 'G'#252'ltig bis'
-      end
-      object lblBemerkung: TLabel
-        Left = 300
-        Top = 56
-        Width = 64
-        Height = 15
-        Caption = 'Bemerkung'
-      end
-      object cboKompetenz: TDBLookupComboBox
-        Left = 8
-        Top = 26
-        Width = 400
-        Height = 23
-        KeyField = 'kompetenz_id'
-        ListField = 'bezeichnung'
-        ListSource = dmLehrer.dsKompetenzAuswahl
-        TabOrder = 0
-      end
-      object dtpErworben: TDateTimePicker
-        Left = 8
-        Top = 74
-        Width = 120
-        Height = 23
-        Date = 46000.000000000000000000
-        Time = 0.000000000000000000
-        TabOrder = 1
-      end
-      object dtpGueltigBis: TDateTimePicker
-        Left = 140
-        Top = 74
-        Width = 120
-        Height = 23
-        Date = 46000.000000000000000000
-        Time = 0.000000000000000000
+      object pnlKompetenzen: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        ShowCaption = False
         TabOrder = 2
+        object pnlKompetenzAdd: TPanel
+          Left = 0
+          Top = 420
+          Width = 560
+          Height = 140
+          Align = alBottom
+          BevelOuter = bvNone
+          ShowCaption = False
+          TabOrder = 0
+          object lblKompetenz: TLabel
+            Left = 8
+            Top = 8
+            Width = 65
+            Height = 15
+            Caption = 'Kompetenz'
+          end
+          object lblErworben: TLabel
+            Left = 8
+            Top = 56
+            Width = 78
+            Height = 15
+            Caption = 'Erworben am'
+          end
+          object lblGueltigBis: TLabel
+            Left = 140
+            Top = 56
+            Width = 56
+            Height = 15
+            Caption = 'G'#252'ltig bis'
+          end
+          object lblBemerkung: TLabel
+            Left = 300
+            Top = 56
+            Width = 64
+            Height = 15
+            Caption = 'Bemerkung'
+          end
+          object cboKompetenz: TDBLookupComboBox
+            Left = 8
+            Top = 26
+            Width = 400
+            Height = 23
+            KeyField = 'kompetenz_id'
+            ListField = 'bezeichnung'
+            ListSource = dmLehrer.dsKompetenzAuswahl
+            TabOrder = 0
+          end
+          object dtpErworben: TDateTimePicker
+            Left = 8
+            Top = 74
+            Width = 120
+            Height = 23
+            Date = 46000.000000000000000000
+            Time = 0.000000000000000000
+            TabOrder = 1
+          end
+          object dtpGueltigBis: TDateTimePicker
+            Left = 140
+            Top = 74
+            Width = 120
+            Height = 23
+            Date = 46000.000000000000000000
+            Time = 0.000000000000000000
+            TabOrder = 2
+          end
+          object cbxUnbefristet: TCheckBox
+            Left = 140
+            Top = 102
+            Width = 130
+            Height = 17
+            Caption = 'unbefristet'
+            TabOrder = 3
+            OnClick = cbxUnbefristetClick
+          end
+          object edtBemerkung: TEdit
+            Left = 300
+            Top = 74
+            Width = 250
+            Height = 23
+            TabOrder = 4
+          end
+          object btnKompetenzAdd: TButton
+            Left = 300
+            Top = 102
+            Width = 120
+            Height = 28
+            Caption = 'Hinzuf'#252'gen'
+            TabOrder = 5
+            OnClick = btnKompetenzAddClick
+          end
+          object btnKompetenzDel: TButton
+            Left = 428
+            Top = 102
+            Width = 120
+            Height = 28
+            Caption = 'Entfernen'
+            TabOrder = 6
+            OnClick = btnKompetenzDelClick
+          end
+        end
+        object dbgrdKompetenzen: TDBGrid
+          Left = 0
+          Top = 0
+          Width = 560
+          Height = 420
+          Align = alClient
+          DataSource = dmLehrer.dstblKompetenzen
+          TabOrder = 1
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
       end
-      object cbxUnbefristet: TCheckBox
-        Left = 140
-        Top = 102
-        Width = 130
-        Height = 17
-        Caption = 'unbefristet'
+    end
+    object tsKurse: TTabSheet
+      Caption = 'Kurse'
+      object barKurse: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 575
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        Buttons = <
+          item
+            Action = actErsterR
+          end
+          item
+            Action = actZurueckR
+            Width = 75
+          end
+          item
+            Action = actWeiterR
+            Width = 70
+          end
+          item
+            Action = actLetzterR
+            Width = 75
+          end>
+      end
+      object pnlKurse: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        ShowCaption = False
         TabOrder = 3
-        OnClick = cbxUnbefristetClick
+        object pnlKurseInfo: TPanel
+          Left = 0
+          Top = 512
+          Width = 560
+          Height = 48
+          Align = alBottom
+          BevelOuter = bvNone
+          ShowCaption = False
+          TabOrder = 0
+          object lblKurseHinweis: TLabel
+            Left = 8
+            Top = 6
+            Width = 540
+            Height = 36
+            AutoSize = False
+            Caption =
+              'Spalte "darf_halten": vergleicht die Kompetenzen dieser Person'+
+              ' mit den Anforderungen des Kurses (Rolle "lehrer"). Abgelaufene'+
+              ' Nachweise z'#228'hlen nicht mit.'
+            WordWrap = True
+          end
+        end
+        object dbgrdKurse: TDBGrid
+          Left = 0
+          Top = 0
+          Width = 560
+          Height = 512
+          Align = alClient
+          DataSource = dmLehrer.dstblKurse
+          TabOrder = 1
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
       end
-      object edtBemerkung: TEdit
-        Left = 300
-        Top = 74
-        Width = 250
-        Height = 23
-        TabOrder = 4
-      end
-      object btnKompetenzAdd: TButton
-        Left = 300
-        Top = 102
-        Width = 120
-        Height = 28
-        Caption = 'Hinzuf'#252'gen'
-        TabOrder = 5
-        OnClick = btnKompetenzAddClick
-      end
-      object btnKompetenzDel: TButton
-        Left = 428
-        Top = 102
-        Width = 120
-        Height = 28
-        Caption = 'Entfernen'
-        TabOrder = 6
-        OnClick = btnKompetenzDelClick
-      end
-    end
-    object dbgrdKompetenzen: TDBGrid
-      Left = 0
-      Top = 0
-      Width = 560
-      Height = 420
-      Align = alClient
-      DataSource = dmLehrer.dstblKompetenzen
-      TabOrder = 1
-      TitleFont.Charset = DEFAULT_CHARSET
-      TitleFont.Color = clWindowText
-      TitleFont.Height = -12
-      TitleFont.Name = 'Segoe UI'
-      TitleFont.Style = []
-    end
-  end
-  object pnlKurse: TPanel
-    Left = 8
-    Top = 780
-    Width = 560
-    Height = 560
-    BevelOuter = bvNone
-    ShowCaption = False
-    TabOrder = 3
-    Visible = False
-    object pnlKurseInfo: TPanel
-      Left = 0
-      Top = 512
-      Width = 560
-      Height = 48
-      Align = alBottom
-      BevelOuter = bvNone
-      ShowCaption = False
-      TabOrder = 0
-      object lblKurseHinweis: TLabel
-        Left = 8
-        Top = 6
-        Width = 540
-        Height = 36
-        AutoSize = False
-        Caption =
-          'Spalte "darf_halten": vergleicht die Kompetenzen dieser Person'+
-          ' mit den Anforderungen des Kurses (Rolle "lehrer"). Abgelaufene'+
-          ' Nachweise z'#228'hlen nicht mit.'
-        WordWrap = True
-      end
-    end
-    object dbgrdKurse: TDBGrid
-      Left = 0
-      Top = 0
-      Width = 560
-      Height = 512
-      Align = alClient
-      DataSource = dmLehrer.dstblKurse
-      TabOrder = 1
-      TitleFont.Charset = DEFAULT_CHARSET
-      TitleFont.Color = clWindowText
-      TitleFont.Height = -12
-      TitleFont.Name = 'Segoe UI'
-      TitleFont.Style = []
     end
   end
   object PaneStyle1: TJvNavPaneStyleManager

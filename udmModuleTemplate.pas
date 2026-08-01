@@ -21,9 +21,17 @@ type
     { Private-Deklarationen }
     class var FInstance: TdmModuleTemplate;
     class var FLock: TCriticalSection;
+    procedure IdFelderHooksEinrichten;
   public
  { Public-Deklarationen }
     class function GetInstance: TdmModuleTemplate;
+    // Blendet ID-Felder in der ANZEIGE aus. Die Felder bleiben im Dataset
+    // vollstaendig erhalten und sind per Code weiter erreichbar -- nur
+    // DB-aware Controls (TDBGrid ohne eigene Spaltendefinition) zeigen sie
+    // nicht mehr. Wird fuer jedes Dataset des Moduls automatisch nach dem
+    // Oeffnen aufgerufen, siehe IdFelderHooksEinrichten.
+    class procedure IdFelderVerbergen(ADataSet: TDataSet);
+    class function IstIdFeld(const AFeldName: string): Boolean;
     procedure ShowMessage(A,B:string);
     constructor Create(AOwner:TComponent);
     destructor Destroy; override;
@@ -48,12 +56,72 @@ uses
 
 {$R *.dfm}
 
+type
+  // Haengt sich in das AfterOpen eines Datasets, ohne einen dort bereits
+  // eingetragenen Handler zu verdraengen: der alte wird gemerkt und im
+  // Anschluss weiterhin aufgerufen. Owner ist das Dataset selbst, der Hook
+  // stirbt also mit ihm.
+  TIdFelderHook = class(TComponent)
+  private
+    FDataSet: TDataSet;
+    FAlterHandler: TDataSetNotifyEvent;
+    procedure NachDemOeffnen(DataSet: TDataSet);
+  public
+    constructor Create(ADataSet: TDataSet); reintroduce;
+  end;
+
+constructor TIdFelderHook.Create(ADataSet: TDataSet);
+begin
+  inherited Create(ADataSet);
+  FDataSet := ADataSet;
+  FAlterHandler := ADataSet.AfterOpen;
+  ADataSet.AfterOpen := NachDemOeffnen;
+end;
+
+procedure TIdFelderHook.NachDemOeffnen(DataSet: TDataSet);
+begin
+  TdmModuleTemplate.IdFelderVerbergen(DataSet);
+  if Assigned(FAlterHandler) then
+    FAlterHandler(DataSet);
+end;
+
 { TdmModuleTemplate }
 
 constructor TdmModuleTemplate.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  IdFelderHooksEinrichten;
   GlobalEventBus.SilentRegisterSubscriberForEvents(Self);
+end;
+
+class function TdmModuleTemplate.IstIdFeld(const AFeldName: string): Boolean;
+var
+  LName: string;
+begin
+  LName := LowerCase(AFeldName);
+  Result := (LName = 'id') or LName.EndsWith('_id');
+end;
+
+class procedure TdmModuleTemplate.IdFelderVerbergen(ADataSet: TDataSet);
+var
+  I: Integer;
+begin
+  if not Assigned(ADataSet) then
+    Exit;
+  for I := 0 to ADataSet.FieldCount - 1 do
+    if IstIdFeld(ADataSet.Fields[I].FieldName) then
+      ADataSet.Fields[I].Visible := False;
+end;
+
+procedure TdmModuleTemplate.IdFelderHooksEinrichten;
+var
+  I: Integer;
+begin
+  // Nach dem inherited Create sind die Komponenten der abgeleiteten
+  // Klasse bereits aus der DFM geladen.
+  for I := 0 to ComponentCount - 1 do
+    if Components[I] is TDataSet then
+      TIdFelderHook.Create(TDataSet(Components[I]));
 end;
 
 destructor TdmModuleTemplate.Destroy;

@@ -30,17 +30,16 @@ package PkgTools;
 requires
   rtl,
   vcl,
-  vclimg,
   Jcl,
   JvCore,
-  JvStdCtrls,
-  JvPageComps,
-  JvMM;
+  JvMM,
+  JvPageComps;
 
 contains
-  JvNavPanelButtonTop in 'JvNavPanelButtonTop.pas',
-  JvRibbonPanel in 'JvRibbonPanel.pas',
+  RibbonPanel in 'RibbonPanel.pas',
   RibbonPageControl in 'RibbonPageControl.pas',
+  JvNavPanelButtonTop in 'JvNavPanelButtonTop.pas',
+  RibbonButtonBar in 'RibbonButtonBar.pas',
   GanttPanel in 'GanttPanel.pas';
 
 end.

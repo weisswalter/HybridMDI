@@ -117,6 +117,10 @@ type
     procedure ZeichneKopf;
     procedure ZeichneZeilen;
     procedure ZeichneBedarf;
+    // Schreibt Text in ein Rechteck und kuerzt ihn bei Bedarf mit "..."
+    // statt ihn -- wie Canvas.TextOut -- in die Zeitachse hinauslaufen
+    // zu lassen.
+    procedure ZeichneGekuerzt(const ARect: TRect; const AText: string);
   protected
     procedure Paint; override;
     procedure Resize; override;
@@ -680,6 +684,20 @@ begin
   Canvas.FillRect(Rect(X1, FKopfHoehe, X2, ClientHeight));
 end;
 
+procedure TGanttPanel.ZeichneGekuerzt(const ARect: TRect; const AText: string);
+var
+  LRect: TRect;
+begin
+  if AText = '' then
+    Exit;
+  LRect := ARect;
+  // DT_END_ELLIPSIS kuerzt mit "...", DT_SINGLELINE + DT_VCENTER zentriert
+  // senkrecht im uebergebenen Bereich. DrawText clippt ausserdem am
+  // Rechteck -- anders als Canvas.TextOut.
+  Winapi.Windows.DrawText(Canvas.Handle, PChar(AText), Length(AText), LRect,
+    DT_LEFT or DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS or DT_NOPREFIX);
+end;
+
 procedure TGanttPanel.ZeichneZeilen;
 var
   I, J, Y, X1, X2: Integer;
@@ -687,6 +705,7 @@ var
   LBalken: TGanttBalken;
   LText: string;
   LFarbe: TColor;
+  LTextRechts, LMitte: Integer;
 begin
   Canvas.Font.Assign(Font);
 
@@ -705,7 +724,10 @@ begin
       Canvas.FillRect(Rect(0, Y, ClientWidth, Y + FZeilenHoehe));
       Canvas.Font.Style := [fsBold];
       Canvas.Brush.Style := bsClear;
-      Canvas.TextOut(6, Y + 5, LZeile.Beschriftung);
+      // Gruppenkopf darf ueber die volle Breite laufen -- er hat den
+      // Hintergrund darunter -- wird aber am rechten Rand sauber gekuerzt.
+      ZeichneGekuerzt(Rect(6, Y + 1, ClientWidth - 4, Y + FZeilenHoehe - 2),
+        LZeile.Beschriftung);
       Canvas.Font.Style := [];
       Continue;
     end;
@@ -727,14 +749,26 @@ begin
       Canvas.Font.Color := clWindowText
     else
       Canvas.Font.Color := clGrayText;
-    Canvas.TextOut(6, Y + 5, LZeile.Beschriftung);
+
+    // Rechts 4px Luft vor der Zeitachse, sonst klebt der gekuerzte Text
+    // an der Trennlinie.
+    LTextRechts := FBeschriftungsBreite - 5;
     if LZeile.Zusatz <> '' then
     begin
+      // Zwei Zeilen: obere und untere Haelfte, damit sich Beschriftung und
+      // Zusatz nicht ueberlappen (feste Offsets taten das bei kleiner
+      // ZeilenHoehe).
+      LMitte := Y + FZeilenHoehe div 2;
+      ZeichneGekuerzt(Rect(6, Y + 1, LTextRechts, LMitte), LZeile.Beschriftung);
       Canvas.Font.Size := Font.Size - 1;
       Canvas.Font.Color := clGrayText;
-      Canvas.TextOut(6, Y + FZeilenHoehe - 14, LZeile.Zusatz);
+      ZeichneGekuerzt(Rect(6, LMitte, LTextRechts, Y + FZeilenHoehe - 2),
+        LZeile.Zusatz);
       Canvas.Font.Size := Font.Size;
-    end;
+    end
+    else
+      ZeichneGekuerzt(Rect(6, Y + 1, LTextRechts, Y + FZeilenHoehe - 2),
+        LZeile.Beschriftung);
     Canvas.Font.Color := clWindowText;
 
     // Zeilentrenner

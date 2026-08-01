@@ -2,7 +2,7 @@ unit AnwesenheitFrm;
 
 // Anwesenheit / Zeiterfassung — Oberflaeche.
 //   links  Datum + Tagesliste aller Personen mit Regime (Soll/Ist/Saldo)
-//   rechts TJvRibbonPanel mit fuenf Reitern:
+//   rechts TRibbonPanel mit fuenf Reitern:
 //     Check        — Abschnitte des Klienten abhaken (Vormittag/Nachmittag)
 //     Stempel      — kommen/gehen/Pause des Lehrers, mit Korrekturmoeglichkeit
 //     Abwesenheit  — Ferien, Krankheit, unentschuldigt (Zeitraeume)
@@ -22,7 +22,7 @@ uses
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Vcl.Mask,
   Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
+  RibbonPanel, RibbonPageControl, RibbonButtonBar,
   uFrmModuleTemplate, JvComponentBase;
 
 type
@@ -51,7 +51,17 @@ type
     btnHeute: TJvNavPanelButtonTop;
     dbgrdTag: TDBGrid;
     Splitter1: TSplitter;
-    JvRibbonPanel1: TJvRibbonPanel;
+    JvRibbonPanel1: TRibbonPanel;
+    tsCheck: TTabSheet;
+    tsStempel: TTabSheet;
+    tsAbwesenheit: TTabSheet;
+    tsRegime: TTabSheet;
+    tsMonat: TTabSheet;
+    barCheck: TRibbonButtonBar;
+    barStempel: TRibbonButtonBar;
+    barAbwesenheit: TRibbonButtonBar;
+    barRegime: TRibbonButtonBar;
+    barMonat: TRibbonButtonBar;
     // Reiter 0: Check
     pnlCheck: TPanel;
     dbgrdCheck: TDBGrid;

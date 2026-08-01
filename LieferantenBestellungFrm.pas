@@ -12,8 +12,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
-  uFrmGuiTemplate, uFrmModuleTemplate, JvComponentBase;
+  uFrmGuiTemplate, uFrmModuleTemplate, JvComponentBase, RibbonPanel;
 
 type
   TfrmLieferantenBestellung = class(TfrmGuiTemplate)

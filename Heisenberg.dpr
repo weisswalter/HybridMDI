@@ -1,4 +1,4 @@
-program Heisenberg;
+﻿program Heisenberg;
 
 uses
   Vcl.Forms,
@@ -41,6 +41,7 @@ uses
   KundeDm in 'KundeDm.pas' {dmKunde: TDataModule},
   KundeFrm in 'KundeFrm.pas' {frmKunde},
   CSharpDm in 'CSharpDm.pas' {dmCSharp: TDataModule},
+  DokumentOcrDm in 'DokumentOcrDm.pas' {dmDokumentOcr: TDataModule},
   BaumKnotenData in 'BaumKnotenData.pas',
   KursDm in 'KursDm.pas' {dmKurs: TDataModule},
   KursFrm in 'KursFrm.pas' {frmKurs},
@@ -62,7 +63,7 @@ uses
   PGManagerFrm in 'PGManagerFrm.pas' {frmPGManager},
   LagerDm in 'LagerDm.pas' {dmLager: TDataModule},
   LagerFrm in 'LagerFrm.pas' {frmLager},
-  UIRibbon in '..\RibbonFramework\Lib\UIRibbon.pas' {$R *.res};
+  UIRibbon in '..\RibbonFramework\Lib\UIRibbon.pas';
 
 {$R *.res}
 
@@ -80,6 +81,8 @@ begin
   Application.CreateForm(TdmPython, dmPython);
   // CSharp-Bruecke — MUSS nach dmPython kommen (nutzt dessen Engine)
   Application.CreateForm(TdmCSharp, dmCSharp);
+  // Texterkennung: braucht wie dmCSharp die eine PythonEngine
+  Application.CreateForm(TdmDokumentOcr, dmDokumentOcr);
   Application.CreateForm(TdmPyKunden, dmPyKunden);
   Application.CreateForm(TdmPyArtikel, dmPyArtikel);
   Application.CreateForm(TdmKunden, dmKunden);

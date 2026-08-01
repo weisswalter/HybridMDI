@@ -3,7 +3,7 @@ object frmArtikelStamm: TfrmArtikelStamm
   Top = 0
   Caption = 'Artikel'
   ClientHeight = 600
-  ClientWidth = 900
+  ClientWidth = 1115
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,15 +17,16 @@ object frmArtikelStamm: TfrmArtikelStamm
   OnDestroy = FormDestroy
   TextHeight = 15
   object Splitter1: TSplitter
-    Left = 470
+    Left = 235
     Top = 0
     Width = 5
     Height = 600
+    ExplicitLeft = 470
   end
   object pnlStamm: TPanel
     Left = 0
     Top = 0
-    Width = 470
+    Width = 235
     Height = 600
     Align = alLeft
     BevelOuter = bvNone
@@ -34,12 +35,13 @@ object frmArtikelStamm: TfrmArtikelStamm
     object pnlStammButtons: TPanel
       Left = 0
       Top = 0
-      Width = 470
+      Width = 235
       Height = 38
       Align = alTop
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 0
+      ExplicitWidth = 353
       object btnErsterStamm: TJvNavPanelButtonTop
         Left = 0
         Top = 0
@@ -215,12 +217,16 @@ object frmArtikelStamm: TfrmArtikelStamm
     object pnlStammFelder: TPanel
       Left = 0
       Top = 38
-      Width = 470
+      Width = 235
       Height = 562
       Align = alClient
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 1
+      ExplicitWidth = 352
+      DesignSize = (
+        235
+        562)
       object lblArtikelNr: TLabel
         Left = 16
         Top = 12
@@ -261,6 +267,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Top = 30
         Width = 200
         Height = 23
+        Anchors = [akLeft, akTop, akRight]
         DataField = 'artikel_nr'
         DataSource = dmArtikelStamm.dstblArtikel
         TabOrder = 0
@@ -270,6 +277,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Top = 82
         Width = 200
         Height = 23
+        Anchors = [akLeft, akTop, akRight]
         DataField = 'artikelname'
         DataSource = dmArtikelStamm.dstblArtikel
         TabOrder = 1
@@ -279,6 +287,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Top = 134
         Width = 200
         Height = 23
+        Anchors = [akLeft, akTop, akRight]
         DataField = 'serien_nr'
         DataSource = dmArtikelStamm.dstblArtikel
         TabOrder = 2
@@ -288,6 +297,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Top = 190
         Width = 200
         Height = 23
+        Anchors = [akLeft, akTop, akRight]
         DataField = 'modul_nr'
         DataSource = dmArtikelStamm.dstblArtikel
         TabOrder = 3
@@ -296,7 +306,8 @@ object frmArtikelStamm: TfrmArtikelStamm
         Left = 16
         Top = 251
         Width = 200
-        Height = 238
+        Height = 294
+        Anchors = [akLeft, akTop, akRight, akBottom]
         DataField = 'beschreibung'
         DataSource = dmArtikelStamm.dstblArtikel
         ScrollBars = ssVertical
@@ -304,82 +315,75 @@ object frmArtikelStamm: TfrmArtikelStamm
       end
     end
   end
-  object JvRibbonPanel1: TJvRibbonPanel
-    Left = 475
+  object rbnpnl1: TRibbonPanel
+    Left = 240
     Top = 0
-    Width = 425
+    Width = 875
     Height = 600
-    Headers = <
+    Align = alClient
+    BevelOuter = bvNone
+    Caption = 'rbnpnl1'
+    ShowCaption = False
+    TabOrder = 1
+    TopPanel.Left = 0
+    TopPanel.Top = 0
+    TopPanel.Width = 875
+    TopPanel.Height = 31
+    TopPanel.Align = alTop
+    TopPanel.BevelOuter = bvNone
+    TopPanel.Caption = 'TopPanel'
+    TopPanel.ShowCaption = False
+    TopPanel.TabOrder = 1
+    TopPanel.ExplicitWidth = 757
+    TopPanel.DesignSize = (
+      875
+      31)
+    PageControl.Left = -1
+    PageControl.Top = 29
+    PageControl.Width = 877
+    PageControl.Height = 572
+    PageControl.ActivePage = tsPhotos
+    PageControl.Anchors = [akLeft, akTop, akRight, akBottom]
+    PageControl.TabOrder = 0
+    PageControl.ExplicitWidth = 759
+    HeaderButtons = <
       item
         Caption = 'Fotos'
-        Actions = ActionListRechts
-        Buttons = <
-          item
-            Action = actErsterR
-          end
-          item
-            Action = actZurueckR
-          end
-          item
-            Action = actWeiterR
-          end
-          item
-            Action = actLetzterR
-          end
-          item
-            Action = actNeuR
-          end
-          item
-            Action = actAendernR
-          end
-          item
-            Action = actSpeichernR
-          end
-          item
-            Action = actAbbrechenR
-          end
-          item
-            Action = actNeuLadenR
-          end>
-        ContentPanel = pnlFotos
       end
       item
         Caption = 'Bestand'
-        Actions = ActionListRechts
-        Buttons = <
-          item
-            Action = actErsterR
-          end
-          item
-            Action = actZurueckR
-          end
-          item
-            Action = actWeiterR
-          end
-          item
-            Action = actLetzterR
-          end
-          item
-            Action = actNeuR
-          end
-          item
-            Action = actAendernR
-          end
-          item
-            Action = actSpeichernR
-          end
-          item
-            Action = actAbbrechenR
-          end
-          item
-            Action = actNeuLadenR
-          end>
-        ContentPanel = pnlBestand
       end
       item
         Caption = 'St'#252'ckliste'
-        Width = 110
-        Actions = ActionListRechts
+      end
+      item
+        Caption = 'Varianten'
+      end>
+    ExplicitLeft = 358
+    ExplicitWidth = 757
+    DesignSize = (
+      875
+      600)
+    object tsPhotos: TTabSheet
+      Caption = 'Fotos'
+      object barFotos: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 877
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 1
+        Gradient.Left = 0
+        Gradient.Top = 0
+        Gradient.Width = 877
+        Gradient.Height = 38
+        Gradient.Style = grVertical
+        Gradient.StartColor = 16245453
+        Gradient.EndColor = 15966336
+        Gradient.ExplicitWidth = 0
+        Gradient.ExplicitHeight = 0
         Buttons = <
           item
             Action = actErsterR
@@ -408,111 +412,339 @@ object frmArtikelStamm: TfrmArtikelStamm
           item
             Action = actNeuLadenR
           end>
-        ContentPanel = pnlStueckliste
-      end>
-    ActivePageIndex = 1
-    Align = alClient
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -7
-    Font.Name = 'Segoe UI'
-    Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 1
-    object pnlFotos: TPanel
-      Left = 4
-      Top = 75
-      Width = 417
-      Height = 521
-      BevelOuter = bvNone
-      Caption = 'pnlFotos'
-      ShowCaption = False
-      TabOrder = 2
-      Visible = False
-      object pnlFotoKopf: TPanel
+        ExplicitWidth = 759
+      end
+      object pnlFotos: TPanel
+        Left = 0
+        Top = 38
+        Width = 877
+        Height = 534
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlFotos'
+        ShowCaption = False
+        TabOrder = 0
+        ExplicitLeft = 7
+        ExplicitTop = 15
+        object lblFotoBeschr: TLabel
+          Left = 7
+          Top = 6
+          Width = 72
+          Height = 15
+          Caption = 'Beschreibung'
+        end
+        object dbimgFoto: TDBImage
+          Left = 312
+          Top = 32
+          Width = 273
+          Height = 285
+          DataField = 'foto'
+          DataSource = dmArtikelStamm.dstblArtikelFoto
+          TabOrder = 0
+        end
+        object btnFotoLaden: TButton
+          Left = 616
+          Top = 197
+          Width = 120
+          Height = 25
+          Caption = 'Foto laden...'
+          TabOrder = 1
+          OnClick = btnFotoLadenClick
+        end
+        object dbgrdFotos: TDBGrid
+          Left = 7
+          Top = 143
+          Width = 250
+          Height = 167
+          DataSource = dmArtikelStamm.dstblArtikelFoto
+          TabOrder = 2
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+          Columns = <
+            item
+              Expanded = False
+              FieldName = 'reihenfolge'
+              Title.Caption = 'Foto'
+              Width = 190
+              Visible = True
+            end>
+        end
+        object dbmmobeschreibung: TDBMemo
+          Left = 7
+          Top = 32
+          Width = 256
+          Height = 92
+          DataField = 'beschreibung'
+          DataSource = dmArtikelStamm.dstblArtikelFoto
+          ScrollBars = ssVertical
+          TabOrder = 3
+        end
+      end
+    end
+    object tsBestandRP: TTabSheet
+      Caption = 'Bestand'
+      object pnlBestand: TPanel
         Left = 0
         Top = 0
-        Width = 417
-        Height = 90
+        Width = 877
+        Height = 572
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlBestand'
+        ShowCaption = False
+        TabOrder = 0
+        ExplicitWidth = 759
+        object vstBestand: TVirtualStringTree
+          Left = 0
+          Top = 0
+          Width = 877
+          Height = 572
+          Align = alClient
+          Header.AutoSizeIndex = 0
+          Header.Height = 15
+          Header.MainColumn = -1
+          TabOrder = 0
+          Touch.InteractiveGestures = [igPan, igPressAndTap]
+          Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+          ExplicitWidth = 759
+          Columns = <>
+        end
+      end
+    end
+    object tsStuecklisteRP: TTabSheet
+      Caption = 'St'#252'ckliste'
+      object pnlStueckliste: TPanel
+        Left = 0
+        Top = 0
+        Width = 877
+        Height = 572
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlStueckliste'
+        ShowCaption = False
+        TabOrder = 0
+        ExplicitWidth = 759
+        object pnlStuecklisteAdd: TPanel
+          Left = 0
+          Top = 0
+          Width = 877
+          Height = 572
+          Align = alClient
+          BevelOuter = bvNone
+          ShowCaption = False
+          TabOrder = 0
+          ExplicitWidth = 759
+          object lblUnterArtikel: TLabel
+            Left = 8
+            Top = 8
+            Width = 61
+            Height = 15
+            Caption = 'Unterartikel'
+          end
+          object lblStkMenge: TLabel
+            Left = 300
+            Top = 8
+            Width = 37
+            Height = 15
+            Caption = 'Menge'
+          end
+          object btnStkAdd: TJvNavPanelButtonTop
+            Left = 8
+            Top = 50
+            Width = 130
+            Alignment = taCenter
+            Caption = 'Hinzuf'#252'gen'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -12
+            Font.Name = 'Segoe UI'
+            Font.Style = [fsBold]
+            ParentFont = False
+            StyleManager = PaneStyle1
+            ParentStyleManager = False
+            ImageIndex = 0
+            OnClick = btnStkAddClick
+          end
+          object btnStkDel: TJvNavPanelButtonTop
+            Left = 144
+            Top = 50
+            Width = 130
+            Alignment = taCenter
+            Caption = 'Entfernen'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -12
+            Font.Name = 'Segoe UI'
+            Font.Style = [fsBold]
+            ParentFont = False
+            StyleManager = PaneStyle1
+            ParentStyleManager = False
+            ImageIndex = 0
+            OnClick = btnStkDelClick
+          end
+          object cboUnterArtikel: TDBLookupComboBox
+            Left = 8
+            Top = 26
+            Width = 280
+            Height = 23
+            KeyField = 'artikel_id'
+            ListField = 'artikelname'
+            ListSource = dmArtikelStamm.dsArtikelAuswahl
+            TabOrder = 0
+          end
+          object edtStkMenge: TEdit
+            Left = 300
+            Top = 26
+            Width = 90
+            Height = 23
+            TabOrder = 1
+            Text = '1'
+          end
+        end
+        object vstStueckliste: TVirtualStringTree
+          Left = 0
+          Top = 0
+          Width = 407
+          Height = 492
+          Header.AutoSizeIndex = 0
+          Header.Height = 15
+          Header.MainColumn = -1
+          TabOrder = 1
+          Touch.InteractiveGestures = [igPan, igPressAndTap]
+          Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+          Columns = <>
+        end
+      end
+    end
+    object tsVarianten: TTabSheet
+      Caption = 'Varianten'
+      object barVarianten: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 877
+        Height = 38
         Align = alTop
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 0
-        object lblFotoBeschr: TLabel
+        ButtonWidth = 96
+        Buttons = <
+          item
+            Action = actVarMerkmal
+          end
+          item
+            Action = actVarUnterelement
+          end
+          item
+            Action = actVarGleicheEbene
+          end
+          item
+            Action = actVarLoeschen
+          end
+          item
+            Action = actVarNeuLaden
+          end>
+      end
+      object pnlAequivalenz: TPanel
+        Left = 0
+        Top = 38
+        Width = 877
+        Height = 44
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 1
+        object lblAequivalenz: TLabel
           Left = 8
-          Top = 8
-          Width = 43
-          Height = 10
-          Caption = 'Beschreibung'
+          Top = 14
+          Width = 62
+          Height = 15
+          Caption = 'Entspricht:'
         end
-        object btnFotoLaden: TButton
-          Left = 8
-          Top = 58
-          Width = 120
-          Height = 25
-          Caption = 'Foto laden...'
+        object lblGleich: TLabel
+          Left = 342
+          Top = 14
+          Width = 13
+          Height = 15
+          Caption = '='
+        end
+        object cboAequivalenzA: TComboBox
+          Left = 76
+          Top = 10
+          Width = 260
+          Height = 23
+          Style = csDropDownList
           TabOrder = 0
-          OnClick = btnFotoLadenClick
         end
-        object memFotoBeschr: TDBMemo
-          Left = 136
-          Top = 8
-          Width = 256
-          Height = 46
-          DataField = 'beschreibung'
-          DataSource = dmArtikelStamm.dstblArtikelFoto
-          ScrollBars = ssVertical
+        object cboAequivalenzB: TComboBox
+          Left = 363
+          Top = 10
+          Width = 260
+          Height = 23
+          Style = csDropDownList
           TabOrder = 1
         end
+        object btnGleichsetzen: TJvNavPanelButtonTop
+          Left = 634
+          Top = 3
+          Width = 110
+          Height = 38
+          Alignment = taCenter
+          Caption = 'Gleichsetzen'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+          ImageIndex = 0
+        end
+        object btnAequivalenzLoesen: TJvNavPanelButtonTop
+          Left = 744
+          Top = 3
+          Width = 110
+          Height = 38
+          Alignment = taCenter
+          Caption = 'Aufheben'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle2
+          ParentStyleManager = False
+          ImageIndex = 0
+        end
       end
-      object dbgrdFotos: TDBGrid
+      object pnlVarianten: TPanel
         Left = 0
-        Top = 90
-        Width = 417
-        Height = 150
-        Align = alTop
-        DataSource = dmArtikelStamm.dstblArtikelFoto
-        TabOrder = 1
-        TitleFont.Charset = DEFAULT_CHARSET
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -7
-        TitleFont.Name = 'Segoe UI'
-        TitleFont.Style = [fsBold]
-      end
-      object dbimgFoto: TDBImage
-        Left = 0
-        Top = 240
-        Width = 417
-        Height = 281
+        Top = 82
+        Width = 877
+        Height = 460
         Align = alClient
-        DataField = 'foto'
-        DataSource = dmArtikelStamm.dstblArtikelFoto
+        BevelOuter = bvNone
+        ShowCaption = False
         TabOrder = 2
-      end
-    end
-    object pnlBestand: TPanel
-      Left = 4
-      Top = 75
-      Width = 417
-      Height = 521
-      BevelOuter = bvNone
-      Caption = 'pnlBestand'
-      ShowCaption = False
-      TabOrder = 3
-      object vstBestand: TVirtualStringTree
-        Left = 0
-        Top = 0
-        Width = 417
-        Height = 521
-        Align = alClient
-        DefaultNodeHeight = 14
-        Header.AutoSizeIndex = 0
-        Header.Height = 10
-        Header.MainColumn = -1
-        TabOrder = 0
-        Touch.InteractiveGestures = [igPan, igPressAndTap]
-        Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-        Columns = <>
+        object vstVarianten: TVirtualStringTree
+          Left = 0
+          Top = 0
+          Width = 877
+          Height = 460
+          Align = alClient
+          Header.AutoSizeIndex = 0
+          Header.Height = 24
+          Header.MainColumn = -1
+          TabOrder = 0
+          Touch.InteractiveGestures = [igPan, igPressAndTap]
+          Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+          Columns = <>
+        end
       end
     end
   end
@@ -574,6 +806,39 @@ object frmArtikelStamm: TfrmArtikelStamm
       OnExecute = ActionLinksExecute
     end
   end
+  object ActionListVarianten: TActionList
+    Left = 392
+    Top = 552
+    object actVarMerkmal: TAction
+      Caption = 'Merkmal'
+      Hint = 'Neues Merkmal auf oberster Ebene anlegen'
+      OnExecute = VariantenAktionExecute
+    end
+    object actVarUnterelement: TAction
+      Tag = 1
+      Caption = 'Unterelement'
+      Hint = 'Unterelement zum markierten Eintrag anlegen'
+      OnExecute = VariantenAktionExecute
+    end
+    object actVarGleicheEbene: TAction
+      Tag = 2
+      Caption = 'Gleiche Ebene'
+      Hint = 'Neuen Eintrag neben dem markierten anlegen'
+      OnExecute = VariantenAktionExecute
+    end
+    object actVarLoeschen: TAction
+      Tag = 3
+      Caption = 'L'#246'schen'
+      Hint = 'Markierten Eintrag l'#246'schen'
+      OnExecute = VariantenAktionExecute
+    end
+    object actVarNeuLaden: TAction
+      Tag = 4
+      Caption = 'Neu laden'
+      Hint = 'Merkmalsbaum neu laden'
+      OnExecute = VariantenAktionExecute
+    end
+  end
   object ActionListRechts: TActionList
     Left = 288
     Top = 552
@@ -622,164 +887,6 @@ object frmArtikelStamm: TfrmArtikelStamm
       OnExecute = ActionRechtsExecute
     end
   end
-  object pnlStueckliste: TPanel
-
-    Left = 8
-
-    Top = 1440
-
-    Width = 400
-
-    Height = 400
-
-    BevelOuter = bvNone
-
-    Caption = 'pnlStueckliste'
-
-    ShowCaption = False
-
-    TabOrder = 4
-
-    Visible = False
-
-    object pnlStuecklisteAdd: TPanel
-
-      Left = 0
-
-      Top = 320
-
-      Width = 400
-
-      Height = 80
-
-      Align = alBottom
-
-      BevelOuter = bvNone
-
-      ShowCaption = False
-
-      TabOrder = 0
-
-      object lblUnterArtikel: TLabel
-
-        Left = 8
-
-        Top = 8
-
-        Width = 68
-
-        Height = 15
-
-        Caption = 'Unterartikel'
-
-      end
-
-      object lblStkMenge: TLabel
-
-        Left = 300
-
-        Top = 8
-
-        Width = 39
-
-        Height = 15
-
-        Caption = 'Menge'
-
-      end
-
-      object cboUnterArtikel: TDBLookupComboBox
-
-        Left = 8
-
-        Top = 26
-
-        Width = 280
-
-        Height = 23
-
-        KeyField = 'artikel_id'
-
-        ListField = 'artikelname'
-
-        ListSource = dmArtikelStamm.dsArtikelAuswahl
-
-        TabOrder = 0
-
-      end
-
-      object edtStkMenge: TEdit
-
-        Left = 300
-
-        Top = 26
-
-        Width = 90
-
-        Height = 23
-
-        TabOrder = 1
-
-        Text = '1'
-
-      end
-
-      object btnStkAdd: TJvNavPanelButtonTop
-        Left = 8
-        Top = 50
-        Width = 130
-        Height = 28
-        Caption = 'Hinzuf'#252'gen'
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        OnClick = btnStkAddClick
-      end
-
-      object btnStkDel: TJvNavPanelButtonTop
-        Left = 144
-        Top = 50
-        Width = 130
-        Height = 28
-        Caption = 'Entfernen'
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        OnClick = btnStkDelClick
-      end
-
-    end
-
-    object vstStueckliste: TVirtualStringTree
-      Left = 0
-      Top = 0
-      Width = 400
-      Height = 320
-      Align = alClient
-      DefaultNodeHeight = 14
-      Header.AutoSizeIndex = 0
-      Header.Height = 10
-      Header.MainColumn = -1
-      TabOrder = 1
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <>
-    end
-
-  end
-
   object dlgFoto: TOpenPictureDialog
     Filter = 
       'Bilder (*.jpg;*.jpeg;*.png;*.bmp)|*.jpg;*.jpeg;*.png;*.bmp|Alle ' +

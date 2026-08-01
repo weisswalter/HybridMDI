@@ -53,7 +53,7 @@ type
     class function GetInstance: TObject;
     procedure OpenEinstellungen;
     // Liefert die DataSource des Tabs mit Index AHeaderIndex (Reihenfolge wie
-    // JvRibbonPanel1.Headers in EinstellungenFrm).
+    // HeaderButtons in EinstellungenFrm).
     function DataSourceFuerTab(AHeaderIndex: Integer): TDataSource;
   end;
 

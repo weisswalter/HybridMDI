@@ -69,3 +69,11 @@ __recovery/
 modules/
 __pycache__/
 *.pyc
+
+# Sicherungskopien der Ribbon-Migration (01.08.2026) -- liegen
+# absichtlich auf der Platte, bis alles geprueft ist
+*.vor_migration
+*.vor_umzug
+*.vor_ribbon
+*.vor_fix
+*.vor_aufraeumen

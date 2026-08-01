@@ -25,6 +25,14 @@ type
     { Public-Deklarationen }
   published
     { Published-Deklarationen }
+    // Bewusst NICHT speichern. Weil das PageControl eine Unterkomponente des
+    // TRibbonPanel ist, schreibt der Designer die aktive Seite sonst als
+    // Eigenschaftspfad "PageControl.ActivePage.Caption = ..." in die DFM.
+    // Beim Laden ist ActivePage an dieser Stelle noch nil, und TReader wirft
+    // "Ungueltiger Pfad fuer Eigenschaft" (EReadError) -- das Formular liess
+    // sich dann nicht mehr oeffnen. Welche Seite aktiv ist, steuert ohnehin
+    // TRibbonPanel.ActivePageIndex.
+    property ActivePage stored False;
   end;
 
 procedure Register;

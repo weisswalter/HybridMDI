@@ -13,6 +13,7 @@ object frmDokumente: TfrmDokumente
   FormStyle = fsMDIChild
   Visible = True
   OnClose = FormClose
+  OnShow = FormShow
   TextHeight = 15
   object pgcDokumente: TPageControl
     Left = 0
@@ -71,6 +72,22 @@ object frmDokumente: TfrmDokumente
           TabOrder = 1
           OnClick = btnScanClick
         end
+        object btnOcr: TJvNavPanelButtonTop
+          Left = 480
+          Top = 3
+          Width = 130
+          Height = 34
+          Alignment = taCenter
+          Caption = 'Texterkennung'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          ImageIndex = 0
+          OnClick = btnOcrClick
+        end
       end
       object pnlGrid: TPanel
         Left = 0
@@ -98,7 +115,7 @@ object frmDokumente: TfrmDokumente
             item
               Expanded = False
               FieldName = 'dokument_id'
-              Visible = True
+              Visible = False
             end
             item
               Expanded = False

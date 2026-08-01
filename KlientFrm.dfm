@@ -319,38 +319,35 @@ object frmKlient: TfrmKlient
       end
     end
   end
-  object JvRibbonPanel1: TJvRibbonPanel
+  object JvRibbonPanel1: TRibbonPanel
     Left = 565
     Top = 40
     Width = 435
     Height = 610
-    Headers = <
+    Align = alClient
+    BevelOuter = bvNone
+    ShowCaption = False
+    TabOrder = 2
+    HeaderButtons = <
       item
         Caption = 'Kontaktdaten'
         Width = 140
-        Actions = ActionListRechts
-        Buttons = <
-          item
-            Action = actErsterR
-          end
-          item
-            Action = actZurueckR
-            Width = 75
-          end
-          item
-            Action = actWeiterR
-            Width = 70
-          end
-          item
-            Action = actLetzterR
-            Width = 75
-          end>
-        ContentPanel = pnlKontaktdaten
       end
       item
         Caption = 'Semester'
         Width = 110
-        Actions = ActionListRechts
+      end>
+    object tsKontaktdaten: TTabSheet
+      Caption = 'Kontaktdaten'
+      object barKontaktdaten: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 435
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
         Buttons = <
           item
             Action = actErsterR
@@ -367,123 +364,143 @@ object frmKlient: TfrmKlient
             Action = actLetzterR
             Width = 75
           end>
-        ContentPanel = pnlSemester
-      end>
-    Align = alClient
-    TabOrder = 2
-    object pnlSemester: TPanel
-      Left = 4
-      Top = 75
-      Width = 427
-      Height = 531
-      BevelOuter = bvNone
-      Caption = 'pnlSemester'
-      ShowCaption = False
-      TabOrder = 3
-      Visible = False
-      object pnlSemesterAdd: TPanel
+      end
+      object pnlKontaktdaten: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlKontaktdaten'
+        ShowCaption = False
+        TabOrder = 2
+        object dbgrdEmail: TDBGrid
+          Left = 0
+          Top = 0
+          Width = 427
+          Height = 110
+          Align = alTop
+          DataSource = dmKlient.dstblEmailUebersicht
+          TabOrder = 0
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
+        object dbgrdTelefon: TDBGrid
+          Left = 0
+          Top = 110
+          Width = 427
+          Height = 110
+          Align = alTop
+          DataSource = dmKlient.dstblTelefonUebersicht
+          TabOrder = 1
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
+        object dbgrdAdresse: TDBGrid
+          Left = 0
+          Top = 220
+          Width = 427
+          Height = 311
+          Align = alClient
+          DataSource = dmKlient.dstblAdresseUebersicht
+          TabOrder = 2
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
+      end
+    end
+    object tsSemester: TTabSheet
+      Caption = 'Semester'
+      object barSemester: TRibbonButtonBar
         Left = 0
         Top = 0
-        Width = 427
-        Height = 40
+        Width = 435
+        Height = 38
         Align = alTop
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 0
-        object cboSemesterHinzufuegen: TDBLookupComboBox
-          Left = 8
-          Top = 8
-          Width = 200
-          Height = 23
-          KeyField = 'semester_id'
-          ListField = 'bezeichnung'
-          ListSource = dmKlient.dsSemesterAuswahl
+        Buttons = <
+          item
+            Action = actErsterR
+          end
+          item
+            Action = actZurueckR
+            Width = 75
+          end
+          item
+            Action = actWeiterR
+            Width = 70
+          end
+          item
+            Action = actLetzterR
+            Width = 75
+          end>
+      end
+      object pnlSemester: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlSemester'
+        ShowCaption = False
+        TabOrder = 3
+        object pnlSemesterAdd: TPanel
+          Left = 0
+          Top = 0
+          Width = 427
+          Height = 40
+          Align = alTop
+          BevelOuter = bvNone
+          ShowCaption = False
           TabOrder = 0
+          object cboSemesterHinzufuegen: TDBLookupComboBox
+            Left = 8
+            Top = 8
+            Width = 200
+            Height = 23
+            KeyField = 'semester_id'
+            ListField = 'bezeichnung'
+            ListSource = dmKlient.dsSemesterAuswahl
+            TabOrder = 0
+          end
+          object btnSemesterHinzufuegen: TButton
+            Left = 216
+            Top = 8
+            Width = 85
+            Height = 23
+            Caption = 'Hinzuf'#252'gen'
+            TabOrder = 1
+            OnClick = btnSemesterHinzufuegenClick
+          end
+          object btnSemesterEntfernen: TButton
+            Left = 306
+            Top = 8
+            Width = 85
+            Height = 23
+            Caption = 'Entfernen'
+            TabOrder = 2
+            OnClick = btnSemesterEntfernenClick
+          end
         end
-        object btnSemesterHinzufuegen: TButton
-          Left = 216
-          Top = 8
-          Width = 85
-          Height = 23
-          Caption = 'Hinzuf'#252'gen'
+        object dbgrdSemester: TDBGrid
+          Left = 0
+          Top = 40
+          Width = 427
+          Height = 491
+          Align = alClient
+          DataSource = dmKlient.dstblKlientSemester
           TabOrder = 1
-          OnClick = btnSemesterHinzufuegenClick
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
         end
-        object btnSemesterEntfernen: TButton
-          Left = 306
-          Top = 8
-          Width = 85
-          Height = 23
-          Caption = 'Entfernen'
-          TabOrder = 2
-          OnClick = btnSemesterEntfernenClick
-        end
-      end
-      object dbgrdSemester: TDBGrid
-        Left = 0
-        Top = 40
-        Width = 427
-        Height = 491
-        Align = alClient
-        DataSource = dmKlient.dstblKlientSemester
-        TabOrder = 1
-        TitleFont.Charset = DEFAULT_CHARSET
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -12
-        TitleFont.Name = 'Segoe UI'
-        TitleFont.Style = []
-      end
-    end
-    object pnlKontaktdaten: TPanel
-      Left = 4
-      Top = 75
-      Width = 427
-      Height = 531
-      BevelOuter = bvNone
-      Caption = 'pnlKontaktdaten'
-      ShowCaption = False
-      TabOrder = 2
-      object dbgrdEmail: TDBGrid
-        Left = 0
-        Top = 0
-        Width = 427
-        Height = 110
-        Align = alTop
-        DataSource = dmKlient.dstblEmailUebersicht
-        TabOrder = 0
-        TitleFont.Charset = DEFAULT_CHARSET
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -12
-        TitleFont.Name = 'Segoe UI'
-        TitleFont.Style = []
-      end
-      object dbgrdTelefon: TDBGrid
-        Left = 0
-        Top = 110
-        Width = 427
-        Height = 110
-        Align = alTop
-        DataSource = dmKlient.dstblTelefonUebersicht
-        TabOrder = 1
-        TitleFont.Charset = DEFAULT_CHARSET
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -12
-        TitleFont.Name = 'Segoe UI'
-        TitleFont.Style = []
-      end
-      object dbgrdAdresse: TDBGrid
-        Left = 0
-        Top = 220
-        Width = 427
-        Height = 311
-        Align = alClient
-        DataSource = dmKlient.dstblAdresseUebersicht
-        TabOrder = 2
-        TitleFont.Charset = DEFAULT_CHARSET
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -12
-        TitleFont.Name = 'Segoe UI'
-        TitleFont.Style = []
       end
     end
   end

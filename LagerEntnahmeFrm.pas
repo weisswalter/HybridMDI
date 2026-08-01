@@ -15,8 +15,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
-  uFrmGuiTemplate, uFrmModuleTemplate, JvComponentBase;
+  uFrmGuiTemplate, uFrmModuleTemplate, JvComponentBase, Vcl.Mask, RibbonPanel;
 
 type
   TfrmLagerEntnahme = class(TfrmGuiTemplate)
@@ -32,7 +31,7 @@ type
     cboStatus: TDBComboBox;
     lblBemerkung: TLabel;
     memBemerkung: TDBMemo;
-    // Detailseite "Positionen"
+   //  Detailseite "Positionen"
     pnlPositionen: TPanel;
     dbgrdPositionen: TDBGrid;
     pnlPositionAdd: TPanel;

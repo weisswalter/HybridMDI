@@ -1,7 +1,7 @@
 unit EinstellungenFrm;
 
 // Zentrale Typ-Verwaltung (siehe EinstellungenDm fuer den Hintergrund).
-// Aufbau wie in den uebrigen Modulen ueber TJvRibbonPanel: ein Reiter je
+// Aufbau wie in den uebrigen Modulen ueber TRibbonPanel: ein Reiter je
 // Typ-Tabelle, jeder Reiter mit EIGENER Buttonleiste (Neu/Speichern/
 // Abbrechen) und einem ContentPanel, das das zugehoerige DBGrid traegt.
 //
@@ -17,7 +17,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
+  RibbonPanel, RibbonPageControl, RibbonButtonBar,
   uFrmModuleTemplate, JvComponentBase;
 
 type
@@ -27,7 +27,21 @@ type
     actNeu: TAction;
     actSpeichern: TAction;
     actAbbrechen: TAction;
-    JvRibbonPanel1: TJvRibbonPanel;
+    JvRibbonPanel1: TRibbonPanel;
+    tsPersonentyp: TTabSheet;
+    tsRollentyp: TTabSheet;
+    tsAdressentyp: TTabSheet;
+    tsEmailtyp: TTabSheet;
+    tsTelefonnummertyp: TTabSheet;
+    tsRechnungstyp: TTabSheet;
+    tsLeadquellentyp: TTabSheet;
+    barPersonentyp: TRibbonButtonBar;
+    barRollentyp: TRibbonButtonBar;
+    barAdressentyp: TRibbonButtonBar;
+    barEmailtyp: TRibbonButtonBar;
+    barTelefonnummertyp: TRibbonButtonBar;
+    barRechnungstyp: TRibbonButtonBar;
+    barLeadquellentyp: TRibbonButtonBar;
     pnlPersonentyp: TPanel;
     dbgrdPersonentyp: TDBGrid;
     pnlRollentyp: TPanel;

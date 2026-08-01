@@ -3,7 +3,7 @@ unit MailFrm;
 // Mailmodul — Oberflaeche. Aufbau wie KlientFrm/KundeFrm:
 //   oben  Kontoauswahl + Aktionsleiste (TJvNavPanelButtonTop)
 //   links Ordnerliste, darunter die Nachrichten des gewaehlten Ordners
-//   rechts TJvRibbonPanel mit zwei Reitern:
+//   rechts TRibbonPanel mit zwei Reitern:
 //     "Nachricht" — Kopfdaten + Textkoerper
 //     "Anhaenge"  — Liste der Anhaenge, Doppelklick oeffnet sie
 //
@@ -19,7 +19,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
+  RibbonPanel, RibbonPageControl, RibbonButtonBar,
   uFrmModuleTemplate, JvComponentBase;
 
 type
@@ -45,7 +45,15 @@ type
     splLeft: TSplitter;
     dbgrdNachrichten: TDBGrid;
     Splitter1: TSplitter;
-    JvRibbonPanel1: TJvRibbonPanel;
+    JvRibbonPanel1: TRibbonPanel;
+    tsNachricht: TTabSheet;
+    tsAnhaenge: TTabSheet;
+    tsKonto: TTabSheet;
+    tsErweitert: TTabSheet;
+    barNachricht: TRibbonButtonBar;
+    barAnhaenge: TRibbonButtonBar;
+    barKonto: TRibbonButtonBar;
+    barErweitert: TRibbonButtonBar;
     // Reiter 0: Nachricht
     pnlNachricht: TPanel;
     pnlKopf: TPanel;

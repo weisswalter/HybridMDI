@@ -2,7 +2,7 @@ unit LehrerFrm;
 
 // Lehrermodul - Oberflaeche. Aufbau wie MitarbeiterFrm/PersonenFrm:
 //   links  Liste aller Lehrer des Mandanten + Stammfelder
-//   rechts TJvRibbonPanel mit zwei Reitern
+//   rechts TRibbonPanel mit zwei Reitern
 //     Kompetenzen - Nachweise der Person, mit Ablaufstatus
 //     Kurse       - welche Kurse diese Person halten darf (Gegenprobe
 //                   Kompetenz gegen kurs_kompetenz mit rolle='lehrer')
@@ -21,7 +21,7 @@ uses
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Vcl.Mask,
   Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
+  RibbonPanel, RibbonPageControl, RibbonButtonBar,
   uFrmModuleTemplate, JvComponentBase;
 
 type
@@ -57,7 +57,11 @@ type
     memBeschreibung: TDBMemo;
     lblHinweis: TLabel;
     Splitter1: TSplitter;
-    JvRibbonPanel1: TJvRibbonPanel;
+    JvRibbonPanel1: TRibbonPanel;
+    tsKompetenzen: TTabSheet;
+    tsKurse: TTabSheet;
+    barKompetenzen: TRibbonButtonBar;
+    barKurse: TRibbonButtonBar;
     // Reiter 0: Kompetenzen
     pnlKompetenzen: TPanel;
     dbgrdKompetenzen: TDBGrid;

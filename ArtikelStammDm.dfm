@@ -66,4 +66,13 @@ object dmArtikelStamm: TdmArtikelStamm
     Left = 488
     Top = 464
   end
+  object qryVariantenBaum: TFDQuery
+    Left = 400
+    Top = 528
+  end
+  object dsVariantenBaum: TDataSource
+    DataSet = qryVariantenBaum
+    Left = 488
+    Top = 528
+  end
 end

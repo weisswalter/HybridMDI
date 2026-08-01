@@ -5,16 +5,20 @@
 //    Beschreibung) ueber ActionListLinks/dmArtikelStamm.dstblArtikel.
 //    Artikel-/Serien-/Modulnummer sind varchar + TDBEdit -> nehmen auch
 //    Buchstaben an.
-//  Rechts (JvRibbonPanel1): zwei Detailseiten
+//  Rechts (rbnpnl1): drei Detailseiten
 //    - Header 0 "Fotos"   -> dstblArtikelFoto (mehrere Bilder je Artikel)
 //    - Header 1 "Bestand" -> vstBestand (VirtualStringTree, read-only Baum
 //      Adresse->Gebaeude/Eingang->Raum->Regal->Fach, aus fn_lagerort_bestand
 //      via dmArtikelStamm.qryBestandBaum; siehe ArtikelBestandBaumData.pas).
 //      Baum wird bei jedem Artikelwechsel automatisch neu aufgebaut
 //      (dmArtikelStamm.qryBestandBaum.AfterOpen -> BestandBaumNeuAufbauen).
-//    Beide Seiten sind als eigenes designtime-Panel (ContentPanel) im DFM
-//    gestaltet; TJvRibbonPanel haengt sie zur Laufzeit in ihr Tabsheet.
-//    Die gemeinsame Buttonleiste (Erster/Neu/Speichern/...) wirkt ueber
+//    Seit 31.07.2026 auf TRibbonPanel migriert: die Seiten liegen als echte
+//    Tabsheets (tsPhotos/tsBestandRP/tsStuecklisteRP) im DFM, die Panels
+//    sind darin alClient. Kein ContentPanel-Umhaengen zur Laufzeit mehr.
+//    Die Buttonleiste ist jetzt eine eigene Komponente (barFotos:
+//    TRibbonButtonBar) auf der Fotos-Seite - Bestand (lesender Baum) und
+//    Stueckliste (hat eigene Schaltflaechen) brauchen keine.
+//    Die Buttonleiste (Erster/Neu/Speichern/...) wirkt ueber
 //    ActionRechtsExecute je nach aktiver Seite auf die passende DataSource
 //    (fuer die Bestand-Seite aktuell nur noch fuer die Fotos-Seite sinnvoll,
 //    da der Baum rein lesend ist -- Bearbeiten/Ablegen an anderem Ort ist
@@ -48,9 +52,9 @@ uses
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
   Vcl.Imaging.jpeg, Vcl.Imaging.pngimage,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
-  JvRibbonPanel,
+  RibbonPanel, RibbonPageControl, RibbonButtonBar,
   VirtualTrees, VirtualTrees.Types, VirtualTrees.EditLink,
-  ArtikelBestandBaumData, BaumKnotenData,
+  ArtikelBestandBaumData, BaumKnotenData, BaumBedienung,
   uFrmModuleTemplate, JvComponentBase, Vcl.Mask, VirtualTrees.BaseAncestorVCL,
   VirtualTrees.BaseTree, VirtualTrees.AncestorVCL;
 
@@ -79,7 +83,6 @@ type
     lblBeschreibung: TLabel;
     memBeschreibung: TDBMemo;
     Splitter1: TSplitter;
-    JvRibbonPanel1: TJvRibbonPanel;
     ActionListLinks: TActionList;
     actErsterL: TAction;
     actZurueckL: TAction;
@@ -100,14 +103,6 @@ type
     actSpeichernR: TAction;
     actAbbrechenR: TAction;
     actNeuLadenR: TAction;
-    // Detailseite 0 "Fotos"
-    pnlFotos: TPanel;
-    pnlFotoKopf: TPanel;
-    btnFotoLaden: TButton;
-    lblFotoBeschr: TLabel;
-    memFotoBeschr: TDBMemo;
-    dbimgFoto: TDBImage;
-    dbgrdFotos: TDBGrid;
     dlgFoto: TOpenPictureDialog;
     // Detailseite 1 "Bestand"
     // Detailseite 2 "Stueckliste" (artikel_artikel)
@@ -131,6 +126,38 @@ type
 
     pnlBestand: TPanel;
     vstBestand: TVirtualStringTree;
+    rbnpnl1: TRibbonPanel;
+    tsPhotos: TTabSheet;
+    tsBestandRP: TTabSheet;
+    tsStuecklisteRP: TTabSheet;
+    barFotos: TRibbonButtonBar;
+    pnlFotos: TPanel;
+    dbimgFoto: TDBImage;
+    btnFotoLaden: TButton;
+    dbgrdFotos: TDBGrid;
+    dbmmobeschreibung: TDBMemo;
+    lblFotoBeschr: TLabel;
+    // ── Varianten-Seite ────────────────────────────────────────────────
+    tsVarianten: TTabSheet;
+    barVarianten: TRibbonButtonBar;
+    pnlVarianten: TPanel;
+    vstVarianten: TVirtualStringTree;
+    pnlAequivalenz: TPanel;
+    lblAequivalenz: TLabel;
+    cboAequivalenzA: TComboBox;
+    lblGleich: TLabel;
+    cboAequivalenzB: TComboBox;
+    btnGleichsetzen: TJvNavPanelButtonTop;
+    btnAequivalenzLoesen: TJvNavPanelButtonTop;
+    // Eigene Liste: die Varianten-Seite pflegt Stammdaten des Mandanten,
+    // nicht den Artikeldatensatz -- die Navigation aus ActionListRechts
+    // passt hier nicht.
+    ActionListVarianten: TActionList;
+    actVarMerkmal: TAction;
+    actVarUnterelement: TAction;
+    actVarGleicheEbene: TAction;
+    actVarLoeschen: TAction;
+    actVarNeuLaden: TAction;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -164,6 +191,24 @@ type
     procedure btnStkAddClick(Sender: TObject);
 
     procedure btnStkDelClick(Sender: TObject);
+
+    // ── Varianten ───────────────────────────────────────────────────────
+    procedure vstVariantenInitNode(Sender: TBaseVirtualTree;
+      ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+    procedure vstVariantenInitChildren(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; var ChildCount: Cardinal);
+    procedure vstVariantenGetText(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+      var CellText: string);
+    procedure vstVariantenDblClick(Sender: TObject);
+    procedure btnGleichsetzenClick(Sender: TObject);
+    procedure btnAequivalenzLoesenClick(Sender: TObject);
+    // MUSS hier stehen, nicht unter private: die DFM weist diesen Handler
+    // den Actions als OnExecute zu, und der Reader findet Methoden nur
+    // ueber die RTTI der published-Sektion. In private steht er zwar im
+    // Code zur Verfuegung, das Formular laesst sich aber nicht mehr laden
+    // ("Ungueltiger Eigenschaftswert").
+    procedure VariantenAktionExecute(Sender: TObject);
   private
     // Wurzelknoten (Adressen) des Bestand-Baums, aufgebaut aus
     // dmArtikelStamm.qryBestandBaum -- haelt die IBestandKnoten-Kette am
@@ -172,14 +217,36 @@ type
     // Wurzel der Stueckliste. Wie FBestandWurzeln haelt die Liste die
     // Interface-Kette am Leben.
     FStuecklisteWurzeln: TList<IBaumKnoten>;
+    // Wurzeln des Merkmalsbaums (Groesse, Farbe, Kragenform ...).
+    FVariantenWurzeln: TList<IBaumKnoten>;
+    // Einheitliche Tastaturbedienung (F2/Entf/Einfg). Gehoert dem Baum und
+    // wird mit ihm freigegeben.
+    FVariantenBedienung: TBaumBedienung;
+    // Rueckrufe fuer FVariantenBedienung -- schreiben in die Datenbank und
+    // melden im Fehlerfall Klartext zurueck.
+    function VarianteNeuAnlegen(const AKnoten: IBaumKnoten;
+      const AText: string): string;
+    function VarianteBearbeiten(const AKnoten: IBaumKnoten;
+      const AText: string): string;
+    function VarianteEntfernen(const AKnoten: IBaumKnoten): string;
+    procedure VariantenGeaendert(Sender: TObject);
     procedure StuecklisteBaumNeuAufbauen(DataSet: TDataSet);
     function GewaehlterStkKnoten: IBaumKnoten;
+    // ── Varianten ───────────────────────────────────────────────────────
+    procedure VariantenSeiteEinrichten;
+    procedure VariantenBaumNeuAufbauen(DataSet: TDataSet);
+    function GewaehlteVariante: IBaumKnoten;
+    procedure AequivalenzListenFuellen;
+    function ComboVarianteId(ACombo: TComboBox): Integer;
     // liefert die DataSource der aktuell sichtbaren Ribbon-Detailseite
     function AktiveDetailDs: TDataSource;
     procedure BestandBaumNeuAufbauen(DataSet: TDataSet);
     function FindeIndexPfad(const AKinder: TList<IBestandKnoten>; AFachId: Integer;
       out APfad: TArray<Integer>): Boolean;
   public
+    // Laedt Merkmalsbaum und Auswahllisten neu. Oeffentlich, weil das
+    // DataModule sie beim Oeffnen des Moduls einmal anstoesst.
+    procedure VariantenNeuLaden;
     // Sucht rekursiv das Fach-Blatt mit passender fach_id im aktuellen Baum
     // bzw. den Geschwister-Index-Pfad dahin (Node.Index entspricht 1:1 dem
     // Kinder-Listenindex, siehe vstBestandInitNode) und springt im Baum
@@ -621,6 +688,8 @@ begin
   vstBestand.OnCreateEditor := vstBestandCreateEditor;
   vstBestand.OnDblClick := vstBestandDblClick;
 
+  VariantenSeiteEinrichten;
+
   // Stueckliste-Baum - gleiche Einrichtung wie vstBestand darueber
   vstStueckliste.Header.Columns.Clear;
   vstStueckliste.Header.Columns.Add.Text := 'Artikel';
@@ -665,7 +734,11 @@ end;
 procedure TfrmArtikelStamm.FormDestroy(Sender: TObject);
 begin
   dmArtikelStamm.qryBestandBaum.AfterOpen := nil;
+  // Ohne das zeigt der Handler nach dem Schliessen auf ein totes Formular,
+  // sobald der Baum von anderer Stelle neu geladen wird.
+  dmArtikelStamm.qryVariantenBaum.AfterOpen := nil;
   FBestandWurzeln.Free;
+  FVariantenWurzeln.Free;
 end;
 
 // Baut den Bestand-Baum aus dem aktuellen qryBestandBaum-Ergebnis neu auf.
@@ -844,10 +917,10 @@ begin
   vstBestand.ScrollIntoView(LNode, True);
 end;
 
-// 0 = Fotos-Seite, 1 = Bestand-Seite (Reihenfolge wie JvRibbonPanel1.Headers)
+// 0 = Fotos-Seite, 1 = Bestand-Seite (Reihenfolge wie rbnpnl1.HeaderButtons)
 function TfrmArtikelStamm.AktiveDetailDs: TDataSource;
 begin
-  case JvRibbonPanel1.ActivePageIndex of
+  case rbnpnl1.ActivePageIndex of
     0: Result := dmArtikelStamm.dstblArtikelFoto;
     1: Result := dmArtikelStamm.dstblArtikelFach;
 
@@ -1016,6 +1089,331 @@ end;
 // Wiederholung geben. Dagegen schuetzt zweifach: der Trigger auf
 // artikel_artikel beim Schreiben und der Pfad-Array in
 // fn_artikel_stueckliste beim Lesen.
+// ── Varianten ───────────────────────────────────────────────────────────────
+// Der Merkmalsbaum haengt NICHT am Artikel: Groesse/Farbe/Kragenform werden
+// einmal je Mandant gepflegt und von allen Artikeln benutzt. Die Seite ist
+// deshalb bewusst unabhaengig von der Artikelnavigation -- sie laedt beim
+// Oeffnen und nach jeder Aenderung, nicht bei jedem Artikelwechsel.
+
+procedure TfrmArtikelStamm.VariantenSeiteEinrichten;
+begin
+  vstVarianten.Header.Columns.Clear;
+  vstVarianten.Header.Columns.Add.Text := 'Merkmal / Auspraegung';
+  vstVarianten.Header.Columns[0].Width := 260;
+  vstVarianten.Header.Columns.Add.Text := 'Kurz';
+  vstVarianten.Header.Columns[1].Width := 60;
+  vstVarianten.Header.Columns.Add.Text := 'entspricht';
+  vstVarianten.Header.Columns[2].Width := 180;
+  vstVarianten.Header.AutoSizeIndex := 0;
+  vstVarianten.Header.Options := vstVarianten.Header.Options
+    + [TVTHeaderOption.hoVisible, TVTHeaderOption.hoAutoResize];
+  vstVarianten.TreeOptions.PaintOptions :=
+    vstVarianten.TreeOptions.PaintOptions
+    - [TVTPaintOption.toShowRoot]
+    + [TVTPaintOption.toShowTreeLines, TVTPaintOption.toShowButtons];
+  vstVarianten.TreeOptions.SelectionOptions :=
+    vstVarianten.TreeOptions.SelectionOptions
+    + [TVTSelectionOption.toFullRowSelect];
+  vstVarianten.Font.Size := 12;
+  vstVarianten.DefaultNodeHeight := 24;
+  vstVarianten.Header.Height := 24;
+  vstVarianten.OnInitChildren := vstVariantenInitChildren;
+  vstVarianten.OnInitNode := vstVariantenInitNode;
+  vstVarianten.OnGetText := vstVariantenGetText;
+  vstVarianten.OnDblClick := vstVariantenDblClick;
+
+  // Die Buttonleiste kennt bewusst kein eigenes Klick-Ereignis -- die
+  // Buttons haengen an den Actions, die im DFM zugewiesen sind. Hier wird
+  // nur der gemeinsame Ausfuehrungs-Handler verdrahtet, unterschieden wird
+  // ueber den Tag (Muster wie ActionRechtsExecute).
+  btnGleichsetzen.OnClick := btnGleichsetzenClick;
+  btnAequivalenzLoesen.OnClick := btnAequivalenzLoesenClick;
+
+  // F2 bearbeiten, Entf loeschen, Einfg/Platzhalter anlegen -- dieselbe
+  // Bedienung wie in den uebrigen Baeumen.
+  FVariantenBedienung := TBaumBedienung.Create(vstVarianten);
+  FVariantenBedienung.NeuFrage := 'Bezeichnung des neuen Eintrags:';
+  FVariantenBedienung.AufNeu := VarianteNeuAnlegen;
+  FVariantenBedienung.AufBearbeiten := VarianteBearbeiten;
+  FVariantenBedienung.AufLoeschen := VarianteEntfernen;
+  FVariantenBedienung.NachAenderung := VariantenGeaendert;
+
+  dmArtikelStamm.qryVariantenBaum.AfterOpen := VariantenBaumNeuAufbauen;
+end;
+
+// ── Rueckrufe der Baumbedienung ─────────────────────────────────────────
+// Alle drei schreiben unmittelbar in die Datenbank. Schlaegt das fehl,
+// kommt die Meldung der Datenbank zurueck und der Baum wird NICHT neu
+// geladen -- so bleibt sichtbar, dass nichts gespeichert wurde.
+
+function TfrmArtikelStamm.VarianteNeuAnlegen(const AKnoten: IBaumKnoten;
+  const AText: string): string;
+var
+  LNeueId, LElternId: Integer;
+begin
+  if AKnoten = nil then
+    LElternId := 0              // neues Merkmal auf oberster Ebene
+  else if AKnoten.IstPlatzhalter then
+    // Der Platzhalter haengt UNTER seinem Elternknoten -- das neue Element
+    // gehoert dorthin, nicht unter den Platzhalter selbst.
+    LElternId := AKnoten.ElternId
+  else
+    LElternId := AKnoten.Id;
+
+  Result := dmArtikelStamm.VarianteAnlegen(AText, LElternId, LNeueId);
+end;
+
+function TfrmArtikelStamm.VarianteBearbeiten(const AKnoten: IBaumKnoten;
+  const AText: string): string;
+begin
+  Result := dmArtikelStamm.VarianteUmbenennen(AKnoten.Id, AText);
+end;
+
+function TfrmArtikelStamm.VarianteEntfernen(const AKnoten: IBaumKnoten): string;
+begin
+  Result := dmArtikelStamm.VarianteLoeschen(AKnoten.Id);
+end;
+
+procedure TfrmArtikelStamm.VariantenGeaendert(Sender: TObject);
+begin
+  VariantenNeuLaden;
+end;
+
+procedure TfrmArtikelStamm.VariantenBaumNeuAufbauen(DataSet: TDataSet);
+begin
+  vstVarianten.BeginUpdate;
+  try
+    vstVarianten.Clear;
+    FreeAndNil(FVariantenWurzeln);
+    FVariantenWurzeln := BaueBaumAusEbenen(
+      dmArtikelStamm.qryVariantenBaum, 'variante_id', 'ebene',
+      ['name', 'kurzzeichen', 'aequivalenzen'], '',
+      // Wie in Stueckliste und Bestand: unter jedem Knoten haengt ein
+      // Platzhalter, ueber den sich direkt im Baum etwas anlegen laesst.
+      '+ Auspraegung...');
+    if Assigned(FVariantenWurzeln) then
+      vstVarianten.RootNodeCount := FVariantenWurzeln.Count;
+  finally
+    vstVarianten.EndUpdate;
+  end;
+  vstVarianten.FullExpand;
+end;
+
+procedure TfrmArtikelStamm.VariantenNeuLaden;
+begin
+  dmArtikelStamm.LadeVariantenBaum;
+  AequivalenzListenFuellen;
+end;
+
+function TfrmArtikelStamm.GewaehlteVariante: IBaumKnoten;
+begin
+  Result := nil;
+  if Assigned(vstVarianten.FocusedNode) then
+    Result := vstVarianten.GetInterfaceFromNodeData<IBaumKnoten>(
+      vstVarianten.FocusedNode);
+end;
+
+procedure TfrmArtikelStamm.vstVariantenInitNode(Sender: TBaseVirtualTree;
+  ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+var
+  LEltern, LKnoten: IBaumKnoten;
+begin
+  if ParentNode = nil then
+  begin
+    if not Assigned(FVariantenWurzeln) then
+      Exit;
+    LKnoten := FVariantenWurzeln[Node.Index];
+  end
+  else
+  begin
+    LEltern := Sender.GetInterfaceFromNodeData<IBaumKnoten>(ParentNode);
+    LKnoten := LEltern.Kinder[Node.Index];
+  end;
+  Node.SetData(LKnoten);
+  if LKnoten.Kinder.Count > 0 then
+    Include(InitialStates, ivsHasChildren);
+end;
+
+procedure TfrmArtikelStamm.vstVariantenInitChildren(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; var ChildCount: Cardinal);
+var
+  LKnoten: IBaumKnoten;
+begin
+  if Node = nil then
+  begin
+    if Assigned(FVariantenWurzeln) then
+      ChildCount := FVariantenWurzeln.Count
+    else
+      ChildCount := 0;
+  end
+  else
+  begin
+    LKnoten := Sender.GetInterfaceFromNodeData<IBaumKnoten>(Node);
+    ChildCount := LKnoten.Kinder.Count;
+  end;
+end;
+
+procedure TfrmArtikelStamm.vstVariantenGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: string);
+var
+  LKnoten: IBaumKnoten;
+begin
+  LKnoten := Sender.GetInterfaceFromNodeData<IBaumKnoten>(Node);
+  if LKnoten = nil then
+    Exit;
+  if Column <= 0 then
+    CellText := LKnoten.Spalte[0]
+  else
+    CellText := LKnoten.Spalte[Column];
+end;
+
+procedure TfrmArtikelStamm.vstVariantenDblClick(Sender: TObject);
+var
+  LKnoten: IBaumKnoten;
+  LName: string;
+  LMeldung: string;
+begin
+  LKnoten := GewaehlteVariante;
+  if LKnoten = nil then
+    Exit;
+
+  LName := LKnoten.Spalte[0];
+  if not InputQuery('Umbenennen', 'Neue Bezeichnung:', LName) then
+    Exit;
+
+  LMeldung := dmArtikelStamm.VarianteUmbenennen(LKnoten.Id, LName);
+  if LMeldung <> '' then
+    MessageDlg(LMeldung, mtWarning, [mbOK], 0)
+  else
+    VariantenNeuLaden;
+end;
+
+// Gemeinsamer Handler aller Varianten-Actions, unterschieden ueber den Tag.
+// Reihenfolge wie die Buttons in barVarianten.
+procedure TfrmArtikelStamm.VariantenAktionExecute(Sender: TObject);
+var
+  LKnoten: IBaumKnoten;
+  LName, LMeldung: string;
+  LNeueId, LElternId: Integer;
+begin
+  LKnoten := GewaehlteVariante;
+  LMeldung := '';
+  LNeueId := 0;
+
+  case TComponent(Sender).Tag of
+    0:  // Neues Merkmal (oberste Ebene)
+      begin
+        LName := '';
+        if not InputQuery('Neues Merkmal', 'Bezeichnung:', LName) then
+          Exit;
+        LMeldung := dmArtikelStamm.VarianteAnlegen(LName, 0, LNeueId);
+      end;
+
+    1:  // Unterelement zum markierten Knoten
+      begin
+        if LKnoten = nil then
+        begin
+          MessageDlg('Bitte zuerst den Eintrag waehlen, unter dem das ' +
+            'Unterelement entstehen soll.', mtInformation, [mbOK], 0);
+          Exit;
+        end;
+        LName := '';
+        if not InputQuery('Unterelement zu "' + LKnoten.Spalte[0] + '"',
+                          'Bezeichnung:', LName) then
+          Exit;
+        LMeldung := dmArtikelStamm.VarianteAnlegen(LName, LKnoten.Id, LNeueId);
+      end;
+
+    2:  // Gleichrangiges Element (selber Elternteil wie der markierte)
+      begin
+        if LKnoten = nil then
+        begin
+          MessageDlg('Bitte zuerst einen Eintrag waehlen.',
+            mtInformation, [mbOK], 0);
+          Exit;
+        end;
+        // ElternId 0 bedeutet: der markierte Knoten ist selbst eine Wurzel,
+        // das neue Element wird dann ebenfalls eine.
+        LElternId := LKnoten.ElternId;
+        LName := '';
+        if not InputQuery('Neuer Eintrag auf gleicher Ebene',
+                          'Bezeichnung:', LName) then
+          Exit;
+        LMeldung := dmArtikelStamm.VarianteAnlegen(LName, LElternId, LNeueId);
+      end;
+
+    3:  // Loeschen
+      begin
+        if LKnoten = nil then
+          Exit;
+        if MessageDlg('"' + LKnoten.Spalte[0] + '" wirklich loeschen?',
+             mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+          Exit;
+        LMeldung := dmArtikelStamm.VarianteLoeschen(LKnoten.Id);
+      end;
+
+    4:  // Neu laden
+      begin
+        VariantenNeuLaden;
+        Exit;
+      end;
+  else
+    Exit;
+  end;
+
+  if LMeldung <> '' then
+    MessageDlg(LMeldung, mtWarning, [mbOK], 0);
+  VariantenNeuLaden;
+end;
+
+procedure TfrmArtikelStamm.AequivalenzListenFuellen;
+var
+  LMerker: string;
+begin
+  // Auswahl merken, damit nach dem Neuladen nicht alles zurueckspringt
+  LMerker := cboAequivalenzA.Text;
+  dmArtikelStamm.FuelleAuspraegungsListe(cboAequivalenzA.Items);
+  cboAequivalenzA.ItemIndex := cboAequivalenzA.Items.IndexOf(LMerker);
+
+  LMerker := cboAequivalenzB.Text;
+  dmArtikelStamm.FuelleAuspraegungsListe(cboAequivalenzB.Items);
+  cboAequivalenzB.ItemIndex := cboAequivalenzB.Items.IndexOf(LMerker);
+end;
+
+function TfrmArtikelStamm.ComboVarianteId(ACombo: TComboBox): Integer;
+begin
+  // Die ID haengt am Objects-Zeiger (siehe FuelleAuspraegungsListe)
+  if ACombo.ItemIndex < 0 then
+    Result := 0
+  else
+    Result := Integer(ACombo.Items.Objects[ACombo.ItemIndex]);
+end;
+
+procedure TfrmArtikelStamm.btnGleichsetzenClick(Sender: TObject);
+var
+  LMeldung: string;
+begin
+  LMeldung := dmArtikelStamm.VarianteGleichsetzen(
+    ComboVarianteId(cboAequivalenzA), ComboVarianteId(cboAequivalenzB));
+  if LMeldung <> '' then
+    MessageDlg(LMeldung, mtWarning, [mbOK], 0)
+  else
+    VariantenNeuLaden;
+end;
+
+procedure TfrmArtikelStamm.btnAequivalenzLoesenClick(Sender: TObject);
+var
+  LMeldung: string;
+begin
+  LMeldung := dmArtikelStamm.AequivalenzAufheben(
+    ComboVarianteId(cboAequivalenzA), ComboVarianteId(cboAequivalenzB));
+  if LMeldung <> '' then
+    MessageDlg(LMeldung, mtWarning, [mbOK], 0)
+  else
+    VariantenNeuLaden;
+end;
+
 procedure TfrmArtikelStamm.StuecklisteBaumNeuAufbauen(DataSet: TDataSet);
 begin
   vstStueckliste.BeginUpdate;
