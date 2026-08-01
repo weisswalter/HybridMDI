@@ -1,0 +1,22 @@
+# Abhaengigkeiten der Dokument-Texterkennung
+#
+# Bereits vorhanden (Stand 31.07.2026):
+numpy>=1.24
+opencv-python>=4.8
+pillow>=10.0
+
+# NICHT vorhanden und bewusst nicht automatisch installiert:
+#
+#   easyocr>=1.7
+#
+# EasyOCR zieht PyTorch nach, rund 2 GB. Das gehoert nicht ungefragt in eine
+# Arbeitsumgebung. Installation, wenn die Texterkennung gebraucht wird:
+#
+#     pip install easyocr
+#
+# Ohne EasyOCR laeuft alles ausser der Bilderkennung selbst: Kategorisierung,
+# Bildaufbereitung und die gesamte Testabdeckung.
+#
+# Beim ersten Aufruf laedt EasyOCR seine Sprachmodelle (~100 MB) nach und
+# legt sie unter %USERPROFILE%\.EasyOCR ab. Der erste Lauf dauert deshalb
+# deutlich laenger als die folgenden.

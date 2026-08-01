@@ -1,0 +1,145 @@
+{
+  "_hinweis": [
+    "Regelwerk der Dokumentkategorisierung. Bewusst als Datei und nicht im",
+    "Code, damit sich Kategorien ohne Programmieren ergaenzen lassen.",
+    "",
+    "Jede Kategorie hat:",
+    "  schluessel   - technischer Name, wandert spaeter nach dokument.typ_id",
+    "  bezeichnung  - Klartext fuer die Oberflaeche",
+    "  muster       - Regulaere Ausdruecke; jeder Treffer zaehlt 'gewicht'",
+    "  mindestwert  - ab dieser Punktzahl gilt die Kategorie als erkannt",
+    "",
+    "Punkte werden addiert. Die Kategorie mit der hoechsten Punktzahl",
+    "gewinnt, sofern sie ihren mindestwert erreicht - sonst 'unbekannt'.",
+    "Alle Muster werden ohne Gross-/Kleinschreibung geprueft."
+  ],
+
+  "kategorien": [
+    {
+      "schluessel": "rechnung",
+      "bezeichnung": "Rechnung",
+      "mindestwert": 3,
+      "muster": [
+        { "regex": "\\brechnung\\b", "gewicht": 3 },
+        { "regex": "\\brechnungs-?nummer\\b|\\brechnungs-?nr\\b", "gewicht": 3 },
+        { "regex": "\\bfaktura\\b|\\binvoice\\b", "gewicht": 3 },
+        { "regex": "\\bmwst\\b|\\bmehrwertsteuer\\b|\\bust-?id\\b", "gewicht": 2 },
+        { "regex": "\\bzahlbar\\s+bis\\b|\\bzahlungsziel\\b|\\bfaelligkeit\\b", "gewicht": 2 },
+        { "regex": "\\brechnungsbetrag\\b|\\bgesamtbetrag\\b|\\btotal\\b", "gewicht": 1 }
+      ]
+    },
+    {
+      "schluessel": "qr_rechnung",
+      "bezeichnung": "QR-Rechnung (CH)",
+      "mindestwert": 4,
+      "muster": [
+        { "regex": "\\bempfangsschein\\b", "gewicht": 4 },
+        { "regex": "\\bzahlteil\\b", "gewicht": 4 },
+        { "regex": "\\bqr-?rechnung\\b", "gewicht": 4 },
+        { "regex": "\\breferenz\\b.*\\bzugunsten\\b", "gewicht": 3 },
+        { "regex": "\\bch\\d{2}[\\s\\d]{15,}", "gewicht": 3 },
+        { "regex": "\\bannahmestelle\\b", "gewicht": 2 },
+        { "regex": "\\bwaehrung\\b\\s*chf|\\bchf\\b", "gewicht": 1 }
+      ]
+    },
+    {
+      "schluessel": "mahnung",
+      "bezeichnung": "Mahnung",
+      "mindestwert": 3,
+      "muster": [
+        { "regex": "\\bmahnung\\b|\\bzahlungserinnerung\\b", "gewicht": 4 },
+        { "regex": "\\b\\d\\.\\s*mahnung\\b|\\bletzte\\s+mahnung\\b", "gewicht": 4 },
+        { "regex": "\\bverzug\\b|\\bmahngebuehr\\b|\\bverzugszins\\b", "gewicht": 3 },
+        { "regex": "\\bbetreibung\\b", "gewicht": 3 }
+      ]
+    },
+    {
+      "schluessel": "lieferschein",
+      "bezeichnung": "Lieferschein",
+      "mindestwert": 3,
+      "muster": [
+        { "regex": "\\bliefer-?schein\\b", "gewicht": 4 },
+        { "regex": "\\bpacking\\s+list\\b|\\bwarenbegleitschein\\b", "gewicht": 3 },
+        { "regex": "\\bliefer-?datum\\b|\\bliefer-?adresse\\b", "gewicht": 2 },
+        { "regex": "\\bversand\\b|\\bsendungs-?nummer\\b", "gewicht": 1 }
+      ]
+    },
+    {
+      "schluessel": "angebot",
+      "bezeichnung": "Angebot / Offerte",
+      "mindestwert": 3,
+      "muster": [
+        { "regex": "\\bangebot\\b|\\bofferte\\b|\\bkosten-?voranschlag\\b", "gewicht": 4 },
+        { "regex": "\\bquotation\\b|\\bproposal\\b", "gewicht": 3 },
+        { "regex": "\\bgueltig\\s+bis\\b|\\bangebots-?nr\\b", "gewicht": 2 },
+        { "regex": "\\bunverbindlich\\b|\\bfreibleibend\\b", "gewicht": 1 }
+      ]
+    },
+    {
+      "schluessel": "bestellung",
+      "bezeichnung": "Bestellung",
+      "mindestwert": 3,
+      "muster": [
+        { "regex": "\\bbestellung\\b|\\bbestell-?nummer\\b|\\bbestell-?nr\\b", "gewicht": 4 },
+        { "regex": "\\bpurchase\\s+order\\b|\\border\\s+confirmation\\b", "gewicht": 3 },
+        { "regex": "\\bauftrags-?bestaetigung\\b", "gewicht": 3 },
+        { "regex": "\\bwunschtermin\\b|\\bliefertermin\\b", "gewicht": 1 }
+      ]
+    },
+    {
+      "schluessel": "vertrag",
+      "bezeichnung": "Vertrag",
+      "mindestwert": 3,
+      "muster": [
+        { "regex": "\\bvertrag\\b|\\bvereinbarung\\b", "gewicht": 3 },
+        { "regex": "\\bvertragsparteien\\b|\\bvertrags-?partner\\b", "gewicht": 3 },
+        { "regex": "\\bkuendigungsfrist\\b|\\bgerichtsstand\\b", "gewicht": 3 },
+        { "regex": "\\bunterschrift\\b|\\bunterzeichnet\\b", "gewicht": 1 }
+      ]
+    },
+    {
+      "schluessel": "lohnabrechnung",
+      "bezeichnung": "Lohnabrechnung",
+      "mindestwert": 4,
+      "muster": [
+        { "regex": "\\blohn-?abrechnung\\b|\\bgehalts-?abrechnung\\b", "gewicht": 5 },
+        { "regex": "\\blohnausweis\\b", "gewicht": 5 },
+        { "regex": "\\bahv\\b|\\biv\\b\\s*/?\\s*\\beo\\b|\\balv\\b", "gewicht": 3 },
+        { "regex": "\\bbruttolohn\\b|\\bnettolohn\\b|\\bsozialabzuege\\b", "gewicht": 3 },
+        { "regex": "\\bpensionskasse\\b|\\bbvg\\b", "gewicht": 2 }
+      ]
+    },
+    {
+      "schluessel": "zeugnis",
+      "bezeichnung": "Zeugnis / Zertifikat",
+      "mindestwert": 3,
+      "muster": [
+        { "regex": "\\bzeugnis\\b|\\bzertifikat\\b|\\bdiplom\\b", "gewicht": 4 },
+        { "regex": "\\bbescheinigung\\b|\\bteilnahme-?bestaetigung\\b", "gewicht": 3 },
+        { "regex": "\\bausbildung\\b|\\bweiterbildung\\b|\\blehrgang\\b", "gewicht": 2 },
+        { "regex": "\\bnote\\b|\\bpruefung\\b|\\bkompetenz\\b", "gewicht": 1 }
+      ]
+    },
+    {
+      "schluessel": "kursunterlage",
+      "bezeichnung": "Kursunterlage",
+      "mindestwert": 3,
+      "muster": [
+        { "regex": "\\bkurs-?programm\\b|\\bkurs-?unterlage\\b|\\blehrmittel\\b", "gewicht": 4 },
+        { "regex": "\\bmodul\\b.*\\blernziel\\b|\\blernziele\\b", "gewicht": 3 },
+        { "regex": "\\bunterkurs\\b|\\bgrundkurs\\b", "gewicht": 3 },
+        { "regex": "\\bteilnehmende\\b|\\bteilnehmer-?liste\\b", "gewicht": 2 }
+      ]
+    },
+    {
+      "schluessel": "korrespondenz",
+      "bezeichnung": "Korrespondenz",
+      "mindestwert": 2,
+      "muster": [
+        { "regex": "\\bsehr\\s+geehrte", "gewicht": 2 },
+        { "regex": "\\bmit\\s+freundlichen\\s+gr(ue|ü)ssen\\b", "gewicht": 2 },
+        { "regex": "\\bbetreff\\b|\\bihr\\s+schreiben\\b", "gewicht": 1 }
+      ]
+    }
+  ]
+}
