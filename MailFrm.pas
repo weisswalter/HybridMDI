@@ -29,6 +29,7 @@ type
     actAbrufen: TAction;
     actNeuLaden: TAction;
     actGelesen: TAction;
+    actGraphAnmelden: TAction;
     ActionListRechts: TActionList;
     actErsterR: TAction;
     actZurueckR: TAction;
@@ -115,6 +116,9 @@ type
     lblKSmtpStatus: TLabel;
     lblKPasswortStatus: TLabel;
     lblKHinweis: TLabel;
+    // Nur fuer Graph-Konten von Belang — bei IMAP steht hier, welcher Weg gilt
+    lblKGraphStatus: TLabel;
+    btnKGraphAbmelden: TButton;
     // Reiter 3: Erweitert (alles einstellbar, nichts im Code entschieden)
     pnlErweitert: TPanel;
     lblEProt: TLabel;
@@ -174,6 +178,8 @@ type
     procedure btnKTestenClick(Sender: TObject);
     procedure cbxKKlartextClick(Sender: TObject);
     procedure btnKSmtpPasswortSetzenClick(Sender: TObject);
+    procedure actGraphAnmeldenExecute(Sender: TObject);
+    procedure btnKGraphAbmeldenClick(Sender: TObject);
   private
     function AktuellesKonto: Integer;
     function AktuellerOrdner: Integer;
@@ -186,6 +192,10 @@ type
     // Ohne das steht es nach jedem Fensteroeffnen wieder auf "verschluesselt",
     // und man setzt das Passwort versehentlich in der falschen Form.
     procedure KlartextHaekchenNachfuehren;
+    // Zeigt, welcher Abrufweg fuer das gewaehlte Konto gilt, und bei Graph
+    // zusaetzlich den Anmeldezustand. Blendet die Passwortfelder aus, wenn
+    // sie auf dem gewaehlten Weg keine Rolle spielen.
+    procedure WegStatusZeigen;
   end;
 
 var
@@ -196,7 +206,7 @@ implementation
 {$R *.dfm}
 
 uses
-  MailDm;
+  MailDm, GraphLoginFrm;
 
 procedure TfrmMail.FormCreate(Sender: TObject);
 begin
@@ -209,6 +219,7 @@ begin
   end;
   KlartextHaekchenNachfuehren;
   PasswortStatusZeigen;
+  WegStatusZeigen;
 end;
 
 procedure TfrmMail.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -253,6 +264,7 @@ begin
   dmMail.KontoWaehlen(LKonto);
   KlartextHaekchenNachfuehren;
   PasswortStatusZeigen;
+  WegStatusZeigen;
   dmMail.LadeOrdner(LKonto);
   dmMail.LadeNachrichten(LKonto, 0);   // erst alle, bis ein Ordner gewaehlt wird
   NachrichtGewechselt;
@@ -321,6 +333,95 @@ end;
 procedure TfrmMail.cbxKKlartextClick(Sender: TObject);
 begin
   PasswortStatusZeigen;
+end;
+
+// ── Reiter "Konto": Graph-Teil ─────────────────────────────────────────────
+// Bei Graph gibt es kein Passwort — der Zugang ist ein Refresh-Token, das aus
+// der Anmeldung entsteht. Passwortfelder waeren dort nicht nur ueberfluessig,
+// sondern irrefuehrend, deshalb werden sie abgeschaltet.
+
+procedure TfrmMail.WegStatusZeigen;
+var
+  LKonto: Integer;
+  LWeg: string;
+  LIstGraph: Boolean;
+begin
+  LKonto := AktuellesKonto;
+  if LKonto = 0 then
+  begin
+    lblKGraphStatus.Caption := '';
+    actGraphAnmelden.Enabled := False;
+    btnKGraphAbmelden.Enabled := False;
+    Exit;
+  end;
+
+  LWeg := dmMail.WegFuerKonto(LKonto);
+  LIstGraph := LWeg = 'graph';
+
+  // Anmelden muss auch dann moeglich sein, wenn der Weg noch nicht auf Graph
+  // steht — die Anmeldung ist ja gerade das, was ihn umstellt.
+  actGraphAnmelden.Enabled := dmMail.GraphMoeglich(LKonto);
+  btnKGraphAbmelden.Enabled := LIstGraph;
+
+  // Die Zugangsdaten des jeweils anderen Weges nicht bedienbar lassen
+  edtKPasswort.Enabled := not LIstGraph;
+  btnKPasswortSetzen.Enabled := not LIstGraph;
+  cbxKKlartext.Enabled := not LIstGraph;
+  edtKSmtpPasswort.Enabled := not LIstGraph;
+  btnKSmtpPasswortSetzen.Enabled := not LIstGraph;
+
+  // Ausdruecklich sagen, WARUM dieser Weg gilt — sonst raet der Anwender.
+  if LIstGraph then
+    lblKGraphStatus.Caption := 'Weg: Microsoft Graph (kein Passwort n' + #246 +
+      'tig). ' + dmMail.GraphStatus(LKonto)
+  else if dmMail.GraphMoeglich(LKonto) then
+    lblKGraphStatus.Caption := 'Weg: IMAP '#252'ber die C#-Br'#252'cke. F'#252'r Exchange ' +
+      'stattdessen oben "Microsoft-Anmeldung" - danach l'#228'uft dieses Konto ' +
+      #252'ber Graph.'
+  else
+    lblKGraphStatus.Caption := 'Weg: ' + UpperCase(LWeg) +
+      ' '#252'ber die C#-Br'#252'cke (MailKit) - im Reiter "Erweitert" fest eingestellt.';
+end;
+
+procedure TfrmMail.actGraphAnmeldenExecute(Sender: TObject);
+var
+  LKonto: Integer;
+  LMeldung: string;
+begin
+  LKonto := AktuellesKonto;
+  if LKonto = 0 then
+  begin
+    ShowMessage('Bitte zuerst ein Konto w' + #228 + 'hlen.');
+    Exit;
+  end;
+  if dmMail.tblKonto.State in dsEditModes then
+  begin
+    ShowMessage('Bitte das Konto zuerst speichern.');
+    Exit;
+  end;
+
+  // Waehrend der Anmeldung laeuft im Anmeldefenster ein ProcessMessages —
+  // ohne diese Sperre koennte man hier gleichzeitig einen Abruf starten.
+  Enabled := False;
+  try
+    LMeldung := TfrmGraphLogin.Anmelden(LKonto);
+  finally
+    Enabled := True;
+  end;
+
+  ShowMessage(LMeldung);
+  WegStatusZeigen;
+end;
+
+procedure TfrmMail.btnKGraphAbmeldenClick(Sender: TObject);
+begin
+  if AktuellesKonto = 0 then
+    Exit;
+  if MessageDlg('Die gespeicherte Anmeldung f' + #252 + 'r dieses Konto entfernen?',
+    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+  ShowMessage(dmMail.GraphAbmelden(AktuellesKonto));
+  WegStatusZeigen;
 end;
 
 procedure TfrmMail.btnKNeuClick(Sender: TObject);
@@ -405,7 +506,10 @@ begin
   // Der Test liest das Passwort aus der DATENBANK, nicht aus dem Eingabefeld.
   // Ohne diese Pruefung meldet MailKit nur "Value cannot be null
   // (Parameter 'password')" — technisch richtig, aber nicht hilfreich.
-  if dmMail.PasswortStatus(AktuellesKonto) = 'keins' then
+  // Bei Graph gibt es kein Passwort; dort pruefen die Aufrufe selbst, ob eine
+  // Anmeldung hinterlegt ist.
+  if not dmMail.IstGraphKonto(AktuellesKonto) and
+     (dmMail.PasswortStatus(AktuellesKonto) = 'keins') then
   begin
     if edtKPasswort.Text <> '' then
       ShowMessage('Das Passwort steht erst im Eingabefeld, aber noch nicht in ' +

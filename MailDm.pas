@@ -2,6 +2,16 @@ unit MailDm;
 
 // Mailmodul — Delphi-Seite (Anzeige/Bedienung).
 //
+// ZWEI ABRUFWEGE, eine Datenbank (Stand 01.08.2026):
+//   'graph' → MailGraph.pas, reines Delphi ueber HTTPS. Fuer Exchange Online
+//             und outlook.com — dort ist Graph der Hauptweg, weil die
+//             Zielgruppe ueberwiegend Exchange einsetzt.
+//   'imap'/'pop3' → MailKit in C# ueber die BridgePOC-Bruecke.
+//   'auto'  → anhand der Domain entscheiden (siehe WegFuerKonto).
+//   Welcher Weg gilt, steht in email_konto.protokoll und wird im Reiter
+//   "Erweitert" gepflegt. Beide Wege schreiben in dieselben Tabellen, die
+//   Oberflaeche merkt den Unterschied deshalb nicht.
+//
 // ARBEITSTEILUNG (siehe sql/email_vorgang.sql):
 //   Das Abholen per IMAP und die komplette MIME-Verarbeitung macht die
 //   C#-Seite (MailKit ueber die BridgePOC-Bruecke) und schreibt das Ergebnis
@@ -32,6 +42,7 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  MailGraph,
   udmModuleTemplate;
 
 type
@@ -62,10 +73,31 @@ type
     // fuer die Dauer der Sitzung gehalten — nie in DB, Registry oder INI
     // (siehe sql/email_konto_crypt.sql).
     FSchluessel: string;
+    // Der Graph-Weg. Wird erst beim ersten Bedarf erzeugt, damit Konten ohne
+    // Graph nichts davon merken.
+    FGraph: TGraphMail;
+    function Graph: TGraphMail;
   public
+    destructor Destroy; override;
     class function GetInstance: TObject;
     procedure OpenMail;
     property Schluessel: string read FSchluessel write FSchluessel;
+
+    // ── Wegwahl ───────────────────────────────────────────────────────────
+    // Liefert 'graph', 'imap' oder 'pop3'. Loest 'auto' auf.
+    function WegFuerKonto(AKontoId: Integer): string;
+    function IstGraphKonto(AKontoId: Integer): Boolean;
+    // Darf die Microsoft-Anmeldung angeboten werden? (bei 'auto' ja)
+    function GraphMoeglich(AKontoId: Integer): Boolean;
+
+    // ── Microsoft-Anmeldung (nur Graph) ───────────────────────────────────
+    // Die Ereignisse reicht die Oberflaeche durch: OnCode zeigt den
+    // Geraetecode an, OnWarten haelt das Fenster waehrend des Wartens am
+    // Leben und erlaubt den Abbruch.
+    function GraphAnmelden(AKontoId: Integer; ACode: TGraphCodeEvent;
+      AWarten: TGraphWartenEvent; AStatus: TGraphStatusEvent): string;
+    function GraphAbmelden(AKontoId: Integer): string;
+    function GraphStatus(AKontoId: Integer): string;
 
     // ── Kontopflege ───────────────────────────────────────────────────────
     procedure KontoWaehlen(AKontoId: Integer);
@@ -493,29 +525,181 @@ begin
   end;
 end;
 
-// ── Bruecke zur C#-Seite ────────────────────────────────────────────────────
-// Der eigentliche IMAP-/SMTP-Verkehr passiert in MailLib (MailKit); hier wird
-// nur der Auftrag abgesetzt. Ergebnisdaten kommen NICHT ueber den Rueckgabewert,
+// ── Wegwahl: Graph oder Bruecke ─────────────────────────────────────────────
+
+destructor TdmMail.Destroy;
+begin
+  FGraph.Free;
+  inherited;
+end;
+
+function TdmMail.Graph: TGraphMail;
+begin
+  if FGraph = nil then
+    FGraph := TGraphMail.Create(PGManagerDm.dmPGManager.FDConnection1, FSchluessel);
+  // Der Schluessel kann sich waehrend der Sitzung noch aendern (der Anwender
+  // tippt ihn erst beim ersten Passwort ein) — deshalb jedes Mal nachziehen.
+  FGraph.Schluessel := FSchluessel;
+  Result := FGraph;
+end;
+
+// 'auto' heisst NICHT "die Domain befragen". Das wurde am 01.08.2026 gemessen
+// und verworfen: login.microsoftonline.com antwortet fuer jede Domain mit
+// einer Tenant-Kennung (auch gmx.de), und arcor.de gilt dort als "Managed",
+// weil Vodafone einen Microsoft-Tenant hat — Walters Postfach liegt trotzdem
+// bei imap.vodafonemail.de. Eine solche Erkennung haette ein funktionierendes
+// IMAP-Konto stillschweigend auf Graph umgeleitet.
+//
+// 'auto' heisst stattdessen: Graph nimmt, WENN fuer das Konto eine
+// Microsoft-Anmeldung hinterlegt ist. Das ist kein Raten, sondern eine
+// Willensbekundung — jemand hat sich fuer dieses Konto angemeldet. Solange
+// das nicht passiert ist, bleibt alles beim bisherigen Weg.
+function TdmMail.WegFuerKonto(AKontoId: Integer): string;
+var
+  LQry: TFDQuery;
+  LProtokoll: string;
+  LAngemeldet: Boolean;
+begin
+  Result := 'imap';
+  if AKontoId <= 0 then
+    Exit;
+
+  LQry := TFDQuery.Create(nil);
+  try
+    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.SQL.Text :=
+      'SELECT protokoll, (oauth_refresh_crypt IS NOT NULL) AS angemeldet ' +
+      'FROM email_konto WHERE konto_id = :k';
+    LQry.ParamByName('k').AsInteger := AKontoId;
+    LQry.Open;
+    if LQry.IsEmpty then
+      Exit;
+    LProtokoll := LowerCase(LQry.FieldByName('protokoll').AsString.Trim);
+    LAngemeldet := LQry.FieldByName('angemeldet').AsBoolean;
+  finally
+    LQry.Free;
+  end;
+
+  // Eine ausdrueckliche Einstellung hat immer Vorrang
+  if (LProtokoll <> '') and (LProtokoll <> 'auto') then
+    Exit(LProtokoll);
+
+  if LAngemeldet then
+    Result := 'graph';
+end;
+
+function TdmMail.IstGraphKonto(AKontoId: Integer): Boolean;
+begin
+  Result := WegFuerKonto(AKontoId) = 'graph';
+end;
+
+// Darf fuer dieses Konto eine Microsoft-Anmeldung angeboten werden? Bei
+// 'auto' ja — sonst kaeme man nie zur ersten Anmeldung, die 'auto' erst auf
+// Graph umstellt. Bei ausdruecklich eingestelltem imap/pop3 nein.
+function TdmMail.GraphMoeglich(AKontoId: Integer): Boolean;
+var
+  LQry: TFDQuery;
+  LProtokoll: string;
+begin
+  Result := False;
+  if AKontoId <= 0 then
+    Exit;
+  LQry := TFDQuery.Create(nil);
+  try
+    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.SQL.Text := 'SELECT protokoll FROM email_konto WHERE konto_id = :k';
+    LQry.ParamByName('k').AsInteger := AKontoId;
+    LQry.Open;
+    if LQry.IsEmpty then
+      Exit;
+    LProtokoll := LowerCase(LQry.Fields[0].AsString.Trim);
+  finally
+    LQry.Free;
+  end;
+  Result := (LProtokoll = 'graph') or (LProtokoll = 'auto') or (LProtokoll = '');
+end;
+
+function TdmMail.GraphAnmelden(AKontoId: Integer; ACode: TGraphCodeEvent;
+  AWarten: TGraphWartenEvent; AStatus: TGraphStatusEvent): string;
+begin
+  Graph.OnCode := ACode;
+  Graph.OnWarten := AWarten;
+  Graph.OnStatus := AStatus;
+  try
+    Result := Graph.Anmelden(AKontoId);
+  finally
+    // Die Ereignisse zeigen auf Methoden des Formulars — sie duerfen nicht
+    // haengen bleiben, wenn das Formular geschlossen wird.
+    Graph.OnCode := nil;
+    Graph.OnWarten := nil;
+    Graph.OnStatus := nil;
+  end;
+end;
+
+function TdmMail.GraphAbmelden(AKontoId: Integer): string;
+begin
+  Result := Graph.Abmelden(AKontoId);
+end;
+
+function TdmMail.GraphStatus(AKontoId: Integer): string;
+begin
+  Result := Graph.AnmeldeStatus(AKontoId);
+end;
+
+// ── Abruf: leitet an den Weg des Kontos weiter ──────────────────────────────
+// Der eigentliche IMAP-/SMTP-Verkehr passiert in MailLib (MailKit), der
+// Graph-Verkehr in MailGraph.pas; hier wird nur der Auftrag abgesetzt.
+// Ergebnisdaten kommen bei BEIDEN Wegen NICHT ueber den Rueckgabewert,
 // sondern ueber die Datenbank — deshalb nach jedem Abruf neu laden.
 
 function TdmMail.OrdnerAbgleichen(AKontoId: Integer): string;
 begin
-  Result := TdmCSharp(TdmCSharp.GetInstance).Call('mail_caller', 'fetch_folders', [AKontoId]);
+  if WegFuerKonto(AKontoId) = 'graph' then
+    Result := Graph.OrdnerAbgleichen(AKontoId)
+  else
+    Result := TdmCSharp(TdmCSharp.GetInstance).Call('mail_caller', 'fetch_folders', [AKontoId]);
 end;
 
 function TdmMail.PostfachAbrufen(AKontoId: Integer): string;
 begin
-  Result := TdmCSharp(TdmCSharp.GetInstance).Call('mail_caller', 'fetch_inbox', [AKontoId]);
+  if WegFuerKonto(AKontoId) = 'graph' then
+    Result := Graph.PostfachAbrufen(AKontoId)
+  else
+    Result := TdmCSharp(TdmCSharp.GetInstance).Call('mail_caller', 'fetch_inbox', [AKontoId]);
 end;
 
+// Hier entscheidet das KONTO der Nachricht, nicht ein uebergebenes — deshalb
+// wird es zuerst nachgeschlagen.
 function TdmMail.NachrichtSenden(ANachrichtId: Integer): string;
+var
+  LKonto: Integer;
+  LQry: TFDQuery;
 begin
-  Result := TdmCSharp(TdmCSharp.GetInstance).Call('mail_caller', 'send_mail', [ANachrichtId]);
+  LQry := TFDQuery.Create(nil);
+  try
+    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.SQL.Text := 'SELECT konto_id FROM email_nachricht WHERE nachricht_id = :n';
+    LQry.ParamByName('n').AsInteger := ANachrichtId;
+    LQry.Open;
+    if LQry.IsEmpty then
+      Exit('FEHLER: Diese Nachricht gibt es nicht.');
+    LKonto := LQry.Fields[0].AsInteger;
+  finally
+    LQry.Free;
+  end;
+
+  if WegFuerKonto(LKonto) = 'graph' then
+    Result := Graph.NachrichtSenden(ANachrichtId)
+  else
+    Result := TdmCSharp(TdmCSharp.GetInstance).Call('mail_caller', 'send_mail', [ANachrichtId]);
 end;
 
 function TdmMail.VerbindungTesten(AKontoId: Integer): string;
 begin
-  Result := TdmCSharp(TdmCSharp.GetInstance).Call('mail_caller', 'test_connection', [AKontoId]);
+  if WegFuerKonto(AKontoId) = 'graph' then
+    Result := Graph.VerbindungTesten(AKontoId)
+  else
+    Result := TdmCSharp(TdmCSharp.GetInstance).Call('mail_caller', 'test_connection', [AKontoId]);
 end;
 
 procedure TdmMail.OpenMail;

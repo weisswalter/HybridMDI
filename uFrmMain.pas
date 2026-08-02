@@ -46,6 +46,12 @@ type
     cmdEinstellungen: TAction;
     cmdMitarbeiter: TAction;
     cmdMail: TAction;
+    cmdLohn: TAction;
+    NavPBtnTopLohn: TJvNavPanelButtonTop;
+    cmdAnlagen: TAction;
+    NavPBtnTopAnlagen: TJvNavPanelButtonTop;
+    cmdKalkulation: TAction;
+    NavPBtnTopKalkulation: TJvNavPanelButtonTop;
     cmdKurs: TAction;
     cmdAnwesenheit: TAction;
     cmdLehrer: TAction;
@@ -90,6 +96,9 @@ type
     procedure cmdEinstellungenExecute(Sender: TObject);
     procedure cmdMitarbeiterExecute(Sender: TObject);
     procedure cmdMailExecute(Sender: TObject);
+    procedure cmdLohnExecute(Sender: TObject);
+    procedure cmdAnlagenExecute(Sender: TObject);
+    procedure cmdKalkulationExecute(Sender: TObject);
     procedure cmdKursExecute(Sender: TObject);
     procedure cmdAnwesenheitExecute(Sender: TObject);
     procedure cmdLehrerExecute(Sender: TObject);
@@ -260,6 +269,21 @@ end;
 procedure TfrmMain.cmdMailExecute(Sender: TObject);
 begin
   TdmModuleTemplate.OpenGui('Mail');
+end;
+
+procedure TfrmMain.cmdLohnExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Lohn');
+end;
+
+procedure TfrmMain.cmdAnlagenExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Anlagen');
+end;
+
+procedure TfrmMain.cmdKalkulationExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Kalkulation');
 end;
 
 procedure TfrmMain.cmdKursExecute(Sender: TObject);

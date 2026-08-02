@@ -323,6 +323,31 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="MailFrm.pas">
             <Form>frmMail</Form>
         </DCCReference>
+        <DCCReference Include="MailGraph.pas"/>
+        <DCCReference Include="GraphLoginFrm.pas">
+            <Form>frmGraphLogin</Form>
+        </DCCReference>
+        <DCCReference Include="LohnDm.pas">
+            <Form>dmLohn</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="LohnFrm.pas">
+            <Form>frmLohn</Form>
+        </DCCReference>
+        <DCCReference Include="AnlagenDm.pas">
+            <Form>dmAnlagen</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="AnlagenFrm.pas">
+            <Form>frmAnlagen</Form>
+        </DCCReference>
+        <DCCReference Include="KalkulationDm.pas">
+            <Form>dmKalkulation</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="KalkulationFrm.pas">
+            <Form>frmKalkulation</Form>
+        </DCCReference>
         <DCCReference Include="EinstellungenDm.pas">
             <Form>dmEinstellungen</Form>
             <DesignClass>TDataModule</DesignClass>

@@ -323,6 +323,57 @@ object frmMain: TfrmMain
           ParentStyleManager = False
           ImageIndex = 0
         end
+        object NavPBtnTopKalkulation: TJvNavPanelButtonTop
+          Left = 1306
+          Top = 0
+          Width = 90
+          Height = 69
+          Action = cmdKalkulation
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+        end
+        object NavPBtnTopAnlagen: TJvNavPanelButtonTop
+          Left = 1216
+          Top = 0
+          Width = 90
+          Height = 69
+          Action = cmdAnlagen
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+        end
+        object NavPBtnTopLohn: TJvNavPanelButtonTop
+          Left = 1126
+          Top = 0
+          Width = 90
+          Height = 69
+          Action = cmdLohn
+          Align = alLeft
+          Alignment = taCenter
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+        end
         object NavPBtnTopMail: TJvNavPanelButtonTop
           Left = 1036
           Top = 0
@@ -1688,6 +1739,18 @@ object frmMain: TfrmMain
     object cmdMail: TAction
       Caption = 'E-Mail'
       OnExecute = cmdMailExecute
+    end
+    object cmdLohn: TAction
+      Caption = 'L'#246'hne'
+      OnExecute = cmdLohnExecute
+    end
+    object cmdAnlagen: TAction
+      Caption = 'Anlagen'
+      OnExecute = cmdAnlagenExecute
+    end
+    object cmdKalkulation: TAction
+      Caption = 'Kalkulation'
+      OnExecute = cmdKalkulationExecute
     end
     object cmdKurs: TAction
       Caption = 'Kurse'

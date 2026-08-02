@@ -394,6 +394,10 @@ object frmMail: TfrmMail
           item
             Action = actLetzterR
             Width = 75
+          end
+          item
+            Action = actGraphAnmelden
+            Width = 130
           end>
       end
       object pnlKonto: TPanel
@@ -516,6 +520,24 @@ object frmMail: TfrmMail
             'r diese Sitzung und muss nach jedem Programmstart erneut eingegeb' +
             'en werden, sobald ein Passwort gesetzt oder gelesen wird.'
           WordWrap = True
+        end
+        object lblKGraphStatus: TLabel
+          Left = 8
+          Top = 566
+          Width = 380
+          Height = 15
+          AutoSize = False
+          Caption = 'Weg: noch nicht ermittelt.'
+        end
+        object btnKGraphAbmelden: TButton
+          Left = 400
+          Top = 561
+          Width = 150
+          Height = 25
+          Caption = 'Microsoft abmelden'
+          Enabled = False
+          TabOrder = 21
+          OnClick = btnKGraphAbmeldenClick
         end
         object pnlKontoButtons: TPanel
           Left = 0
@@ -1163,6 +1185,11 @@ object frmMail: TfrmMail
     object actGelesen: TAction
       Caption = 'Gelesen/Ungelesen'
       OnExecute = actGelesenExecute
+    end
+    object actGraphAnmelden: TAction
+      Caption = 'Microsoft-Anmeldung'
+      Hint = 'Bei Microsoft anmelden (Ger'#228'tecode) - nur f'#252'r Graph-Konten'
+      OnExecute = actGraphAnmeldenExecute
     end
   end
   object ActionListRechts: TActionList

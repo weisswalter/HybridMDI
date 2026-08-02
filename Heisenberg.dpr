@@ -51,6 +51,14 @@ uses
   LehrerFrm in 'LehrerFrm.pas' {frmLehrer},
   MailDm in 'MailDm.pas' {dmMail: TDataModule},
   MailFrm in 'MailFrm.pas' {frmMail},
+  MailGraph in 'MailGraph.pas',
+  GraphLoginFrm in 'GraphLoginFrm.pas' {frmGraphLogin},
+  LohnDm in 'LohnDm.pas' {dmLohn: TDataModule},
+  LohnFrm in 'LohnFrm.pas' {frmLohn},
+  AnlagenDm in 'AnlagenDm.pas' {dmAnlagen: TDataModule},
+  AnlagenFrm in 'AnlagenFrm.pas' {frmAnlagen},
+  KalkulationDm in 'KalkulationDm.pas' {dmKalkulation: TDataModule},
+  KalkulationFrm in 'KalkulationFrm.pas' {frmKalkulation},
   EinstellungenDm in 'EinstellungenDm.pas' {dmEinstellungen: TDataModule},
   EinstellungenFrm in 'EinstellungenFrm.pas' {frmEinstellungen},
   MitarbeiterDm in 'MitarbeiterDm.pas' {dmMitarbeiter: TDataModule},
@@ -114,6 +122,12 @@ begin
   Application.CreateForm(TdmEinstellungen, dmEinstellungen);
   // Mail — CreateForm noetig (RTTI-Dispatch)
   Application.CreateForm(TdmMail, dmMail);
+  // Muss erzeugt werden, auch wenn das Modul nur per RTTI-String aufgerufen
+  // wird (OpenGui('Lohn')) — sonst optimiert der Smart-Linker die Klasse samt
+  // RTTI weg und HandleMessage findet sie zur Laufzeit nicht.
+  Application.CreateForm(TdmLohn, dmLohn);
+  Application.CreateForm(TdmAnlagen, dmAnlagen);
+  Application.CreateForm(TdmKalkulation, dmKalkulation);
   // Kurs — CreateForm noetig (RTTI-Dispatch)
   Application.CreateForm(TdmKurs, dmKurs);
   // Lehrer - CreateForm noetig (RTTI-Dispatch), sonst linkt der
