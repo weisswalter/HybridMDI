@@ -1,6 +1,6 @@
 object dmModuleTemplate: TdmModuleTemplate
-  Height = 600
-  Width = 800
+  Left = 0
+  Top = 0
   object JvThread1: TJvThread
     Exclusive = False
     MaxCount = 0
@@ -8,7 +8,7 @@ object dmModuleTemplate: TdmModuleTemplate
     FreeOnTerminate = False
     AfterCreateDialogForm = JvThread1AfterCreateDialogForm
     OnExecute = JvThread1Execute
-    Left = 440
-    Top = 370
+    Left = 550
+    Top = 463
   end
 end

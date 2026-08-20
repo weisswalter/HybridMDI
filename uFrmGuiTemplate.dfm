@@ -1,26 +1,23 @@
-object frmGuiTemplate: TfrmGuiTemplate
-  Left = 0
-  Top = 0
+inherited frmGuiTemplate: TfrmGuiTemplate
   Caption = 'GUI-Vorlage'
   ClientHeight = 600
-  ClientWidth = 1048
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
-  Font.Style = []
+  ClientWidth = 1080
   FormStyle = fsMDIChild
   Visible = True
+  StyleElements = [seFont, seClient, seBorder]
+  ExplicitLeft = 3
+  ExplicitTop = 3
+  ExplicitWidth = 1096
+  ExplicitHeight = 639
   TextHeight = 15
-  object Splitter1: TSplitter
+  object Splitter1: TSplitter [0]
     Left = 313
     Top = 0
     Width = 5
     Height = 600
     ExplicitLeft = 470
   end
-  object pnlStamm: TPanel
+  object pnlStamm: TPanel [1]
     Left = 0
     Top = 0
     Width = 313
@@ -29,217 +26,100 @@ object frmGuiTemplate: TfrmGuiTemplate
     BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 0
-    object pnlStammButtons: TPanel
+    ExplicitHeight = 592
+    object pnlStammFelder: TPanel
       Left = 0
       Top = 0
       Width = 313
-      Height = 38
-      Align = alTop
-      BevelOuter = bvNone
-      ShowCaption = False
-      TabOrder = 0
-      object btnErsterStamm: TJvNavPanelButtonTop
-        Left = 0
-        Top = 0
-        Width = 50
-        Height = 38
-        Action = actErsterL
-        Align = alLeft
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        ImageIndex = 0
-      end
-      object btnZurueckStamm: TJvNavPanelButtonTop
-        Left = 50
-        Top = 0
-        Width = 60
-        Height = 38
-        Action = actZurueckL
-        Align = alLeft
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        ImageIndex = 0
-      end
-      object btnWeiterStamm: TJvNavPanelButtonTop
-        Left = 110
-        Top = 0
-        Width = 52
-        Height = 38
-        Action = actWeiterL
-        Align = alLeft
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        ImageIndex = 0
-      end
-      object btnLetzterStamm: TJvNavPanelButtonTop
-        Left = 162
-        Top = 0
-        Width = 60
-        Height = 38
-        Action = actLetzterL
-        Align = alLeft
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        ImageIndex = 0
-      end
-      object btnNeuStamm: TJvNavPanelButtonTop
-        Left = 222
-        Top = 0
-        Width = 31
-        Height = 38
-        Action = actNeuL
-        Align = alLeft
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        ImageIndex = 0
-      end
-      object btnAendernStamm: TJvNavPanelButtonTop
-        Left = 253
-        Top = 0
-        Width = 50
-        Height = 38
-        Action = actAendernL
-        Align = alLeft
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        ImageIndex = 0
-      end
-      object btnSpeichernStamm: TJvNavPanelButtonTop
-        Left = 303
-        Top = 0
-        Width = 64
-        Height = 38
-        Action = actSpeichernL
-        Align = alLeft
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        ImageIndex = 0
-      end
-      object btnAbbrechenStamm: TJvNavPanelButtonTop
-        Left = 367
-        Top = 0
-        Width = 61
-        Height = 38
-        Action = actAbbrechenL
-        Align = alLeft
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        ImageIndex = 0
-      end
-      object btnNeuLadenStamm: TJvNavPanelButtonTop
-        Left = 428
-        Top = 0
-        Width = 61
-        Height = 38
-        Action = actNeuLadenL
-        Align = alLeft
-        Alignment = taCenter
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        StyleManager = PaneStyle1
-        ParentStyleManager = False
-        ImageIndex = 0
-      end
-    end
-    object pnlStammFelder: TPanel
-      Left = 0
-      Top = 38
-      Width = 313
-      Height = 562
+      Height = 600
       Align = alClient
       BevelOuter = bvNone
       ShowCaption = False
-      TabOrder = 1
+      TabOrder = 0
+      ExplicitHeight = 592
+      object rbtnbleft: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 313
+        Height = 48
+        Align = alTop
+        BevelOuter = bvNone
+        Caption = 'rbtnbleft'
+        ShowCaption = False
+        TabOrder = 0
+        Gradient.Left = 0
+        Gradient.Top = 0
+        Gradient.Width = 313
+        Gradient.Height = 48
+        Gradient.Style = grVertical
+        Gradient.StartColor = 16245453
+        Gradient.EndColor = 15966336
+        Gradient.ExplicitWidth = 0
+        Gradient.ExplicitHeight = 0
+        Buttons = <
+          item
+            Action = actErsterL
+          end
+          item
+            Action = actZurueckL
+          end
+          item
+            Action = actWeiterL
+          end
+          item
+            Action = actLetzterL
+          end
+          item
+            Action = actNeuL
+          end
+          item
+            Action = actAendernL
+          end
+          item
+            Action = actSpeichernL
+          end
+          item
+            Action = actAbbrechenL
+          end
+          item
+            Action = actNeuLadenL
+          end>
+      end
     end
   end
-  object rbnpnl1: TRibbonPanel
-    Left = 648
+  object rbnpnl1: TRibbonPanel [2]
+    Left = 318
     Top = 0
-    Width = 400
+    Width = 762
     Height = 600
-    Align = alRight
+    Align = alClient
     BevelOuter = bvNone
     Caption = 'rbnpnl1'
     ShowCaption = False
     TabOrder = 1
     TopPanel.Left = 0
     TopPanel.Top = 0
-    TopPanel.Width = 400
+    TopPanel.Width = 762
     TopPanel.Height = 31
     TopPanel.Align = alTop
     TopPanel.BevelOuter = bvNone
     TopPanel.Caption = 'TopPanel'
     TopPanel.ShowCaption = False
     TopPanel.TabOrder = 1
+    TopPanel.ExplicitWidth = 728
     PageControl.Left = -1
     PageControl.Top = 29
-    PageControl.Width = 402
+    PageControl.Width = 758
     PageControl.Height = 572
     PageControl.Anchors = [akLeft, akTop, akRight, akBottom]
     PageControl.TabOrder = 0
+    PageControl.ExplicitWidth = 724
+    PageControl.ExplicitHeight = 564
     HeaderButtons = <>
+    ExplicitWidth = 728
+    ExplicitHeight = 592
     DesignSize = (
-      400
+      762
       600)
   end
   object PaneStyle1: TJvNavPaneStyleManager
@@ -300,49 +180,148 @@ object frmGuiTemplate: TfrmGuiTemplate
       OnExecute = ActionLinksExecute
     end
   end
-  object ActionListRechts: TActionList
+  object ActionListRechts1: TActionList
+    Tag = 1
     Left = 288
     Top = 552
-    object actErsterR: TAction
+    object actErsterR1: TAction
       Caption = 'Erster'
       OnExecute = ActionRechtsExecute
     end
-    object actZurueckR: TAction
+    object actZurueckR1: TAction
       Tag = 1
       Caption = 'Zur'#252'ck'
       OnExecute = ActionRechtsExecute
     end
-    object actWeiterR: TAction
+    object actWeiterR1: TAction
       Tag = 2
       Caption = 'Weiter'
       OnExecute = ActionRechtsExecute
     end
-    object actLetzterR: TAction
+    object actLetzterR1: TAction
       Tag = 3
       Caption = 'Letzter'
       OnExecute = ActionRechtsExecute
     end
-    object actNeuR: TAction
+    object actNeuR1: TAction
       Tag = 4
       Caption = 'Neu'
       OnExecute = ActionRechtsExecute
     end
-    object actAendernR: TAction
+    object actAendernR1: TAction
       Tag = 5
       Caption = #196'ndern'
       OnExecute = ActionRechtsExecute
     end
-    object actSpeichernR: TAction
+    object actSpeichernR1: TAction
       Tag = 6
       Caption = 'Speichern'
       OnExecute = ActionRechtsExecute
     end
-    object actAbbrechenR: TAction
+    object actAbbrechenR1: TAction
       Tag = 7
       Caption = 'Abbrechen'
       OnExecute = ActionRechtsExecute
     end
-    object actNeuLadenR: TAction
+    object actNeuLadenR1: TAction
+      Tag = 8
+      Caption = 'Neu laden'
+      OnExecute = ActionRechtsExecute
+    end
+  end
+  object ActionListRechts2: TActionList
+    Tag = 2
+    Left = 376
+    Top = 544
+    object actErsterR2: TAction
+      Caption = 'Erster'
+      OnExecute = ActionRechtsExecute
+    end
+    object actZurueckR2: TAction
+      Tag = 1
+      Caption = 'Zur'#252'ck'
+      OnExecute = ActionRechtsExecute
+    end
+    object actWeiterR2: TAction
+      Tag = 2
+      Caption = 'Weiter'
+      OnExecute = ActionRechtsExecute
+    end
+    object actLetzterR2: TAction
+      Tag = 3
+      Caption = 'Letzter'
+      OnExecute = ActionRechtsExecute
+    end
+    object actNeuR2: TAction
+      Tag = 4
+      Caption = 'Neu'
+      OnExecute = ActionRechtsExecute
+    end
+    object actAendernR2: TAction
+      Tag = 5
+      Caption = #196'ndern'
+      OnExecute = ActionRechtsExecute
+    end
+    object actSpeichernR2: TAction
+      Tag = 6
+      Caption = 'Speichern'
+      OnExecute = ActionRechtsExecute
+    end
+    object actAbbrechenR2: TAction
+      Tag = 7
+      Caption = 'Abbrechen'
+      OnExecute = ActionRechtsExecute
+    end
+    object actNeuLadenR2: TAction
+      Tag = 8
+      Caption = 'Neu laden'
+      OnExecute = ActionRechtsExecute
+    end
+  end
+  object ActionListRechts3: TActionList
+    Tag = 3
+    Left = 472
+    Top = 544
+    object actErsterR3: TAction
+      Caption = 'Erster'
+      OnExecute = ActionRechtsExecute
+    end
+    object actZurueckR3: TAction
+      Tag = 1
+      Caption = 'Zur'#252'ck'
+      OnExecute = ActionRechtsExecute
+    end
+    object actWeiterR3: TAction
+      Tag = 2
+      Caption = 'Weiter'
+      OnExecute = ActionRechtsExecute
+    end
+    object actLetzterR3: TAction
+      Tag = 3
+      Caption = 'Letzter'
+      OnExecute = ActionRechtsExecute
+    end
+    object actNeuR3: TAction
+      Tag = 4
+      Caption = 'Neu'
+      OnExecute = ActionRechtsExecute
+    end
+    object actAendernR3: TAction
+      Tag = 5
+      Caption = #196'ndern'
+      OnExecute = ActionRechtsExecute
+    end
+    object actSpeichernR3: TAction
+      Tag = 6
+      Caption = 'Speichern'
+      OnExecute = ActionRechtsExecute
+    end
+    object actAbbrechenR3: TAction
+      Tag = 7
+      Caption = 'Abbrechen'
+      OnExecute = ActionRechtsExecute
+    end
+    object actNeuLadenR3: TAction
       Tag = 8
       Caption = 'Neu laden'
       OnExecute = ActionRechtsExecute

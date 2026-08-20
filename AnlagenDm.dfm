@@ -2,10 +2,8 @@ object dmAnlagen: TdmAnlagen
   Left = 0
   Top = 0
   OnCreate = DataModuleCreate
-  object tblAnlage: TFDTable
-    AfterScroll = tblAnlageAfterScroll
+  object tblAnlage: TFDMemTable
     OnNewRecord = tblAnlageNewRecord
-    TableName = 'anlage'
     Left = 40
     Top = 32
   end
@@ -14,7 +12,10 @@ object dmAnlagen: TdmAnlagen
     Left = 152
     Top = 32
   end
-  object qryPlan: TFDQuery
+  object qryPlan: TFDMemTable
+    IndexFieldNames = 'anlage_id;jahr'
+    MasterSource = dsAnlage
+    MasterFields = 'anlage_id'
     Left = 40
     Top = 96
   end
@@ -23,7 +24,7 @@ object dmAnlagen: TdmAnlagen
     Left = 152
     Top = 96
   end
-  object qryKonto: TFDQuery
+  object qryKonto: TFDMemTable
     Left = 40
     Top = 160
   end
@@ -32,7 +33,7 @@ object dmAnlagen: TdmAnlagen
     Left = 152
     Top = 160
   end
-  object qryRaum: TFDQuery
+  object qryRaum: TFDMemTable
     Left = 40
     Top = 224
   end

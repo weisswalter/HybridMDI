@@ -62,8 +62,7 @@ type
     // und fuer Mailtexte aus dem Mailmodul.
     function TextEinordnen(const AText: string): TOcrErgebnis;
     // typ_id zum Kategorie-Schluessel, 0 wenn nicht gepflegt.
-    function TypIdZuKategorie(AConnection: TFDConnection;
-      const AKategorie: string): Integer;
+    function TypIdZuKategorie(const AKategorie: string): Integer;
     // Schreibt das Ergebnis in eine dokument-Zeile. Der Datensatz muss im
     // Bearbeitungsmodus sein. Felder, die es im Dataset nicht gibt, werden
     // uebersprungen -- so bleibt es benutzbar, wenn die Abfrage nur einen
@@ -78,7 +77,7 @@ var
 implementation
 
 uses
-  PythonDm;
+  System.Variants, PythonDm, ZentraleDatenDm;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -208,27 +207,20 @@ begin
   Result := AusJson(Rufe(Format('ocr_caller.text_einordnen("%s")', [LSicher])));
 end;
 
-function TdmDokumentOcr.TypIdZuKategorie(AConnection: TFDConnection;
-  const AKategorie: string): Integer;
+// Keine eigene Query mehr: die Datenbankfunktion wird ueber das zentrale
+// Datenmodul gerufen, das als einziges noch eine Verbindung haelt.
+function TdmDokumentOcr.TypIdZuKategorie(const AKategorie: string): Integer;
 var
-  LQry: TFDQuery;
+  LWert: Variant;
 begin
   Result := 0;
-  if (AKategorie = '') or (AKategorie = 'unbekannt')
-     or not Assigned(AConnection) then
+  if (AKategorie = '') or (AKategorie = 'unbekannt') then
     Exit;
 
-  LQry := TFDQuery.Create(nil);
-  try
-    LQry.Connection := AConnection;
-    LQry.SQL.Text := 'SELECT fn_dokument_typ_zu_ocr(:k) AS typ_id';
-    LQry.ParamByName('k').AsString := AKategorie;
-    LQry.Open;
-    if not LQry.Fields[0].IsNull then
-      Result := LQry.Fields[0].AsInteger;
-  finally
-    LQry.Free;
-  end;
+  LWert := TdmZentraleDaten(TdmZentraleDaten.GetInstance).SpAufrufen(
+    'fn_dokument_typ_zu_ocr', [AKategorie]);
+  if not VarIsNull(LWert) then
+    Result := LWert;
 end;
 
 procedure TdmDokumentOcr.InDatensatzSchreiben(ADataSet: TDataSet;

@@ -2,9 +2,8 @@ object dmMail: TdmMail
   Left = 0
   Top = 0
   OnCreate = DataModuleCreate
-  object tblKonto: TFDTable
+  object tblKonto: TFDMemTable
     OnNewRecord = tblKontoNewRecord
-    TableName = 'email_konto'
     Left = 40
     Top = 32
   end
@@ -40,8 +39,7 @@ object dmMail: TdmMail
     Left = 128
     Top = 224
   end
-  object tblDokument: TFDTable
-    TableName = 'dokument'
+  object tblDokument: TFDMemTable
     Left = 40
     Top = 288
   end

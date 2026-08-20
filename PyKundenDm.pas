@@ -7,13 +7,12 @@ unit PyKundenDm;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmPyKunden = class(TdmModuleTemplate)
-    procedure DataModuleCreate(Sender: TObject);
-    procedure DataModuleDestroy(Sender: TObject);
   public
     class function GetInstance: TObject;
     procedure OpenPyKunden;
@@ -27,22 +26,28 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms,
   PythonDm,
-  PyKundenFrm;
+  PyKundenFrm, System.SyncObjs, ZentraleDatenDm;
 
-procedure TdmPyKunden.DataModuleCreate(Sender: TObject);
-begin
-  // Registrierung übernimmt TdmModuleTemplate.Create (SilentRegisterSubscriberForEvents)
-end;
 
-procedure TdmPyKunden.DataModuleDestroy(Sender: TObject);
-begin
-  // Deregistrierung übernimmt TdmModuleTemplate.Destroy
-end;
+
+var
+  GSperrePyKunden: TCriticalSection;
 
 class function TdmPyKunden.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmPyKunden) then
+  begin
+    GSperrePyKunden.Enter;
+    try
+      if not Assigned(dmPyKunden) then
+        Application.CreateForm(TdmPyKunden, dmPyKunden);
+    finally
+      GSperrePyKunden.Leave;
+    end;
+  end;
   Result := dmPyKunden;
 end;
 
@@ -56,5 +61,12 @@ begin
     'import importlib, modul_kunden; importlib.reload(modul_kunden); modul_kunden.ModulKunden().show(%d)',
     [frmPyKunden.Handle]));
 end;
+
+
+initialization
+  GSperrePyKunden := TCriticalSection.Create;
+
+finalization
+  GSperrePyKunden.Free;
 
 end.

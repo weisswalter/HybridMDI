@@ -19,7 +19,7 @@ unit LehrerDm;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
@@ -29,27 +29,31 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmLehrer = class(TdmModuleTemplate)
-    qryLehrer: TFDQuery;
+    // Kopien der Views aus dem zentralen Datenmodul.
+    qryLehrer: TFDMemTable;
     dstblLehrer: TDataSource;
-    tblPerson: TFDTable;
+    tblPerson: TFDMemTable;
     dstblPerson: TDataSource;
-    tblPersonBeziehung: TFDTable;
+    tblPersonBeziehung: TFDMemTable;
     dstblPersonBeziehung: TDataSource;
-    qryKompetenzen: TFDQuery;
+    qryKompetenzen: TFDMemTable;
     dstblKompetenzen: TDataSource;
-    qryKompetenzAuswahl: TFDQuery;
+    qryKompetenzAuswahl: TFDMemTable;
     dsKompetenzAuswahl: TDataSource;
-    qryKurse: TFDQuery;
+    qryKurse: TFDMemTable;
     dstblKurse: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
   private
     FMandantId: Integer;
     FPersonId: Integer;
-    function Ausfuehren(const ASql: string; const AParams: array of Variant): Integer;
+    // Holt alle Speichertabellen dieses Moduls aus dem zentralen
+    // Datenmodul (geklont) bzw. holt sie notfalls selbst.
+    procedure TabellenLaden;
   public
     class function GetInstance: TObject;
     property MandantId: Integer read FMandantId;
@@ -79,108 +83,49 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms, Vcl.Dialogs,
-  PGManagerDm,
+  ZentraleDatenDm,
+  System.Variants,
+  Vcl.Dialogs,
   MandantDm,
-  LehrerFrm;
+  LehrerFrm, System.SyncObjs;
+
+var
+  GSperreLehrer: TCriticalSection;
 
 class function TdmLehrer.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmLehrer) then
+  begin
+    GSperreLehrer.Enter;
+    try
+      if not Assigned(dmLehrer) then
+        Application.CreateForm(TdmLehrer, dmLehrer);
+    finally
+      GSperreLehrer.Leave;
+    end;
+  end;
   Result := dmLehrer;
 end;
 
 procedure TdmLehrer.DataModuleCreate(Sender: TObject);
-var
-  I: Integer;
 begin
-  for I := 0 to ComponentCount - 1 do
-    if Components[I] is TFDCustomQuery then
-      TFDCustomQuery(Components[I]).Connection := PGManagerDm.dmPGManager.FDConnection1
-    else if Components[I] is TFDTable then
-      TFDTable(Components[I]).Connection := PGManagerDm.dmPGManager.FDConnection1;
-
+  // Keine Verbindung und kein Inline-SQL mehr: alle Listen sind Kopien aus
+  // dem zentralen Datenmodul. Die frueheren Abfragen stehen jetzt als Views
+  // in der Datenbank:
+  //   v_lehrer_liste            - Anstellungsart abgeleitet (siehe oben)
+  //   v_person_kompetenz_status - Reststatus der Nachweise
+  //   v_lehrer_kurs_eignung     - darf dieser Lehrer diesen Kurs halten
   tblPerson.UpdateOptions.AutoIncFields          := 'person_id';
   tblPersonBeziehung.UpdateOptions.AutoIncFields := 'beziehungs_id';
-
-  // Die Anstellungsart wird hier abgeleitet - siehe Unit-Kommentar.
-  qryLehrer.SQL.Text :=
-    'SELECT pb.beziehungs_id, p.person_id, p.vorname, p.nachname_firmenname, ' +
-    '       p.titel, p.geburtsdatum, ' +
-    '       CASE WHEN pb.ist_mitarbeiter THEN ''Lohnmitarbeiter'' ' +
-    '            ELSE ''Honorarlehrer'' END AS anstellungsart, ' +
-    '       rt.rollen_bezeichnung AS rolle_name, ' +
-    '       (SELECT count(*) FROM person_kompetenz pk ' +
-    '         WHERE pk.person_id = p.person_id AND pk.mandant_id = pb.mandant_id) AS kompetenzen ' +
-    'FROM person_beziehung pb ' +
-    'JOIN person p ON p.person_id = pb.quell_person_id ' +
-    'LEFT JOIN rolle_typ rt ON rt.mandant_id = pb.mandant_id AND rt.rolle_id = pb.rolle_id ' +
-    'WHERE pb.mandant_id = :m AND pb.ist_lehrer = true ' +
-    'ORDER BY p.nachname_firmenname, p.vorname';
-
-  // Abgelaufene Nachweise sind der eigentliche Grund, warum das Modul
-  // gebraucht wird - deshalb steht der Reststatus in der Liste.
-  qryKompetenzen.SQL.Text :=
-    'SELECT pk.person_kompetenz_id, pk.kompetenz_id, kt.bezeichnung, ' +
-    '       kt.quelle, pk.erworben_am, pk.gueltig_bis, pk.bemerkung, ' +
-    '       CASE WHEN pk.gueltig_bis IS NULL THEN ''unbefristet'' ' +
-    '            WHEN pk.gueltig_bis < CURRENT_DATE THEN ''ABGELAUFEN'' ' +
-    '            WHEN pk.gueltig_bis < CURRENT_DATE + 60 THEN ''laeuft bald ab'' ' +
-    '            ELSE ''gueltig'' END AS status ' +
-    'FROM person_kompetenz pk ' +
-    'JOIN kompetenz_typ kt ON kt.mandant_id = pk.mandant_id ' +
-    '                     AND kt.kompetenz_id = pk.kompetenz_id ' +
-    'WHERE pk.person_id = :p AND pk.mandant_id = :m ' +
-    'ORDER BY kt.bezeichnung';
-
-  qryKompetenzAuswahl.SQL.Text :=
-    'SELECT kompetenz_id, bezeichnung, gueltigkeit_monate FROM kompetenz_typ ' +
-    'WHERE mandant_id = :m AND aktiv ORDER BY bezeichnung';
-
-  // Welche Kurse darf dieser Lehrer halten? Gegenprobe zwischen den
-  // Kompetenzen der Person und kurs_kompetenz mit rolle='lehrer'.
-  qryKurse.SQL.Text :=
-    'SELECT k.kurs_id, k.kurs_nr, k.bezeichnung, k.unterrichtsstunden, ' +
-    '       count(kk.kompetenz_id) AS gefordert, ' +
-    '       count(pk.kompetenz_id) AS vorhanden, ' +
-    '       CASE WHEN count(kk.kompetenz_id) = count(pk.kompetenz_id) ' +
-    '            THEN ''ja'' ELSE ''nein'' END AS darf_halten ' +
-    'FROM kurs k ' +
-    'LEFT JOIN kurs_kompetenz kk ON kk.kurs_id = k.kurs_id AND kk.rolle = ''lehrer'' ' +
-    'LEFT JOIN person_kompetenz pk ON pk.kompetenz_id = kk.kompetenz_id ' +
-    '                             AND pk.mandant_id = kk.mandant_id ' +
-    '                             AND pk.person_id = :p ' +
-    '                             AND (pk.gueltig_bis IS NULL OR pk.gueltig_bis >= CURRENT_DATE) ' +
-    'WHERE k.mandant_id = :m AND k.aktiv ' +
-    'GROUP BY k.kurs_id, k.kurs_nr, k.bezeichnung, k.unterrichtsstunden ' +
-    'ORDER BY k.bezeichnung';
-end;
-
-function TdmLehrer.Ausfuehren(const ASql: string;
-  const AParams: array of Variant): Integer;
-var
-  LQry: TFDQuery;
-  I: Integer;
-begin
-  LQry := TFDQuery.Create(nil);
-  try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
-    LQry.SQL.Text := ASql;
-    for I := 0 to High(AParams) do
-      LQry.Params[I].Value := AParams[I];
-    LQry.ExecSQL;
-    Result := LQry.RowsAffected;
-  finally
-    LQry.Free;
-  end;
 end;
 
 // ── Laden ───────────────────────────────────────────────────────────────────
 
 procedure TdmLehrer.LadeListe;
 begin
-  qryLehrer.Close;
-  qryLehrer.ParamByName('m').AsInteger := FMandantId;
-  qryLehrer.Open;
+  TabellenLaden;
 
   if not qryLehrer.IsEmpty then
     LadeLehrer(qryLehrer.FieldByName('person_id').AsInteger,
@@ -189,6 +134,8 @@ begin
     LadeLehrer(0, 0);
 end;
 
+// Was frueher die Parameter :p und :m der Queries waren, ist jetzt ein
+// Filter auf der Kopie im Speicher.
 procedure TdmLehrer.LadeLehrer(APersonId, ABeziehungsId: Integer);
 begin
   if tblPerson.State in dsEditModes then tblPerson.Cancel;
@@ -196,23 +143,15 @@ begin
 
   FPersonId := APersonId;
 
-  qryKompetenzen.Close;
-  qryKurse.Close;
-
   if APersonId <= 0 then
     Exit;
 
+  // Kompetenzen und Kurseignung haengen per MasterSource/MasterFields an
+  // qryLehrer (im DFM eingetragen) und ziehen von selbst nach. Hier wird nur
+  // noch der Satzzeiger der beiden Stammtabellen mitgefuehrt.
   tblPerson.Locate('person_id', APersonId, []);
   if ABeziehungsId > 0 then
     tblPersonBeziehung.Locate('beziehungs_id', ABeziehungsId, []);
-
-  qryKompetenzen.ParamByName('p').AsInteger := APersonId;
-  qryKompetenzen.ParamByName('m').AsInteger := FMandantId;
-  qryKompetenzen.Open;
-
-  qryKurse.ParamByName('p').AsInteger := APersonId;
-  qryKurse.ParamByName('m').AsInteger := FMandantId;
-  qryKurse.Open;
 end;
 
 // ── Stammdaten ──────────────────────────────────────────────────────────────
@@ -248,7 +187,7 @@ end;
 function TdmLehrer.KompetenzHinzufuegen(AKompetenzId: Integer;
   AErworbenAm, AGueltigBis: TDate; const ABemerkung: string): string;
 var
-  LQry: TFDQuery;
+  LGueltigBis: Variant;
 begin
   Result := '';
   if FPersonId <= 0 then
@@ -256,44 +195,30 @@ begin
   if AKompetenzId <= 0 then
     Exit('Bitte eine Kompetenz w' + #228 + 'hlen.');
 
-  LQry := TFDQuery.Create(nil);
+  // Ist am Typ eine Gueltigkeitsdauer hinterlegt und kein Enddatum
+  // angegeben, rechnet die Datenbank es aus dem Erwerbsdatum hoch - so
+  // steht die Regel an einer Stelle und nicht in jeder Maske neu.
+  if AGueltigBis > 0 then
+    LGueltigBis := AGueltigBis
+  else
+    LGueltigBis := Null;
+
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
-    // Ist am Typ eine Gueltigkeitsdauer hinterlegt und kein Enddatum
-    // angegeben, rechnet die Datenbank es aus dem Erwerbsdatum hoch - so
-    // steht die Regel an einer Stelle und nicht in jeder Maske neu.
-    LQry.SQL.Text :=
-      'INSERT INTO person_kompetenz (mandant_id, person_id, kompetenz_id, ' +
-      '  erworben_am, gueltig_bis, bemerkung) ' +
-      'SELECT :m, :p, :k, :e, ' +
-      '       COALESCE(:g, CASE WHEN kt.gueltigkeit_monate IS NULL THEN NULL ' +
-      '                         ELSE (:e2::date + (kt.gueltigkeit_monate || '' months'')::interval)::date ' +
-      '                    END), :b ' +
-      'FROM kompetenz_typ kt WHERE kt.mandant_id = :m2 AND kt.kompetenz_id = :k2';
-    LQry.ParamByName('m').AsInteger := FMandantId;
-    LQry.ParamByName('p').AsInteger := FPersonId;
-    LQry.ParamByName('k').AsInteger := AKompetenzId;
-    LQry.ParamByName('e').AsDate := AErworbenAm;
-    if AGueltigBis > 0 then
-      LQry.ParamByName('g').AsDate := AGueltigBis
-    else
-      LQry.ParamByName('g').Clear;
-    LQry.ParamByName('e2').AsDate := AErworbenAm;
-    LQry.ParamByName('b').AsString := ABemerkung;
-    LQry.ParamByName('m2').AsInteger := FMandantId;
-    LQry.ParamByName('k2').AsInteger := AKompetenzId;
-    try
-      LQry.ExecSQL;
-    except
-      on E: Exception do
-        if Pos('person_kompetenz_person_id_kompetenz_id_erworben_am_key', E.Message) > 0 then
-          Result := 'Diese Kompetenz ist mit demselben Erwerbsdatum bereits ' +
-                    'eingetragen.'
-        else
-          Result := E.Message;
-    end;
-  finally
-    LQry.Free;
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).SpAufrufen(
+      'fn_person_kompetenz_setzen',
+      [FMandantId, FPersonId, AKompetenzId, AErworbenAm, LGueltigBis,
+       ABemerkung]);
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance)
+      .TabelleAuffrischen('person_kompetenz');
+    TabellenLaden;
+  except
+    on E: Exception do
+      if Pos('person_kompetenz_person_id_kompetenz_id_erworben_am_key',
+             E.Message) > 0 then
+        Result := 'Diese Kompetenz ist mit demselben Erwerbsdatum bereits ' +
+                  'eingetragen.'
+      else
+        Result := E.Message;
   end;
 
   if Result = '' then
@@ -302,8 +227,11 @@ end;
 
 procedure TdmLehrer.KompetenzEntfernen(APersonKompetenzId: Integer);
 begin
-  Ausfuehren('DELETE FROM person_kompetenz WHERE person_kompetenz_id = :i',
-    [APersonKompetenzId]);
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).SpAufrufen(
+    'fn_person_kompetenz_loeschen', [APersonKompetenzId]);
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance)
+    .TabelleAuffrischen('person_kompetenz');
+  TabellenLaden;
   LadeLehrer(FPersonId, 0);
 end;
 
@@ -311,7 +239,7 @@ end;
 
 procedure TdmLehrer.OpenLehrer;
 begin
-  if not PGManagerDm.dmPGManager.FDConnection1.Connected then
+  if not TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung.Connected then
   begin
     ShowMessage('Bitte zuerst im PGManager die Datenbankverbindung herstellen.', '');
     Exit;
@@ -325,16 +253,13 @@ begin
   end;
 
   tblPerson.Filtered := False;
-  tblPerson.Open;
+  // Speichertabellen kommen aus dem zentralen Datenmodul
+  TabellenLaden;
 
   tblPersonBeziehung.Filtered := False;
-  tblPersonBeziehung.Open;
   tblPersonBeziehung.Filter := Format('mandant_id=%d', [FMandantId]);
   tblPersonBeziehung.Filtered := True;
 
-  qryKompetenzAuswahl.Close;
-  qryKompetenzAuswahl.ParamByName('m').AsInteger := FMandantId;
-  qryKompetenzAuswahl.Open;
 
   LadeListe;
 
@@ -342,5 +267,36 @@ begin
     frmLehrer := TfrmLehrer.Create(Application);
   frmLehrer.Show;
 end;
+
+
+procedure TdmLehrer.TabellenLaden;
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
+    Zuordnung(tblPerson, 'person'),
+    Zuordnung(tblPersonBeziehung, 'person_beziehung'),
+    Zuordnung(qryLehrer, 'v_lehrer_liste'),
+    Zuordnung(qryKompetenzen, 'v_person_kompetenz_status'),
+    Zuordnung(qryKompetenzAuswahl, 'kompetenz_typ'),
+    Zuordnung(qryKurse, 'v_lehrer_kurs_eignung')]);
+
+  qryLehrer.Filtered := False;
+  qryLehrer.Filter := Format('mandant_id = %d', [FMandantId]);
+  qryLehrer.Filtered := True;
+  qryLehrer.IndexFieldNames := 'nachname_firmenname;vorname';
+
+  qryKompetenzAuswahl.Filtered := False;
+  qryKompetenzAuswahl.Filter :=
+    Format('mandant_id = %d and aktiv = true', [FMandantId]);
+  qryKompetenzAuswahl.Filtered := True;
+  qryKompetenzAuswahl.IndexFieldNames := 'bezeichnung';
+end;
+
+
+
+initialization
+  GSperreLehrer := TCriticalSection.Create;
+
+finalization
+  GSperreLehrer.Free;
 
 end.

@@ -40,6 +40,7 @@ contains
   RibbonPageControl in 'RibbonPageControl.pas',
   JvNavPanelButtonTop in 'JvNavPanelButtonTop.pas',
   RibbonButtonBar in 'RibbonButtonBar.pas',
-  GanttPanel in 'GanttPanel.pas';
+  GanttPanel in 'GanttPanel.pas',
+  DataModuleForDelphi in 'DataModuleForDelphi.pas';
 
 end.

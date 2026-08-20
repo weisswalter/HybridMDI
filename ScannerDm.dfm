@@ -1,4 +1,4 @@
 object dmScanner: TdmScanner
-  Height = 240
-  Width = 320
+  Left = 0
+  Top = 0
 end

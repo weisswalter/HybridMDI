@@ -14,6 +14,12 @@ object frmMitarbeiter: TfrmMitarbeiter
   Visible = True
   OnClose = FormClose
   TextHeight = 15
+  object Splitter1: TSplitter
+    Left = 560
+    Top = 0
+    Width = 5
+    Height = 650
+  end
   object pnlLeft: TPanel
     Left = 0
     Top = 0
@@ -57,7 +63,7 @@ object frmMitarbeiter: TfrmMitarbeiter
         ShowCaption = False
         TabOrder = 0
         object btnNeu: TJvNavPanelButtonTop
-          Left = 8
+          Left = 0
           Top = 0
           Width = 90
           Height = 36
@@ -66,15 +72,17 @@ object frmMitarbeiter: TfrmMitarbeiter
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
           StyleManager = PaneStyle1
           ParentStyleManager = False
+          ImageIndex = 0
+          ExplicitLeft = 8
         end
         object btnAendern: TJvNavPanelButtonTop
-          Left = 98
+          Left = 90
           Top = 0
           Width = 90
           Height = 36
@@ -83,15 +91,17 @@ object frmMitarbeiter: TfrmMitarbeiter
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
           StyleManager = PaneStyle1
           ParentStyleManager = False
+          ImageIndex = 0
+          ExplicitLeft = 98
         end
         object btnSpeichern: TJvNavPanelButtonTop
-          Left = 188
+          Left = 180
           Top = 0
           Width = 90
           Height = 36
@@ -100,15 +110,17 @@ object frmMitarbeiter: TfrmMitarbeiter
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
           StyleManager = PaneStyle1
           ParentStyleManager = False
+          ImageIndex = 0
+          ExplicitLeft = 188
         end
         object btnAbbrechen: TJvNavPanelButtonTop
-          Left = 278
+          Left = 270
           Top = 0
           Width = 90
           Height = 36
@@ -117,12 +129,14 @@ object frmMitarbeiter: TfrmMitarbeiter
           Alignment = taCenter
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
           StyleManager = PaneStyle1
           ParentStyleManager = False
+          ImageIndex = 0
+          ExplicitLeft = 278
         end
       end
       object pnlEditFelder: TPanel
@@ -137,35 +151,35 @@ object frmMitarbeiter: TfrmMitarbeiter
         object lblVorname: TLabel
           Left = 8
           Top = 8
-          Width = 42
+          Width = 47
           Height = 15
           Caption = 'Vorname'
         end
         object lblNachname: TLabel
           Left = 290
           Top = 8
-          Width = 53
+          Width = 58
           Height = 15
           Caption = 'Nachname'
         end
         object lblTitel: TLabel
           Left = 8
           Top = 60
-          Width = 25
+          Width = 23
           Height = 15
           Caption = 'Titel'
         end
         object lblGeburtsdatum: TLabel
           Left = 290
           Top = 60
-          Width = 68
+          Width = 76
           Height = 15
           Caption = 'Geburtsdatum'
         end
         object lblRolle: TLabel
           Left = 8
           Top = 112
-          Width = 30
+          Width = 26
           Height = 15
           Caption = 'Rolle'
         end
@@ -220,12 +234,6 @@ object frmMitarbeiter: TfrmMitarbeiter
       end
     end
   end
-  object Splitter1: TSplitter
-    Left = 560
-    Top = 0
-    Width = 5
-    Height = 650
-  end
   object JvRibbonPanel1: TRibbonPanel
     Left = 565
     Top = 0
@@ -235,25 +243,52 @@ object frmMitarbeiter: TfrmMitarbeiter
     BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 1
-    ActiveTheme = nptXPBlue
-    InactiveTheme = nptXPSilver
-    ActivePageIndex = 0
+    TopPanel.Left = 0
+    TopPanel.Top = 0
+    TopPanel.Width = 435
+    TopPanel.Height = 31
+    TopPanel.Align = alTop
+    TopPanel.BevelOuter = bvNone
+    TopPanel.Caption = 'TopPanel'
+    TopPanel.ShowCaption = False
+    TopPanel.TabOrder = 1
+    TopPanel.DesignSize = (
+      435
+      31)
+    PageControl.Left = -1
+    PageControl.Top = 29
+    PageControl.Width = 437
+    PageControl.Height = 622
+    PageControl.Anchors = [akLeft, akTop, akRight, akBottom]
+    PageControl.TabOrder = 0
     HeaderButtons = <
       item
         Caption = 'Kontaktdaten'
         Width = 140
       end>
+    DesignSize = (
+      435
+      650)
     object tsKontaktdaten: TTabSheet
       Caption = 'Kontaktdaten'
       object barKontaktdaten: TRibbonButtonBar
         Left = 0
         Top = 0
-        Width = 435
+        Width = 437
         Height = 38
         Align = alTop
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 0
+        Gradient.Left = 0
+        Gradient.Top = 0
+        Gradient.Width = 437
+        Gradient.Height = 38
+        Gradient.Style = grVertical
+        Gradient.StartColor = 16245453
+        Gradient.EndColor = 15966336
+        Gradient.ExplicitWidth = 0
+        Gradient.ExplicitHeight = 0
         Buttons = <
           item
             Action = actErsterR
@@ -272,15 +307,19 @@ object frmMitarbeiter: TfrmMitarbeiter
           end>
       end
       object pnlKontaktdaten: TPanel
+        Left = 0
+        Top = 38
+        Width = 437
+        Height = 584
         Align = alClient
         BevelOuter = bvNone
         Caption = 'pnlKontaktdaten'
         ShowCaption = False
-        TabOrder = 2
+        TabOrder = 1
         object dbgrdEmail: TDBGrid
           Left = 0
           Top = 0
-          Width = 400
+          Width = 437
           Height = 110
           Align = alTop
           DataSource = dmMitarbeiter.dstblEmailUebersicht
@@ -294,7 +333,7 @@ object frmMitarbeiter: TfrmMitarbeiter
         object dbgrdTelefon: TDBGrid
           Left = 0
           Top = 110
-          Width = 400
+          Width = 437
           Height = 110
           Align = alTop
           DataSource = dmMitarbeiter.dstblTelefonUebersicht
@@ -308,8 +347,8 @@ object frmMitarbeiter: TfrmMitarbeiter
         object dbgrdAdresse: TDBGrid
           Left = 0
           Top = 220
-          Width = 400
-          Height = 180
+          Width = 437
+          Height = 364
           Align = alClient
           DataSource = dmMitarbeiter.dstblAdresseUebersicht
           TabOrder = 2

@@ -16,7 +16,8 @@ uses
   // TdmModuleTemplate.OpenGui, um andere Module ueber den MessageHandler anzustossen.
   // MandantDm: Ausnahme #2 — Mandantenauswahl lebt direkt im Hauptfenster,
   // weil andere Module diesen Kontext brauchen, bevor sie geoeffnet werden.
-  udmModuleTemplate, MandantDm, MandantNeuFrm, MandantWaehlenFrm, UIRibbon,
+  udmModuleTemplate, MandantDm, MandantNeuFrm, MandantWaehlenFrm, FeedbackFrm,
+  NotfallFrm, UIRibbon,
   // Ribbon\HeisenbergRibbon.xml -> RibbonCMDCompiler.exe -> .res + Registrierung
   // der Kommando-IDs. TUIRibbon mappt Ribbon-Kommandos automatisch auf
   // gleichnamige TAction-Komponenten (Actions-ActionList unten).
@@ -32,6 +33,7 @@ type
     cmdKunden: TAction;
     cmdArtikel: TAction;
     cmdDokumente: TAction;
+    cmdWebEditor: TAction;
     cmdPersonen: TAction;
     cmdLager: TAction;
     cmdScanner: TAction;
@@ -52,24 +54,33 @@ type
     NavPBtnTopAnlagen: TJvNavPanelButtonTop;
     cmdKalkulation: TAction;
     NavPBtnTopKalkulation: TJvNavPanelButtonTop;
+    cmdFeedback: TAction;
+    NavPBtnTopFeedback: TJvNavPanelButtonTop;
+    cmdKursAnwesenheit: TAction;
+    NavPBtnTopKursAnwesenheit: TJvNavPanelButtonTop;
+    cmdBenutzer: TAction;
+    NavPBtnTopBenutzer: TJvNavPanelButtonTop;
+    // Ohne Button und unsichtbar - nur ueber Strg+Alt+Umschalt+G erreichbar
+    cmdNotfall: TAction;
     cmdKurs: TAction;
     cmdAnwesenheit: TAction;
     cmdLehrer: TAction;
+    cmdVorgang: TAction;
     ilstRibbonLI: TJvImageList;
     ActionManager: TActionManager;
     sbrMain: TJvStatusBar; ilstRibbonSI: TJvImageList;
+    prgLaden: TProgressBar;
     PaneStyle1: TJvNavPaneStyleManager;
     PaneStyle2: TJvNavPaneStyleManager;
     pnlRibbon: TPanel;
-    pctrModule: TPageControl;
+    pctrRibbon: TPageControl;
     tsDatei: TTabSheet;
-    tsModule: TTabSheet;
+    tsStammdaten: TTabSheet;
     tsWerkzeuge: TTabSheet;
     jvnvpnlhdr1: TJvNavPanelHeader;
     jvnvpnlhdr2: TJvNavPanelHeader;
     jvnvpnlhdr3: TJvNavPanelHeader;
     NavPBtnTopactCnPrefixWizard: TJvNavPanelButtonTop;
-    NavPBtnTopKunden: TJvNavPanelButtonTop;
     NavPBtnTopDok: TJvNavPanelButtonTop;
     JvNavPanelButtonTop1: TJvNavPanelButtonTop;
     NavPBtnTopLager: TJvNavPanelButtonTop;
@@ -79,9 +90,12 @@ type
     jvgrdnt1: TJvGradient;
     jvgrdnt2: TJvGradient;
     jvgrdnt3: TJvGradient;
+    tsBelege: TTabSheet;
+    tsVorgaenge: TTabSheet;
     procedure cmdKundenExecute(Sender: TObject);
     procedure cmdArtikelExecute(Sender: TObject);
     procedure cmdDokumenteExecute(Sender: TObject);
+    procedure cmdWebEditorExecute(Sender: TObject);
     procedure cmdPersonenExecute(Sender: TObject);
     procedure cmdLagerExecute(Sender: TObject);
     procedure cmdScannerExecute(Sender: TObject);
@@ -99,9 +113,14 @@ type
     procedure cmdLohnExecute(Sender: TObject);
     procedure cmdAnlagenExecute(Sender: TObject);
     procedure cmdKalkulationExecute(Sender: TObject);
+    procedure cmdFeedbackExecute(Sender: TObject);
+    procedure cmdKursAnwesenheitExecute(Sender: TObject);
+    procedure cmdBenutzerExecute(Sender: TObject);
+    procedure cmdNotfallExecute(Sender: TObject);
     procedure cmdKursExecute(Sender: TObject);
     procedure cmdAnwesenheitExecute(Sender: TObject);
     procedure cmdLehrerExecute(Sender: TObject);
+    procedure cmdVorgangExecute(Sender: TObject);
     procedure mnuKundenClick(Sender: TObject);
     procedure mnuArtikelClick(Sender: TObject);
     procedure mnuPyKundenClick(Sender: TObject);
@@ -116,14 +135,25 @@ type
     procedure jvnvpnlhdr1Click(Sender: TObject);
   private
     FRibbonImagesInit: Boolean;
+  public
     // Zeigt den aktuell gewaehlten Mandanten (TdmMandant.CurrentMandantName)
     // in sbrMain an — einziger Ort, der die Statuszeile dafuer beschreibt.
+    // Public, weil das dpr sie nach dem Anlegen von dmMandant ruft: aus
+    // FormCreate heraus darf dmMandant nicht entstehen (siehe dort).
     procedure UpdateMandantStatus;
-  public
+
     [Subscribe(TThreadMode.Main)]
     procedure OnKundenResult(AEvent: IKundenResultEvent);
     [Subscribe(TThreadMode.Main)]
     procedure OnArtikelResult(AEvent: IArtikelResultEvent);
+
+    // Haengt am OnLadeFortschritt des zentralen Datenmoduls: zeigt in der
+    // Statuszeile, welche Tabelle gerade geholt wird. Ohne das steht das
+    // Fenster beim Start scheinbar still.
+    procedure LadeFortschritt(Sender: TObject; const ATabelle: string;
+      AIndex, AGesamt: Integer);
+    // Balken und Text wieder wegnehmen, wenn alles geladen ist.
+    procedure LadenFertig;
   end;
 
 var
@@ -137,14 +167,51 @@ implementation
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   GlobalEventBus.RegisterSubscriberForEvents(Self);
+  // Die Statuszeile zeigt hier noch "Kein Mandant gewaehlt" - dmMandant gibt
+  // es zu diesem Zeitpunkt noch nicht. Das dpr ruft UpdateMandantStatus
+  // gleich nach dem Anlegen noch einmal.
   UpdateMandantStatus;
+end;
+
+// Haengt am OnLadeFortschritt des zentralen Datenmoduls. Panel 1 nennt die
+// Tabelle beim Namen - bei 130 Tabellen ueber die Leitung will man sehen,
+// dass sich etwas bewegt und nicht nur, dass es dauert.
+procedure TfrmMain.LadeFortschritt(Sender: TObject; const ATabelle: string;
+  AIndex, AGesamt: Integer);
+begin
+  if not prgLaden.Visible then
+  begin
+    prgLaden.Visible := True;
+    prgLaden.Min := 0;
+  end;
+  if prgLaden.Max <> AGesamt then
+    prgLaden.Max := AGesamt;
+  prgLaden.Position := AIndex;
+
+  sbrMain.Panels[1].Text :=
+    Format('Lade %d von %d: %s', [AIndex, AGesamt, ATabelle]);
+
+  // Ohne das bleibt das Fenster waehrend des Ladens ein graues Rechteck.
+  Application.ProcessMessages;
+end;
+
+procedure TfrmMain.LadenFertig;
+begin
+  prgLaden.Visible := False;
+  sbrMain.Panels[1].Text := '';
 end;
 
 procedure TfrmMain.UpdateMandantStatus;
 var
   LName: string;
 begin
-  LName := TdmMandant(TdmMandant.GetInstance).CurrentMandantName;
+  // Bewusst ueber die Variable statt ueber GetInstance: eine Anzeige soll
+  // lesen, nicht nebenbei ein Datenmodul anlegen. Gibt es dmMandant noch
+  // nicht, gibt es auch keinen gewaehlten Mandanten - die Zeile stimmt dann.
+  if Assigned(dmMandant) then
+    LName := dmMandant.CurrentMandantName
+  else
+    LName := '';
   if LName = '' then
     sbrMain.Panels[0].Text := 'Kein Mandant gewählt'
   else
@@ -183,12 +250,18 @@ begin
 end;
 
 procedure TfrmMain.jvnvpnlhdr1Click(Sender: TObject);
+var
+  I: Integer;
 begin
-  jvnvpnlhdr1.StyleManager := PaneStyle2;
-  jvnvpnlhdr2.StyleManager := PaneStyle2;
-  jvnvpnlhdr3.StyleManager := PaneStyle2;
-  (Sender as TJvNavPanelHeader).StyleManager := PaneStyle1 ;
-  pctrModule.ActivePageIndex := (Sender as TJvNavPanelHeader).Tag;
+  // Alle Kopfschalter blass, den angeklickten hervorheben. Ueber die Kinder
+  // von pnlRibbon statt namentlich - sonst muss diese Methode bei jedem
+  // neuen Reiter wieder angefasst werden.
+  for I := 0 to pnlRibbon.ControlCount - 1 do
+    if pnlRibbon.Controls[I] is TJvNavPanelHeader then
+      TJvNavPanelHeader(pnlRibbon.Controls[I]).StyleManager := PaneStyle2;
+  (Sender as TJvNavPanelHeader).StyleManager := PaneStyle1;
+  // Tag = PageIndex des zugehoerigen Reiters.
+  pctrRibbon.ActivePageIndex := (Sender as TJvNavPanelHeader).Tag;
 end;
 
 // Diese Execute-Methoden sind die einzige Stelle mit der eigentlichen Logik —
@@ -209,6 +282,13 @@ end;
 procedure TfrmMain.cmdDokumenteExecute(Sender: TObject);
 begin
   TdmModuleTemplate.OpenGui('Dokumente');
+end;
+
+// Webinhalte: dieselben Dokumente, aber unter dem Gesichtspunkt,
+// was davon im Netz steht - Freigabe, Darstellungsform, Text.
+procedure TfrmMain.cmdWebEditorExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('WebEditor');
 end;
 
 procedure TfrmMain.cmdPersonenExecute(Sender: TObject);
@@ -286,6 +366,34 @@ begin
   TdmModuleTemplate.OpenGui('Kalkulation');
 end;
 
+// Feedback ist bewusst KEIN eigenes Modul ueber OpenGui/RTTI, sondern ein
+// eigenstaendiger Dialog (wie die Microsoft-Anmeldung) - siehe FeedbackFrm.
+procedure TfrmMain.cmdFeedbackExecute(Sender: TObject);
+begin
+  TfrmFeedback.Erfassen('Hauptfenster',
+    TdmMandant(TdmMandant.GetInstance).CurrentMandantId);
+end;
+
+// Kurs-Anwesenheit (Teilnahme je Kurstermin) - nicht zu verwechseln mit
+// 'Anwesenheit' im Modul-Reiter, das die betriebliche Zeiterfassung ist.
+procedure TfrmMain.cmdKursAnwesenheitExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('KursAnwesenheit');
+end;
+
+procedure TfrmMain.cmdBenutzerExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Benutzer');
+end;
+
+// Sicherheitstuer des Herstellers - kein Menuepunkt, kein Button, nur das
+// Tastenkuerzel an cmdNotfall. Bewusst NICHT ueber OpenGui/RTTI: dieser
+// Dialog darf nicht ueber den Modulnamen aufrufbar sein.
+procedure TfrmMain.cmdNotfallExecute(Sender: TObject);
+begin
+  TfrmNotfall.Oeffnen;
+end;
+
 procedure TfrmMain.cmdKursExecute(Sender: TObject);
 begin
   TdmModuleTemplate.OpenGui('Kurs');
@@ -299,6 +407,11 @@ end;
 procedure TfrmMain.cmdLehrerExecute(Sender: TObject);
 begin
   TdmModuleTemplate.OpenGui('Lehrer');
+end;
+
+procedure TfrmMain.cmdVorgangExecute(Sender: TObject);
+begin
+  TdmModuleTemplate.OpenGui('Vorgang');
 end;
 
 procedure TfrmMain.mnuKundenClick(Sender: TObject);

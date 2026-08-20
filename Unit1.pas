@@ -1,14 +1,14 @@
-unit Unit3;
+unit Unit1;
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmModuleTemplate, System.ImageList,
+  Vcl.ImgList, JvImageList, System.Actions, Vcl.ActnList;
 
 type
-  TForm3 = class(TForm)
-    pnlReiter1: TPanel;
+  TfrmTemplate1 = class(TfrmTemplate)
   private
     { Private-Deklarationen }
   public
@@ -16,7 +16,7 @@ type
   end;
 
 var
-  Form3: TForm3;
+  frmTemplate1: TfrmTemplate1;
 
 implementation
 

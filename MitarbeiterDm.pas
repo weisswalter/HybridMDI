@@ -16,7 +16,7 @@ unit MitarbeiterDm;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
@@ -26,14 +26,15 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmMitarbeiter = class(TdmModuleTemplate)
     qryMitarbeiter: TFDQuery;
     dstblMitarbeiterListe: TDataSource;
-    tblPerson: TFDTable;
-    tblPersonBeziehung: TFDTable;
+    tblPerson: TFDMemTable;
+    tblPersonBeziehung: TFDMemTable;
     dstblPerson: TDataSource;
     dstblPersonBeziehung: TDataSource;
     qryRolleAuswahl: TFDQuery;
@@ -49,6 +50,9 @@ type
     FMandantId: Integer;
     function HauptpersonId: Integer;
     function RolleIdFuer(const ABezeichnung: string): Integer;
+    // Holt alle Speichertabellen dieses Moduls aus dem zentralen
+    // Datenmodul (geklont) bzw. holt sie notfalls selbst.
+    procedure TabellenLaden;
   public
     class function GetInstance: TObject;
     procedure OpenMitarbeiter;
@@ -69,25 +73,38 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms, Vcl.Dialogs,
-  PGManagerDm,
+  ZentraleDatenDm,
+  Vcl.Dialogs,
   MandantDm,
-  MitarbeiterFrm;
+  MitarbeiterFrm, System.SyncObjs;
+
+var
+  GSperreMitarbeiter: TCriticalSection;
 
 class function TdmMitarbeiter.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmMitarbeiter) then
+  begin
+    GSperreMitarbeiter.Enter;
+    try
+      if not Assigned(dmMitarbeiter) then
+        Application.CreateForm(TdmMitarbeiter, dmMitarbeiter);
+    finally
+      GSperreMitarbeiter.Leave;
+    end;
+  end;
   Result := dmMitarbeiter;
 end;
 
 procedure TdmMitarbeiter.DataModuleCreate(Sender: TObject);
 begin
-  qryMitarbeiter.Connection        := PGManagerDm.dmPGManager.FDConnection1;
-  tblPerson.Connection             := PGManagerDm.dmPGManager.FDConnection1;
-  tblPersonBeziehung.Connection    := PGManagerDm.dmPGManager.FDConnection1;
-  qryRolleAuswahl.Connection       := PGManagerDm.dmPGManager.FDConnection1;
-  qryEmailUebersicht.Connection    := PGManagerDm.dmPGManager.FDConnection1;
-  qryTelefonUebersicht.Connection  := PGManagerDm.dmPGManager.FDConnection1;
-  qryAdresseUebersicht.Connection  := PGManagerDm.dmPGManager.FDConnection1;
+  qryMitarbeiter.Connection        := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+  qryRolleAuswahl.Connection       := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+  qryEmailUebersicht.Connection    := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+  qryTelefonUebersicht.Connection  := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+  qryAdresseUebersicht.Connection  := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 
   tblPerson.UpdateOptions.AutoIncFields          := 'person_id';
   tblPersonBeziehung.UpdateOptions.AutoIncFields := 'beziehungs_id';
@@ -132,7 +149,7 @@ begin
   Result := 0;
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'SELECT person_id FROM person_mandant WHERE mandant_id = :m AND ist_hauptperson = true';
     LQry.ParamByName('m').AsInteger := FMandantId;
     LQry.Open;
@@ -155,7 +172,7 @@ begin
   Result := 0;
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'SELECT rolle_id FROM rolle_typ WHERE mandant_id = :m AND rollen_bezeichnung = :b';
     LQry.ParamByName('m').AsInteger := FMandantId;
     LQry.ParamByName('b').AsString := ABezeichnung;
@@ -213,7 +230,7 @@ begin
 
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 
     LQry.SQL.Text := 'INSERT INTO person (typ_id, vorname, nachname_firmenname) ' +
       'VALUES (1, '''', ''Neuer Mitarbeiter'') RETURNING person_id';
@@ -268,7 +285,7 @@ end;
 
 procedure TdmMitarbeiter.OpenMitarbeiter;
 begin
-  if not PGManagerDm.dmPGManager.FDConnection1.Connected then
+  if not TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung.Connected then
   begin
     ShowMessage('Bitte zuerst im PGManager die Datenbankverbindung herstellen.', '');
     Exit;
@@ -288,10 +305,10 @@ begin
     Exit;
   end;
 
-  tblPerson.Open;
+  // Speichertabellen kommen aus dem zentralen Datenmodul
+  TabellenLaden;
 
   tblPersonBeziehung.Filtered := False;
-  tblPersonBeziehung.Open;
   tblPersonBeziehung.Filter := Format('mandant_id=%d AND ist_mitarbeiter=True', [FMandantId]);
   tblPersonBeziehung.Filtered := True;
 
@@ -305,5 +322,21 @@ begin
     frmMitarbeiter := TfrmMitarbeiter.Create(Application);
   frmMitarbeiter.Show;
 end;
+
+
+procedure TdmMitarbeiter.TabellenLaden;
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
+    Zuordnung(tblPerson, 'person'),
+    Zuordnung(tblPersonBeziehung, 'person_beziehung')]);
+end;
+
+
+
+initialization
+  GSperreMitarbeiter := TCriticalSection.Create;
+
+finalization
+  GSperreMitarbeiter.Free;
 
 end.

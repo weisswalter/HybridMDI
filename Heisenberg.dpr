@@ -1,5 +1,7 @@
 ﻿program Heisenberg;
 
+
+
 uses
   Vcl.Forms,
   uAppEvents in 'uAppEvents.pas',
@@ -7,10 +9,9 @@ uses
   uMessageHandler in 'uMessageHandler.pas' {dmMessageHandler: TDataModule},
   udmModuleTemplate in 'udmModuleTemplate.pas' {dmModuleTemplate: TDataModule},
   uFrmModuleTemplate in 'uFrmModuleTemplate.pas' {frmTemplate},
-  uFrmGuiTemplate in 'uFrmGuiTemplate.pas' {frmGuiTemplate},
   uFrmRibbonTemplate in 'uFrmRibbonTemplate.pas',
   EventBus,
-  EventBus.Core,
+  Eventbus.Core in '..\delphi-event-bus\source\Eventbus.Core.pas',
   EventBus.Helpers,
   EventBus.Subscribers,
   MandantDm in 'MandantDm.pas' {dmMandant: TDataModule},
@@ -24,17 +25,17 @@ uses
   PyKundenFrm in 'PyKundenFrm.pas' {frmPyKunden},
   PyArtikelDm in 'PyArtikelDm.pas' {dmPyArtikel: TDataModule},
   PyArtikelFrm in 'PyArtikelFrm.pas' {frmPyArtikel},
-  KundenDm in 'KundenDm.pas' {dmKunden: TDataModule},
-  KundenFrm in 'KundenFrm.pas' {frmKunden},
-  ArtikelDm in 'ArtikelDm.pas' {dmArtikel: TDataModule},
-  ArtikelFrm in 'ArtikelFrm.pas' {frmArtikel},
-  ArtikelStammDm in 'ArtikelStammDm.pas' {dmArtikelStamm: TDataModule},
+  // Neues, schlankes Anzeigeformular (19.08.2026). Das alte mit Fotos,
+  // Bestand, Varianten und Stueckliste liegt als Vorlage unter
+  // ArtikelStammFrm.pas.stillgelegt.
   ArtikelStammFrm in 'ArtikelStammFrm.pas' {frmArtikelStamm},
   KundenBestellungDm in 'KundenBestellungDm.pas' {dmKundenBestellung: TDataModule},
   KundenBestellungFrm in 'KundenBestellungFrm.pas' {frmKundenBestellung},
   LieferantenBestellungDm in 'LieferantenBestellungDm.pas' {dmLieferantenBestellung: TDataModule},
   LieferantenBestellungFrm in 'LieferantenBestellungFrm.pas' {frmLieferantenBestellung},
   LagerEntnahmeDm in 'LagerEntnahmeDm.pas' {dmLagerEntnahme: TDataModule},
+  VorgangDm in 'VorgangDm.pas' {dmVorgang: TDataModule},
+  VorgangFrm in 'VorgangFrm.pas' {frmVorgang},
   LagerEntnahmeFrm in 'LagerEntnahmeFrm.pas' {frmLagerEntnahme},
   KlientDm in 'KlientDm.pas' {dmKlient: TDataModule},
   KlientFrm in 'KlientFrm.pas' {frmKlient},
@@ -59,6 +60,16 @@ uses
   AnlagenFrm in 'AnlagenFrm.pas' {frmAnlagen},
   KalkulationDm in 'KalkulationDm.pas' {dmKalkulation: TDataModule},
   KalkulationFrm in 'KalkulationFrm.pas' {frmKalkulation},
+  FeedbackFrm in 'FeedbackFrm.pas' {frmFeedback},
+  KursAnwesenheitDm in 'KursAnwesenheitDm.pas' {dmKursAnwesenheit: TDataModule},
+  KursAnwesenheitFrm in 'KursAnwesenheitFrm.pas' {frmKursAnwesenheit},
+  ZentraleDatenDm in 'ZentraleDatenDm.pas' {dmZentraleDaten: TDataModule},
+  WebEditorDm in 'WebEditorDm.pas' {dmWebEditor: TDataModule},
+  WebEditorFrm in 'WebEditorFrm.pas' {frmWebEditor},
+  BenutzerDm in 'BenutzerDm.pas' {dmBenutzer: TDataModule},
+  BenutzerFrm in 'BenutzerFrm.pas' {frmBenutzer},
+  LoginFrm in 'LoginFrm.pas' {frmLogin},
+  NotfallFrm in 'NotfallFrm.pas' {frmNotfall},
   EinstellungenDm in 'EinstellungenDm.pas' {dmEinstellungen: TDataModule},
   EinstellungenFrm in 'EinstellungenFrm.pas' {frmEinstellungen},
   MitarbeiterDm in 'MitarbeiterDm.pas' {dmMitarbeiter: TDataModule},
@@ -71,19 +82,42 @@ uses
   PGManagerFrm in 'PGManagerFrm.pas' {frmPGManager},
   LagerDm in 'LagerDm.pas' {dmLager: TDataModule},
   LagerFrm in 'LagerFrm.pas' {frmLager},
-  UIRibbon in '..\RibbonFramework\Lib\UIRibbon.pas';
+  UIRibbon in '..\RibbonFramework\Lib\UIRibbon.pas',
+  uFrmGuiTemplate in 'uFrmGuiTemplate.pas' {frmGuiTemplate},
+  ArtikelStammDm in 'ArtikelStammDm.pas' {dmArtikelStamm};
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  // dmMandant zuerst: frmMain.FormCreate greift beim Erzeugen direkt darauf zu
-  Application.CreateForm(TdmMandant, dmMandant);
-  //Application.CreateForm(TForm3, Form3);
-  //AApplication.CreateForm(TForm2, Form2);
-  // Reihenfolge wichtig: MDI-Frame zuerst, dann DataModules
+  Application.CreateForm(TdmZentraleDaten, dmZentraleDaten);
+
+  // frmMain zuerst: Application.CreateForm macht das erste erzeugte TForm zum
+  // MainForm, und fsMDIForm wirkt nur am MainForm. Die Datenmodule sind zwar
+  // wieder TDataModule und koennen den Platz nicht mehr belegen - die
+  // Reihenfolge bleibt trotzdem, weil sie die richtige ist.
   Application.CreateForm(TfrmMain, frmMain);
+  Application.CreateForm(TdmArtikelStamm, dmArtikelStamm);
+  // Das zentrale Datenmodul wird hier nur ERZEUGT (Verbindung), es holt seine
+  // Tabellen noch nicht - das passiert weiter unten, wenn frmMain steht und
+  // den Fortschritt anzeigen kann.
+
+  TdmMandant.GetInstance;
+  // Statuszeile jetzt fuellen: beim FormCreate von frmMain gab es dmMandant
+  // noch nicht.
+  frmMain.UpdateMandantStatus;
+
+  // Jetzt erst die Tabellen holen: das Fenster steht, der Balken in der
+  // Statuszeile zeigt Tabelle fuer Tabelle, was gerade passiert.
+  frmMain.Show;
+  Application.ProcessMessages;
+  dmZentraleDaten.OnLadeFortschritt := frmMain.LadeFortschritt;
+  try
+    dmZentraleDaten.AlleTabellenLaden;
+  finally
+    frmMain.LadenFertig;
+  end;
   // MessageHandler muss früh erstellen damit er beim EventBus registriert ist
   Application.CreateForm(TdmMessageHandler, dmMessageHandler);
   Application.CreateForm(TdmPython, dmPython);
@@ -93,8 +127,9 @@ begin
   Application.CreateForm(TdmDokumentOcr, dmDokumentOcr);
   Application.CreateForm(TdmPyKunden, dmPyKunden);
   Application.CreateForm(TdmPyArtikel, dmPyArtikel);
-  Application.CreateForm(TdmKunden, dmKunden);
-  Application.CreateForm(TdmArtikel, dmArtikel);
+  // Siehe oben in der uses-Liste: EventBus-Demo, Units auskommentiert.
+  // Application.CreateForm(TdmKunden, dmKunden);
+  // Application.CreateForm(TdmArtikel, dmArtikel);
   Application.CreateForm(TdmDokumente, dmDokumente);
   // Scanner — Application.CreateForm noetig, sonst entfernt der Smart-Linker die
   // Klasse und mtModulCall TdmScanner.OpenScanner findet sie nicht (RTTI-Dispatch)
@@ -103,9 +138,11 @@ begin
   Application.CreateForm(TdmPersonen, dmPersonen);
   // Lager — CreateForm noetig (RTTI-Dispatch, sonst linkt der Smart-Linker die Klasse weg)
   Application.CreateForm(TdmLager, dmLager);
-  // ArtikelStamm — CreateForm noetig (RTTI-Dispatch); braucht dmPGManager,
-  // das oben bereits erzeugt ist
-  Application.CreateForm(TdmArtikelStamm, dmArtikelStamm);
+  // ArtikelStamm wird WEITER OBEN erzeugt, vor AlleTabellenLaden - nur dann
+  // erreicht ihn der Broadcast "DatenGeladen". Ein zweites CreateForm hier
+  // wuerde eine ZWEITE Instanz anlegen und die globale Variable darauf
+  // umhaengen; die erste bekaeme den Broadcast, die zweite waere leer.
+  // (Genau das war der Grund fuer die leere Artikelliste am 20.08.2026.)
   // Rechnungstyp — CreateForm noetig (RTTI-Dispatch); braucht dmPGManager/dmMandant,
   // die oben bereits erzeugt sind
   // KundenBestellung — CreateForm noetig (RTTI-Dispatch)
@@ -128,6 +165,9 @@ begin
   Application.CreateForm(TdmLohn, dmLohn);
   Application.CreateForm(TdmAnlagen, dmAnlagen);
   Application.CreateForm(TdmKalkulation, dmKalkulation);
+  Application.CreateForm(TdmKursAnwesenheit, dmKursAnwesenheit);
+  // WebEditor - CreateForm noetig (RTTI-Dispatch)
+  Application.CreateForm(TdmWebEditor, dmWebEditor);
   // Kurs — CreateForm noetig (RTTI-Dispatch)
   Application.CreateForm(TdmKurs, dmKurs);
   // Lehrer - CreateForm noetig (RTTI-Dispatch), sonst linkt der
@@ -137,5 +177,29 @@ begin
   Application.CreateForm(TdmAnwesenheit, dmAnwesenheit);
   // Mitarbeiter — CreateForm noetig (RTTI-Dispatch)
   Application.CreateForm(TdmMitarbeiter, dmMitarbeiter);
+  // Benutzer/Anmeldung — CreateForm noetig (RTTI-Dispatch) und ausserdem
+  // Voraussetzung fuer die Anmeldepruefung direkt darunter.
+  Application.CreateForm(TdmBenutzer, dmBenutzer);
+
+  // ── Anmeldung ────────────────────────────────────────────────────────────
+  // Erst NACH allen CreateForm-Aufrufen, weil dmBenutzer und dmPGManager
+  // stehen muessen. Gibt es noch KEINEN Benutzer, laeuft das Programm ohne
+  // Anmeldung weiter — sonst koennte man sich bei einer frischen Datenbank
+  // aussperren. Sobald ein Konto existiert, ist die Anmeldung Pflicht, und
+  // ein Abbruch beendet das Programm.
+  if dmBenutzer.AnmeldungErforderlich then
+    if not TfrmLogin.Anmelden then
+      Exit;
+
+  // dokument traegt die PDF-Blobs und ist um Groessenordnungen schwerer als
+  // alles andere. Deshalb ganz zum Schluss, wenn der Benutzer schon arbeiten
+  // koennte - und nicht als Teil der Startwartezeit.
+  try
+    dmZentraleDaten.NachladenSchwere;
+  finally
+    frmMain.LadenFertig;
+    dmZentraleDaten.OnLadeFortschritt := nil;
+  end;
+
   Application.Run;
 end.

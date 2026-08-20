@@ -2,9 +2,8 @@ object dmKalkulation: TdmKalkulation
   Left = 0
   Top = 0
   OnCreate = DataModuleCreate
-  object tblKalkulation: TFDTable
+  object tblKalkulation: TFDMemTable
     AfterScroll = tblKalkulationAfterScroll
-    TableName = 'kalkulation'
     Left = 40
     Top = 24
   end
@@ -13,9 +12,8 @@ object dmKalkulation: TdmKalkulation
     Left = 160
     Top = 24
   end
-  object tblPosition: TFDTable
+  object tblPosition: TFDMemTable
     OnNewRecord = tblPositionNewRecord
-    TableName = 'kalkulation_position'
     Left = 40
     Top = 80
   end
@@ -33,9 +31,8 @@ object dmKalkulation: TdmKalkulation
     Left = 160
     Top = 136
   end
-  object tblZuschlag: TFDTable
+  object tblZuschlag: TFDMemTable
     OnNewRecord = tblZuschlagNewRecord
-    TableName = 'zuschlagssatz'
     Left = 40
     Top = 192
   end
@@ -44,9 +41,8 @@ object dmKalkulation: TdmKalkulation
     Left = 160
     Top = 192
   end
-  object tblKostenart: TFDTable
+  object tblKostenart: TFDMemTable
     OnNewRecord = tblKostenartNewRecord
-    TableName = 'kostenart'
     Left = 40
     Top = 248
   end
@@ -55,9 +51,8 @@ object dmKalkulation: TdmKalkulation
     Left = 160
     Top = 248
   end
-  object tblKostenstelle: TFDTable
+  object tblKostenstelle: TFDMemTable
     OnNewRecord = tblKostenstelleNewRecord
-    TableName = 'kostenstelle'
     Left = 40
     Top = 304
   end
@@ -66,9 +61,8 @@ object dmKalkulation: TdmKalkulation
     Left = 160
     Top = 304
   end
-  object tblKonto: TFDTable
+  object tblKonto: TFDMemTable
     OnNewRecord = tblKontoNewRecord
-    TableName = 'konto'
     Left = 40
     Top = 360
   end

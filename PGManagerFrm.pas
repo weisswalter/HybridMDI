@@ -172,15 +172,20 @@ begin
   // dmPGManager.OnLog := Log;
 
   edtHost.Text     := 'localhost';
-  edtPort.Text     := '5432';
-  edtUser.Text     := 'postgres';
-  edtPassword.Text := '';
+  edtPort.Text     := '5455';
+  edtUser.Text     := 'wwe123';
+  edtPassword.Text := 'a4cX7pAp29WRK7XHkGHBzs4DIhjAM14Z';
   edtDatabase.Text := 'postgres';
   UpdateStatus;
 end;
 
 procedure TfrmPGManager.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  // ZURUECK auf caFree am 09.08.2026: MDI-Kinder lassen sich
+  // nicht verstecken - weder per caHide (VCL wirft) noch per
+  // ShowWindow (der MDI-Client zeigt sie wieder an). Mit caNone
+  // gingen die Fenster gar nicht mehr zu. Das Wiederoeffnen
+  // bleibt damit langsam; ein anderer Weg muss her.
   Action := caFree;
   frmPGManager := nil;
 end;

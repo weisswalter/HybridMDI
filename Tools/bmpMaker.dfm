@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 441
+  ClientHeight = 549
   ClientWidth = 624
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -59,10 +59,9 @@ object Form1: TForm1
   end
   object btnFromImage16: TButton
     Left = 416
-    Top = 312
+    Top = 263
     Width = 129
     Height = 25
-    Caption = 'btnFromImage16'
     TabOrder = 4
     OnClick = btnFromImage16Click
   end

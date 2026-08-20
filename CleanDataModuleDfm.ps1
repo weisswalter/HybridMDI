@@ -56,4 +56,3 @@ Get-ChildItem -Path $ProjectDir -Filter '*.dfm' -Recurse | ForEach-Object {
         Write-Host "Bereinigt: $($_.Name) ($($lines.Count - $cleaned.Count) Zeile(n) entfernt)"
     }
 }
-pause

@@ -42,6 +42,30 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Android64)'!=''">
+        <Cfg_1_Android64>true</Cfg_1_Android64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Cfg_1)'=='true') or '$(Cfg_1_iOSDevice64)'!=''">
+        <Cfg_1_iOSDevice64>true</Cfg_1_iOSDevice64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSX64' and '$(Cfg_1)'=='true') or '$(Cfg_1_OSX64)'!=''">
+        <Cfg_1_OSX64>true</Cfg_1_OSX64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSXARM64' and '$(Cfg_1)'=='true') or '$(Cfg_1_OSXARM64)'!=''">
+        <Cfg_1_OSXARM64>true</Cfg_1_OSXARM64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
         <Cfg_1_Win32>true</Cfg_1_Win32>
         <CfgParent>Cfg_1</CfgParent>
@@ -134,6 +158,7 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -141,11 +166,29 @@
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Android64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_iOSDevice64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_OSX64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_OSXARM64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <PreBuildEvent><![CDATA[powershell -ExecutionPolicy Bypass -File "$(ProjectDir)\CleanDataModuleDfm.ps1"
+$(PreBuildEvent)]]></PreBuildEvent>
+        <DCC_UnitSearchPath>C:\Users\weiss\source\DelphiTwain-main\units;C:\Users\weiss\source\repos\delphi-event-bus\source;C:\Users\weiss\source\repos\Python4Delphi\python4delphi\Source\vcl;C:\Users\weiss\source\repos\Python4Delphi\python4delphi\Source;C:\Users\weiss\source\repos\jvcl\jvcl\run;C:\Windows\SysWOW64\;C:\Users\weiss\Documents\Embarcadero\Studio\37.0\Imports;C:\Users\weiss\source\repos\Heisenberg\Tools;C:\Users\weiss\source\repos\Virtual-TreeView\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -175,8 +218,6 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <PreBuildEvent><![CDATA[powershell -ExecutionPolicy Bypass -File "C:\Users\weiss\source\repos\Heisenberg\CleanDataModuleDfm.ps1"
-$(PreBuildEvent)]]></PreBuildEvent>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -194,10 +235,8 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="uFrmModuleTemplate.pas">
             <Form>frmTemplate</Form>
         </DCCReference>
-        <DCCReference Include="uFrmGuiTemplate.pas">
-            <Form>frmGuiTemplate</Form>
-        </DCCReference>
         <DCCReference Include="uFrmRibbonTemplate.pas"/>
+        <DCCReference Include="..\delphi-event-bus\source\Eventbus.Core.pas"/>
         <DCCReference Include="MandantDm.pas">
             <Form>dmMandant</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -234,24 +273,6 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="PyArtikelFrm.pas">
             <Form>frmPyArtikel</Form>
         </DCCReference>
-        <DCCReference Include="KundenDm.pas">
-            <Form>dmKunden</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="KundenFrm.pas">
-            <Form>frmKunden</Form>
-        </DCCReference>
-        <DCCReference Include="ArtikelDm.pas">
-            <Form>dmArtikel</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="ArtikelFrm.pas">
-            <Form>frmArtikel</Form>
-        </DCCReference>
-        <DCCReference Include="ArtikelStammDm.pas">
-            <Form>dmArtikelStamm</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
         <DCCReference Include="ArtikelStammFrm.pas">
             <Form>frmArtikelStamm</Form>
         </DCCReference>
@@ -273,6 +294,13 @@ $(PreBuildEvent)]]></PreBuildEvent>
             <Form>dmLagerEntnahme</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="VorgangDm.pas">
+            <Form>dmVorgang</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="VorgangFrm.pas">
+            <Form>frmVorgang</Form>
+        </DCCReference>
         <DCCReference Include="LagerEntnahmeFrm.pas">
             <Form>frmLagerEntnahme</Form>
         </DCCReference>
@@ -292,6 +320,10 @@ $(PreBuildEvent)]]></PreBuildEvent>
         </DCCReference>
         <DCCReference Include="CSharpDm.pas">
             <Form>dmCSharp</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="DokumentOcrDm.pas">
+            <Form>dmDokumentOcr</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="BaumKnotenData.pas"/>
@@ -348,6 +380,40 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="KalkulationFrm.pas">
             <Form>frmKalkulation</Form>
         </DCCReference>
+        <DCCReference Include="FeedbackFrm.pas">
+            <Form>frmFeedback</Form>
+        </DCCReference>
+        <DCCReference Include="KursAnwesenheitDm.pas">
+            <Form>dmKursAnwesenheit</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="KursAnwesenheitFrm.pas">
+            <Form>frmKursAnwesenheit</Form>
+        </DCCReference>
+        <DCCReference Include="ZentraleDatenDm.pas">
+            <Form>dmZentraleDaten</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="WebEditorDm.pas">
+            <Form>dmWebEditor</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="WebEditorFrm.pas">
+            <Form>frmWebEditor</Form>
+        </DCCReference>
+        <DCCReference Include="BenutzerDm.pas">
+            <Form>dmBenutzer</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="BenutzerFrm.pas">
+            <Form>frmBenutzer</Form>
+        </DCCReference>
+        <DCCReference Include="LoginFrm.pas">
+            <Form>frmLogin</Form>
+        </DCCReference>
+        <DCCReference Include="NotfallFrm.pas">
+            <Form>frmNotfall</Form>
+        </DCCReference>
         <DCCReference Include="EinstellungenDm.pas">
             <Form>dmEinstellungen</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -390,10 +456,15 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="LagerFrm.pas">
             <Form>frmLager</Form>
         </DCCReference>
-        <DCCReference Include="..\RibbonFramework\Lib\UIRibbon.pas">
-            <Form>$R *.res</Form>
+        <DCCReference Include="..\RibbonFramework\Lib\UIRibbon.pas"/>
+        <DCCReference Include="uFrmGuiTemplate.pas">
+            <Form>frmGuiTemplate</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Unit1.pas"/>
+        <DCCReference Include="ArtikelStammDm.pas">
+            <Form>dmArtikelStamm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -1390,8 +1461,8 @@ $(PreBuildEvent)]]></PreBuildEvent>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
-    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64'">
-        <PreBuildEvent>powershell -ExecutionPolicy Bypass -File &quot;C:\Users\weiss\source\repos\Heisenberg\CleanDataModuleDfm.ps1&quot;</PreBuildEvent>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
+        <PreBuildEvent>powershell -ExecutionPolicy Bypass -File &quot;$(ProjectDir)\CleanDataModuleDfm.ps1&quot;</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>

@@ -1,0 +1,213 @@
+program TestEchteDaten;
+{$APPTYPE CONSOLE}
+// Kein Testdatensatz, keine gestellte Lage: geht die WIRKLICH vorhandenen
+// Artikel des Mandanten durch und vergleicht fuer jeden, was das Fenster
+// anzeigt, mit dem, was in der Datenbank steht.
+//
+// Gebaut, weil die bisherigen Pruefstaende ihre eigenen Artikel angelegt
+// haben und damit gruen waren, waehrend im Betrieb bei TRT-120 weder das
+// Foto noch der Kategorie-Haken erschien.
+uses
+  System.SysUtils, System.Classes, System.StrUtils, System.Variants,
+  Data.DB, Vcl.Forms, Vcl.Controls,
+  FireDAC.Comp.Client, FireDAC.Comp.DataSet,
+  ZentraleDatenDm, MandantDm, ArtikelStammDm, ArtikelStammFrm;
+
+type
+  TMdiRahmen = class(TForm)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TMdiRahmen.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+  FormStyle := fsMDIForm;
+  Position := poDesigned;
+  Left := -32000;
+  Top := -32000;
+  WindowState := wsMinimized;
+end;
+
+var
+  LRahmen: TMdiRahmen;
+  LDm: TdmArtikelStamm;
+  LFunk: TFDQuery;
+  LFehler: Integer = 0;
+
+procedure Sag(const ATitel: string; AGut: Boolean; const AText: string = '');
+begin
+  Writeln(Format('%-40s %-5s %s', [ATitel, BoolToStr(AGut, True), AText]));
+  if not AGut then
+    Inc(LFehler);
+end;
+
+function EineSpalte(const ASql: string): string;
+begin
+  LFunk.Close;
+  LFunk.SQL.Text := ASql;
+  LFunk.Open;
+  Result := '';
+  while not LFunk.Eof do
+  begin
+    if Result <> '' then
+      Result := Result + ',';
+    Result := Result + LFunk.Fields[0].AsString;
+    LFunk.Next;
+  end;
+end;
+
+// Welche foto_ids sieht die Detailtabelle gerade, und wie gross sind die
+// Bilder darin?
+function SichtbareFotos: string;
+var
+  LMerker: TBookmark;
+begin
+  Result := '';
+  if not LDm.tblArtikelFoto.Active or LDm.tblArtikelFoto.IsEmpty then
+    Exit('(leer)');
+  LDm.tblArtikelFoto.DisableControls;
+  LMerker := LDm.tblArtikelFoto.GetBookmark;
+  try
+    LDm.tblArtikelFoto.First;
+    while not LDm.tblArtikelFoto.Eof do
+    begin
+      if Result <> '' then
+        Result := Result + ',';
+      Result := Result + LDm.tblArtikelFoto.FieldByName('foto_id').AsString +
+        '/' + IntToStr(Length(LDm.tblArtikelFoto.FieldByName('foto').AsBytes));
+      LDm.tblArtikelFoto.Next;
+    end;
+  finally
+    if Assigned(LMerker) then
+    begin
+      LDm.tblArtikelFoto.GotoBookmark(LMerker);
+      LDm.tblArtikelFoto.FreeBookmark(LMerker);
+    end;
+    LDm.tblArtikelFoto.EnableControls;
+  end;
+end;
+
+function AngezeigtesBild: string;
+begin
+  if not Assigned(frmArtikelStamm) then
+    Exit('kein Formular');
+  if not Assigned(frmArtikelStamm.dbimgFoto.Picture.Graphic) or
+     frmArtikelStamm.dbimgFoto.Picture.Graphic.Empty then
+    Exit('leer');
+  Result := Format('%dx%d', [frmArtikelStamm.dbimgFoto.Picture.Width,
+                             frmArtikelStamm.dbimgFoto.Picture.Height]);
+end;
+
+function AngekreuzteKategorien: string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to frmArtikelStamm.clbKategorie.Items.Count - 1 do
+    if frmArtikelStamm.clbKategorie.Checked[I] then
+    begin
+      if Result <> '' then
+        Result := Result + ',';
+      Result := Result +
+        IntToStr(Integer(NativeInt(frmArtikelStamm.clbKategorie.Items.Objects[I])));
+    end;
+end;
+
+var
+  LArtikel: TArray<Integer>;
+  LNummern: TArray<string>;
+  I, LId: Integer;
+  LSollFotos, LIstFotos, LSollKat, LIstKat, LBild: string;
+begin
+  try
+    Application.ShowMainForm := False;
+    Application.Initialize;
+    Application.CreateForm(TMdiRahmen, LRahmen);
+
+    LFunk := TFDQuery.Create(nil);
+    try
+      LFunk.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+      Writeln('Datenbank: ' +
+        TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung.Params.Values['Server'] +
+        '/' +
+        TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung.Params.Values['Database']);
+
+      TdmZentraleDaten(TdmZentraleDaten.GetInstance).AlleTabellenLaden;
+      TdmMandant(TdmMandant.GetInstance).CurrentMandantId := 1;
+      LDm := TdmArtikelStamm(TdmArtikelStamm.GetInstance);
+      LDm.OpenArtikelStamm;
+
+      // Nur die Artikel, bei denen es etwas zu sehen gibt: die mit Foto
+      // oder mit Kategoriezuordnung.
+      LFunk.Close;
+      LFunk.SQL.Text :=
+        'SELECT a.artikel_id, a.artikel_nr FROM artikel a WHERE a.mandant_id=1 ' +
+        '  AND (EXISTS (SELECT 1 FROM artikel_foto f WHERE f.artikel_id=a.artikel_id) ' +
+        '    OR EXISTS (SELECT 1 FROM artikel_kategorie k WHERE k.artikel_id=a.artikel_id)) ' +
+        'ORDER BY a.artikel_id';
+      LFunk.Open;
+      SetLength(LArtikel, 0);
+      SetLength(LNummern, 0);
+      while not LFunk.Eof do
+      begin
+        LArtikel := LArtikel + [LFunk.Fields[0].AsInteger];
+        LNummern := LNummern + [LFunk.Fields[1].AsString];
+        LFunk.Next;
+      end;
+      Writeln(Format('%d Artikel mit Foto oder Kategorie', [Length(LArtikel)]));
+      Writeln;
+
+      for I := 0 to High(LArtikel) do
+      begin
+        LId := LArtikel[I];
+        if not LDm.tblArtikel.Locate('artikel_id', LId, []) then
+        begin
+          Sag(LNummern[I] + ': in der Liste', False, 'nicht gefunden');
+          Continue;
+        end;
+        Application.ProcessMessages;
+
+        LSollFotos := EineSpalte(Format(
+          'SELECT foto_id || ''/'' || COALESCE(octet_length(foto),0) ' +
+          'FROM artikel_foto WHERE artikel_id=%d ORDER BY foto_id', [LId]));
+        if LSollFotos = '' then
+          LSollFotos := '(leer)';
+        LIstFotos := SichtbareFotos;
+        Sag(LNummern[I] + ': Fotos', LIstFotos = LSollFotos,
+            Format('ist %s / soll %s', [LIstFotos, LSollFotos]));
+
+        LBild := AngezeigtesBild;
+        Sag(LNummern[I] + ': Bild sichtbar',
+            (LSollFotos = '(leer)') = (LBild = 'leer'), LBild);
+
+        LSollKat := EineSpalte(Format(
+          'SELECT ak.kategorie_id FROM artikel_kategorie ak ' +
+          'JOIN kategorie k USING (kategorie_id) ' +
+          'WHERE ak.artikel_id=%d AND k.mandant_id=1 AND k.bereich=''ARTIKEL'' ' +
+          '  AND k.aktiv ORDER BY k.sortierung, k.bezeichnung', [LId]));
+        LIstKat := AngekreuzteKategorien;
+        Sag(LNummern[I] + ': Kategorie-Haken', LIstKat = LSollKat,
+            Format('ist "%s" / soll "%s"', [LIstKat, LSollKat]));
+      end;
+
+      Writeln;
+      if LFehler = 0 then
+        Writeln('Alles in Ordnung.')
+      else
+        Writeln(LFehler, ' Pruefung(en) fehlgeschlagen.');
+
+      if Assigned(frmArtikelStamm) then
+      begin
+        frmArtikelStamm.Close;
+        Application.ProcessMessages;
+      end;
+    finally
+      LFunk.Free;
+    end;
+  except
+    on E: Exception do
+      Writeln('FEHLER ', E.ClassName, ': ', E.Message);
+  end;
+  Halt(0);
+end.

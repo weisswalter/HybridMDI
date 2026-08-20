@@ -1,0 +1,31 @@
+INSERT INTO web_text (mandant_id, schluessel, sprache, wert)
+SELECT 1, s.k, 'de', s.v FROM (VALUES
+    ('allgemein.laedt', 'Wird geladen …'),
+    ('cta.frage', 'Interesse an einer Zusammenarbeit?'),
+    ('cta.knopf', 'Kontakt aufnehmen →'),
+    ('home.hero.titel', 'TRT Engineering'),
+    ('home.hero.untertitel', 'Ihr Partner für Softwareentwicklung, Projektmanagement und Beratung'),
+    ('home.leistungen.titel', 'Unsere Leistungen'),
+    ('impressum.angaben', 'Angaben gemäß § 5 TMG'),
+    ('impressum.haftung.inhalte', 'Haftung für Inhalte'),
+    ('impressum.haftung.links', 'Haftung für Links'),
+    ('impressum.kontakt', 'Kontakt'),
+    ('impressum.titel', 'Impressum'),
+    ('impressum.ustid', 'Umsatzsteuer-ID'),
+    ('kontakt.hero.titel', 'Kontakt'),
+    ('kontakt.hero.untertitel', 'Wir freuen uns auf Ihre Nachricht'),
+    ('nav.logo.alt', 'TRT Engineering Logo'),
+    ('nav.marke', 'TRT-Engineering'),
+    ('schluessel', 'Ersatztext'),
+    ('seite.fehlt.text', 'Diese Seite gibt es nicht (mehr).'),
+    ('seite.fehlt.titel', 'Nicht gefunden'),
+    ('seite.fehlt.zurueck', 'Zurück zur Teamübersicht'),
+    ('team.hero.titel', 'Unser Team'),
+    ('team.hero.untertitel', 'Die Menschen hinter TRT Engineering GmbH'),
+    ('team.kein.profil', 'Für diese Person ist noch kein Profiltext hinterlegt.'),
+    ('team.mehr', 'Weitere anzeigen'),
+    ('team.mehr.rest', 'verbleibend'),
+    ('team.pdf.oeffnen', 'Profil als PDF öffnen'),
+    ('team.profil.titel', 'Profil')
+) AS s(k, v)
+ WHERE NOT EXISTS (SELECT 1 FROM web_text t WHERE t.mandant_id=1 AND t.schluessel=s.k AND t.sprache='de');

@@ -1,4 +1,4 @@
-unit ScannerDm;
+﻿unit ScannerDm;
 
 // DataModule fuer die Scanner-Anbindung — TRTHeisenberg.
 // Buendelt beide Treiberwege: WIA (fuer HP Officejet Pro 8620, kein TWAIN-Treiber
@@ -15,7 +15,8 @@ unit ScannerDm;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
@@ -56,17 +57,32 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms, Vcl.Dialogs, System.Variants, System.IOUtils, ComObj, ActiveX, WIA_TLB,
+  Vcl.Dialogs, System.Variants, System.IOUtils, ComObj, ActiveX, WIA_TLB,
   Data.DB,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
   FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
   FireDAC.Phys, FireDAC.Phys.PG, FireDAC.Phys.PGDef, FireDAC.VCLUI.Wait,
   FireDAC.Stan.Param, FireDAC.DApt, FireDAC.Comp.Client,
   DelphiTwain, DelphiTwain_VCL,
-  ScannerFrm;
+  ScannerFrm, System.SyncObjs, ZentraleDatenDm;
+
+var
+  GSperreScanner: TCriticalSection;
 
 class function TdmScanner.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmScanner) then
+  begin
+    GSperreScanner.Enter;
+    try
+      if not Assigned(dmScanner) then
+        Application.CreateForm(TdmScanner, dmScanner);
+    finally
+      GSperreScanner.Leave;
+    end;
+  end;
   Result := dmScanner;
 end;
 
@@ -176,10 +192,10 @@ begin
       Conn.LoginPrompt := False;
       Conn.Params.Values['DriverID']  := 'PG';
       Conn.Params.Values['Server']    := 'localhost';
-      Conn.Params.Values['Port']      := '5432';
+      Conn.Params.Values['Port']      := '5455';
       Conn.Params.Values['Database']  := 'TRTHeisenberg';
-      Conn.Params.Values['User_Name'] := 'postgres';
-      Conn.Params.Values['Password']  := 'postgres';
+      Conn.Params.Values['User_Name'] := 'wwe123';
+      Conn.Params.Values['Password']  := 'a4cX7pAp29WRK7XHkGHBzs4DIhjAM14Z';
       Conn.Connected := True;
 
       SP.Connection := Conn;
@@ -256,5 +272,13 @@ begin
     CoUninitialize;
   end;
 end;
+
+
+
+initialization
+  GSperreScanner := TCriticalSection.Create;
+
+finalization
+  GSperreScanner.Free;
 
 end.

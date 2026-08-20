@@ -27,7 +27,8 @@ uses
   Data.DB, Vcl.StdCtrls, Vcl.Mask,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
   JvDBControls, JvDBLookup,
-  uFrmModuleTemplate, JvComponentBase, JvExMask, JvToolEdit, JvMaskEdit;
+  uFrmModuleTemplate, JvComponentBase, JvExMask, JvToolEdit, JvMaskEdit,
+  System.ImageList, Vcl.ImgList, JvImageList, System.Actions, Vcl.ActnList;
 
 type
   // Reihenfolge = Tag der Buttons in jeder Leiste
@@ -259,6 +260,11 @@ end;
 
 procedure TfrmLager.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  // ZURUECK auf caFree am 09.08.2026: MDI-Kinder lassen sich
+  // nicht verstecken - weder per caHide (VCL wirft) noch per
+  // ShowWindow (der MDI-Client zeigt sie wieder an). Mit caNone
+  // gingen die Fenster gar nicht mehr zu. Das Wiederoeffnen
+  // bleibt damit langsam; ein anderer Weg muss her.
   Action := caFree;
   frmLager := nil;
 end;
@@ -373,19 +379,23 @@ begin
     laLetzter:       LDs.DataSet.Last;
     laNeu:           LDs.DataSet.Append;
     laBearbeiten:    if not LDs.DataSet.IsEmpty then LDs.DataSet.Edit;
-    laSpeichern:     if LDs.DataSet.State in dsEditModes then LDs.DataSet.Post;
+    // Speichern geht nicht mehr per Post gegen die Datenbank, sondern ueber
+    // die Datenbankfunktion. Post passiert innerhalb von SatzSpeichern nur
+    // noch, um die Feldwerte aus dem Editiermodus in den Satz zu bringen.
+    laSpeichern:     dmLager.SatzSpeichern(LDs.DataSet);
     laAbbrechen:     if LDs.DataSet.State in dsEditModes then LDs.DataSet.Cancel;
     laAktualisieren: if LDs.DataSet.State = dsBrowse then LDs.DataSet.Refresh;
   end;
 end;
 
 // Bilddatei in ein Blob-Feld laden. Vcl.Imaging.jpeg/pngimage in uses ->
-// TDBImage zeigt JPG/PNG an. ATbl wird als TFDTable erwartet (tblLager).
+// TDBImage zeigt JPG/PNG an. Erwartet ein Dataset (tblLager) - der Typ ist
+// TDataSet, nicht TFDTable: die Tabellen des Moduls sind MemTables.
 procedure TfrmLager.LadeBild(const AFeld: string; ATbl: TObject);
 var
-  LTbl: TFDTable;
+  LTbl: TDataSet;
 begin
-  LTbl := TFDTable(ATbl);
+  LTbl := TDataSet(ATbl);
   if LTbl.IsEmpty and not (LTbl.State in dsEditModes) then
     Exit;
   if not dlgBild.Execute then

@@ -7,7 +7,7 @@ object dmPGManager: TdmPGManager
     Params.Strings = (
       'DriverID=PG'
       'Database=postgres'
-      'User_Name=postgres')
+      'User_Name=wwe123')
     LoginPrompt = False
     Left = 48
     Top = 48

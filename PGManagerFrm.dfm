@@ -252,7 +252,7 @@ object frmPGManager: TfrmPGManager
         object lblConnStatus: TLabel
           Left = 680
           Top = 84
-          Width = 100
+          Width = 50
           Height = 15
           Caption = 'getrennt'
           Font.Charset = DEFAULT_CHARSET
@@ -276,7 +276,7 @@ object frmPGManager: TfrmPGManager
           Width = 80
           Height = 23
           TabOrder = 1
-          Text = '5432'
+          Text = '5455'
         end
         object edtUser: TEdit
           Left = 316
@@ -293,6 +293,7 @@ object frmPGManager: TfrmPGManager
           Height = 23
           PasswordChar = '*'
           TabOrder = 3
+          Text = #9'a4cX7pAp29WRK7XHkGHBzs4DIhjAM14Z'
         end
         object btnConnect: TButton
           Left = 680

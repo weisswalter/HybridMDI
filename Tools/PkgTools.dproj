@@ -185,6 +185,7 @@
         <DCCReference Include="JvNavPanelButtonTop.pas"/>
         <DCCReference Include="RibbonButtonBar.pas"/>
         <DCCReference Include="GanttPanel.pas"/>
+        <DCCReference Include="DataModuleForDelphi.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -225,12 +226,6 @@
                 <DeployFile LocalName="..\..\..\..\..\Public\Documents\Embarcadero\Studio\37.0\Bpl\Win64\PkgTools.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>PkgTools.bpl</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="..\..\..\..\..\Public\Documents\Embarcadero\Studio\37.0\Bpl\Win64\PkgTools.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>PkgTools.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

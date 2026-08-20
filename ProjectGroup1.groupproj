@@ -12,6 +12,9 @@
         <Projects Include="Tools\PrjTool.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Tools\CopyBlazor.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -47,14 +50,23 @@
     <Target Name="PrjTool:Make">
         <MSBuild Projects="Tools\PrjTool.dproj" Targets="Make"/>
     </Target>
+    <Target Name="CopyBlazor">
+        <MSBuild Projects="Tools\CopyBlazor.dproj"/>
+    </Target>
+    <Target Name="CopyBlazor:Clean">
+        <MSBuild Projects="Tools\CopyBlazor.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CopyBlazor:Make">
+        <MSBuild Projects="Tools\CopyBlazor.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="PkgTools;Heisenberg;PrjTool"/>
+        <CallTarget Targets="PkgTools;Heisenberg;PrjTool;CopyBlazor"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="PkgTools:Clean;Heisenberg:Clean;PrjTool:Clean"/>
+        <CallTarget Targets="PkgTools:Clean;Heisenberg:Clean;PrjTool:Clean;CopyBlazor:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="PkgTools:Make;Heisenberg:Make;PrjTool:Make"/>
+        <CallTarget Targets="PkgTools:Make;Heisenberg:Make;PrjTool:Make;CopyBlazor:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

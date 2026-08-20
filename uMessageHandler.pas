@@ -91,7 +91,8 @@ implementation
 
 uses
   Vcl.Dialogs,
-  CSharpDm;   // fuer den mtCSharp-Zweig in HandleMessage
+  CSharpDm,   // fuer den mtCSharp-Zweig in HandleMessage
+  udmModuleTemplate;   // fuer den mtBroadcast-Zweig
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -160,6 +161,12 @@ begin
     // Analog zu mtModulCall, nur dass die Arbeit in C# statt in Delphi passiert.
     mtCSharp:
       TdmCSharp(TdmCSharp.GetInstance).Call(AMessage, ASender, AParams);
+    // Geht an ALLE erzeugten Module statt an eines. AMessage traegt den
+    // Namen der Methode, die bei jedem gerufen wird (z.B. 'DatenGeladen').
+    // Kein Suchlauf ueber alle RTTI-Typen wie bei mtModulCall: das Template
+    // fuehrt die Liste seiner Instanzen, und nur die gibt es wirklich.
+    mtBroadcast:
+      TdmModuleTemplate.AlleBenachrichtigen(AMessage);
     mtException:  raise Exception.CreateFmt('Es ist ein Fehler aufgetreten: %s.%s', [AMessage, ASender]);
   end;
 end;

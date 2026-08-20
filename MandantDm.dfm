@@ -1,15 +1,16 @@
 object dmMandant: TdmMandant
-  OldCreateOrder = False
+  Left = 0
+  Top = 0
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
-  Height = 150
-  Width = 215
-  object FDConnection: TFDConnection
-    LoginPrompt = False
-    Left = 40
-    Top = 40
-  end
-  object qryMandant: TFDQuery
+  object memMandant: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
     Left = 112
     Top = 40
   end

@@ -32,6 +32,7 @@ object frmArtikelStamm: TfrmArtikelStamm
     BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 0
+    ExplicitHeight = 592
     object pnlStammButtons: TPanel
       Left = 0
       Top = 0
@@ -41,7 +42,6 @@ object frmArtikelStamm: TfrmArtikelStamm
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 0
-      ExplicitWidth = 353
       object btnErsterStamm: TJvNavPanelButtonTop
         Left = 0
         Top = 0
@@ -52,7 +52,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -70,7 +70,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -90,7 +90,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -108,7 +108,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -126,7 +126,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -144,7 +144,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -164,7 +164,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -184,7 +184,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -203,7 +203,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         Alignment = taCenter
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -223,7 +223,7 @@ object frmArtikelStamm: TfrmArtikelStamm
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 1
-      ExplicitWidth = 352
+      ExplicitHeight = 554
       DesignSize = (
         235
         562)
@@ -312,6 +312,7 @@ object frmArtikelStamm: TfrmArtikelStamm
         DataSource = dmArtikelStamm.dstblArtikel
         ScrollBars = ssVertical
         TabOrder = 4
+        ExplicitHeight = 286
       end
     end
   end
@@ -334,19 +335,14 @@ object frmArtikelStamm: TfrmArtikelStamm
     TopPanel.Caption = 'TopPanel'
     TopPanel.ShowCaption = False
     TopPanel.TabOrder = 1
-    TopPanel.ExplicitWidth = 757
+    TopPanel.ExplicitWidth = 873
     TopPanel.DesignSize = (
       875
       31)
-    PageControl.Left = -1
-    PageControl.Top = 29
-    PageControl.Width = 877
-    PageControl.Height = 572
-    PageControl.ActivePage = tsPhotos
-    PageControl.Anchors = [akLeft, akTop, akRight, akBottom]
-    PageControl.TabOrder = 0
-    PageControl.ExplicitWidth = 759
     HeaderButtons = <
+      item
+        Caption = 'Kategorien'
+      end
       item
         Caption = 'Fotos'
       end
@@ -359,11 +355,62 @@ object frmArtikelStamm: TfrmArtikelStamm
       item
         Caption = 'Varianten'
       end>
-    ExplicitLeft = 358
-    ExplicitWidth = 757
-    DesignSize = (
-      875
-      600)
+    ExplicitWidth = 873
+    ExplicitHeight = 592
+    object tsKategorien: TTabSheet
+      Caption = 'Kategorien'
+      object pnlKategorie: TPanel
+        Left = 0
+        Top = 0
+        Width = 875
+        Height = 569
+        Align = alClient
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        ExplicitWidth = 873
+        ExplicitHeight = 561
+        object lblKategorie: TLabel
+          Left = 8
+          Top = 8
+          Width = 57
+          Height = 15
+          Caption = 'Kategorien'
+        end
+        object clbKategorie: TCheckListBox
+          Left = 8
+          Top = 29
+          Width = 240
+          Height = 300
+          ItemHeight = 17
+          TabOrder = 0
+          OnClickCheck = clbKategorieClickCheck
+        end
+        object grdKategorie: TDBGrid
+          Left = 264
+          Top = 29
+          Width = 260
+          Height = 300
+          DataSource = dmArtikelStamm.dstblArtikelKategorie
+          Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect]
+          ReadOnly = True
+          TabOrder = 1
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+          Columns = <
+            item
+              Expanded = False
+              FieldName = 'bezeichnung'
+              Title.Caption = 'zugeordnet'
+              Width = 210
+              Visible = True
+            end>
+        end
+      end
+    end
     object tsPhotos: TTabSheet
       Caption = 'Fotos'
       object barFotos: TRibbonButtonBar
@@ -412,26 +459,38 @@ object frmArtikelStamm: TfrmArtikelStamm
           item
             Action = actNeuLadenR
           end>
-        ExplicitWidth = 759
+        ExplicitWidth = 875
       end
       object pnlFotos: TPanel
         Left = 0
         Top = 38
         Width = 877
-        Height = 534
+        Height = 531
         Align = alClient
         BevelOuter = bvNone
         Caption = 'pnlFotos'
         ShowCaption = False
         TabOrder = 0
-        ExplicitLeft = 7
-        ExplicitTop = 15
+        ExplicitWidth = 875
         object lblFotoBeschr: TLabel
           Left = 7
           Top = 6
           Width = 72
           Height = 15
           Caption = 'Beschreibung'
+        end
+        object lblZiehen: TLabel
+          Left = 616
+          Top = 268
+          Width = 119
+          Height = 26
+          Caption = 'oder Bilder aus dem'#13#10'Explorer hierher ziehen'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clGrayText
+          Font.Height = -11
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
         end
         object dbimgFoto: TDBImage
           Left = 312
@@ -482,6 +541,15 @@ object frmArtikelStamm: TfrmArtikelStamm
           ScrollBars = ssVertical
           TabOrder = 3
         end
+        object btnFotoLoeschen: TButton
+          Left = 616
+          Top = 232
+          Width = 120
+          Height = 25
+          Caption = 'Foto entfernen'
+          TabOrder = 4
+          OnClick = btnFotoLoeschenClick
+        end
       end
     end
     object tsBestandRP: TTabSheet
@@ -496,7 +564,6 @@ object frmArtikelStamm: TfrmArtikelStamm
         Caption = 'pnlBestand'
         ShowCaption = False
         TabOrder = 0
-        ExplicitWidth = 759
         object vstBestand: TVirtualStringTree
           Left = 0
           Top = 0
@@ -509,7 +576,6 @@ object frmArtikelStamm: TfrmArtikelStamm
           TabOrder = 0
           Touch.InteractiveGestures = [igPan, igPressAndTap]
           Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-          ExplicitWidth = 759
           Columns = <>
         end
       end
@@ -520,46 +586,45 @@ object frmArtikelStamm: TfrmArtikelStamm
         Left = 0
         Top = 0
         Width = 877
-        Height = 572
+        Height = 569
         Align = alClient
         BevelOuter = bvNone
         Caption = 'pnlStueckliste'
         ShowCaption = False
         TabOrder = 0
-        ExplicitWidth = 759
         object pnlStuecklisteAdd: TPanel
           Left = 0
           Top = 0
           Width = 877
-          Height = 572
-          Align = alClient
+          Height = 50
+          Align = alTop
           BevelOuter = bvNone
           ShowCaption = False
           TabOrder = 0
-          ExplicitWidth = 759
           object lblUnterArtikel: TLabel
             Left = 8
-            Top = 8
+            Top = 6
             Width = 61
             Height = 15
             Caption = 'Unterartikel'
           end
           object lblStkMenge: TLabel
             Left = 300
-            Top = 8
+            Top = 6
             Width = 37
             Height = 15
             Caption = 'Menge'
           end
           object btnStkAdd: TJvNavPanelButtonTop
-            Left = 8
-            Top = 50
-            Width = 130
+            Left = 380
+            Top = 9
+            Width = 110
+            Height = 32
             Alignment = taCenter
             Caption = 'Hinzuf'#252'gen'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -569,14 +634,15 @@ object frmArtikelStamm: TfrmArtikelStamm
             OnClick = btnStkAddClick
           end
           object btnStkDel: TJvNavPanelButtonTop
-            Left = 144
-            Top = 50
-            Width = 130
+            Left = 494
+            Top = 9
+            Width = 110
+            Height = 32
             Alignment = taCenter
             Caption = 'Entfernen'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -587,18 +653,17 @@ object frmArtikelStamm: TfrmArtikelStamm
           end
           object cboUnterArtikel: TDBLookupComboBox
             Left = 8
-            Top = 26
+            Top = 22
             Width = 280
             Height = 23
             KeyField = 'artikel_id'
             ListField = 'artikelname'
-            ListSource = dmArtikelStamm.dsArtikelAuswahl
             TabOrder = 0
           end
           object edtStkMenge: TEdit
             Left = 300
-            Top = 26
-            Width = 90
+            Top = 22
+            Width = 70
             Height = 23
             TabOrder = 1
             Text = '1'
@@ -606,9 +671,10 @@ object frmArtikelStamm: TfrmArtikelStamm
         end
         object vstStueckliste: TVirtualStringTree
           Left = 0
-          Top = 0
-          Width = 407
-          Height = 492
+          Top = 50
+          Width = 877
+          Height = 519
+          Align = alClient
           Header.AutoSizeIndex = 0
           Header.Height = 15
           Header.MainColumn = -1
@@ -630,7 +696,15 @@ object frmArtikelStamm: TfrmArtikelStamm
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 0
-        ButtonWidth = 96
+        Gradient.Left = 0
+        Gradient.Top = 0
+        Gradient.Width = 877
+        Gradient.Height = 38
+        Gradient.Style = grVertical
+        Gradient.StartColor = 16245453
+        Gradient.EndColor = 15966336
+        Gradient.ExplicitWidth = 0
+        Gradient.ExplicitHeight = 0
         Buttons = <
           item
             Action = actVarMerkmal
@@ -647,6 +721,7 @@ object frmArtikelStamm: TfrmArtikelStamm
           item
             Action = actVarNeuLaden
           end>
+        ButtonWidth = 96
       end
       object pnlAequivalenz: TPanel
         Left = 0
@@ -660,16 +735,52 @@ object frmArtikelStamm: TfrmArtikelStamm
         object lblAequivalenz: TLabel
           Left = 8
           Top = 14
-          Width = 62
+          Width = 56
           Height = 15
           Caption = 'Entspricht:'
         end
         object lblGleich: TLabel
           Left = 342
           Top = 14
-          Width = 13
+          Width = 8
           Height = 15
           Caption = '='
+        end
+        object btnGleichsetzen: TJvNavPanelButtonTop
+          Left = 634
+          Top = 3
+          Width = 110
+          Height = 38
+          Alignment = taCenter
+          Caption = 'Gleichsetzen'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -15
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle1
+          ParentStyleManager = False
+          ImageIndex = 0
+          OnClick = btnGleichsetzenClick
+        end
+        object btnAequivalenzLoesen: TJvNavPanelButtonTop
+          Left = 748
+          Top = 3
+          Width = 110
+          Height = 38
+          Alignment = taCenter
+          Caption = 'Aufheben'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -15
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+          StyleManager = PaneStyle2
+          ParentStyleManager = False
+          ImageIndex = 0
+          OnClick = btnAequivalenzLoesenClick
         end
         object cboAequivalenzA: TComboBox
           Left = 76
@@ -687,46 +798,12 @@ object frmArtikelStamm: TfrmArtikelStamm
           Style = csDropDownList
           TabOrder = 1
         end
-        object btnGleichsetzen: TJvNavPanelButtonTop
-          Left = 634
-          Top = 3
-          Width = 110
-          Height = 38
-          Alignment = taCenter
-          Caption = 'Gleichsetzen'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -12
-          Font.Name = 'Segoe UI'
-          Font.Style = [fsBold]
-          ParentFont = False
-          StyleManager = PaneStyle1
-          ParentStyleManager = False
-          ImageIndex = 0
-        end
-        object btnAequivalenzLoesen: TJvNavPanelButtonTop
-          Left = 744
-          Top = 3
-          Width = 110
-          Height = 38
-          Alignment = taCenter
-          Caption = 'Aufheben'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -12
-          Font.Name = 'Segoe UI'
-          Font.Style = [fsBold]
-          ParentFont = False
-          StyleManager = PaneStyle2
-          ParentStyleManager = False
-          ImageIndex = 0
-        end
       end
       object pnlVarianten: TPanel
         Left = 0
         Top = 82
-        Width = 877
-        Height = 460
+        Width = 875
+        Height = 487
         Align = alClient
         BevelOuter = bvNone
         ShowCaption = False
@@ -738,7 +815,7 @@ object frmArtikelStamm: TfrmArtikelStamm
           Height = 460
           Align = alClient
           Header.AutoSizeIndex = 0
-          Header.Height = 24
+          Header.Height = 15
           Header.MainColumn = -1
           TabOrder = 0
           Touch.InteractiveGestures = [igPan, igPressAndTap]

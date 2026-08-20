@@ -1,4 +1,4 @@
-unit MitarbeiterFrm;
+﻿unit MitarbeiterFrm;
 
 // Mitarbeiter-Verwaltung (Mitarbeiter der Hauptperson, siehe MitarbeiterDm).
 // Wie KlientFrm/KundeFrm bewusst NICHT von TfrmGuiTemplate abgeleitet --
@@ -17,7 +17,7 @@ uses
   Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
   RibbonPanel, RibbonPageControl, RibbonButtonBar,
-  uFrmModuleTemplate, JvComponentBase;
+  uFrmModuleTemplate, JvComponentBase, Vcl.Mask;
 
 type
   TfrmMitarbeiter = class(TfrmTemplate)
@@ -80,6 +80,11 @@ uses
 
 procedure TfrmMitarbeiter.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  // ZURUECK auf caFree am 09.08.2026: MDI-Kinder lassen sich
+  // nicht verstecken - weder per caHide (VCL wirft) noch per
+  // ShowWindow (der MDI-Client zeigt sie wieder an). Mit caNone
+  // gingen die Fenster gar nicht mehr zu. Das Wiederoeffnen
+  // bleibt damit langsam; ein anderer Weg muss her.
   Action := caFree;
   frmMitarbeiter := nil;
 end;

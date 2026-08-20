@@ -50,6 +50,7 @@ object frmPersonen: TfrmPersonen
         StyleManager = PaneStyle1
         ParentStyleManager = False
         ImageIndex = 0
+        Images = ImageList1
         OnClick = BtnNavClick
       end
       object btnZurueckStamm: TJvNavPanelButtonTop
@@ -69,7 +70,8 @@ object frmPersonen: TfrmPersonen
         ParentFont = False
         StyleManager = PaneStyle1
         ParentStyleManager = False
-        ImageIndex = 0
+        ImageIndex = 1
+        Images = ImageList1
         OnClick = BtnNavClick
       end
       object btnWeiterStamm: TJvNavPanelButtonTop
@@ -89,7 +91,8 @@ object frmPersonen: TfrmPersonen
         ParentFont = False
         StyleManager = PaneStyle1
         ParentStyleManager = False
-        ImageIndex = 0
+        ImageIndex = 2
+        Images = ImageList1
         OnClick = BtnNavClick
       end
       object btnLetzterStamm: TJvNavPanelButtonTop
@@ -109,7 +112,8 @@ object frmPersonen: TfrmPersonen
         ParentFont = False
         StyleManager = PaneStyle1
         ParentStyleManager = False
-        ImageIndex = 0
+        ImageIndex = 3
+        Images = ImageList1
         OnClick = BtnNavClick
       end
       object btnNeuStamm: TJvNavPanelButtonTop
@@ -129,7 +133,8 @@ object frmPersonen: TfrmPersonen
         ParentFont = False
         StyleManager = PaneStyle1
         ParentStyleManager = False
-        ImageIndex = 0
+        ImageIndex = 4
+        Images = ImageList1
         OnClick = BtnNavClick
       end
       object btnAendernStamm: TJvNavPanelButtonTop
@@ -149,7 +154,8 @@ object frmPersonen: TfrmPersonen
         ParentFont = False
         StyleManager = PaneStyle1
         ParentStyleManager = False
-        ImageIndex = 0
+        ImageIndex = 5
+        Images = ImageList1
         OnClick = BtnNavClick
         ExplicitLeft = 217
       end
@@ -170,7 +176,8 @@ object frmPersonen: TfrmPersonen
         ParentFont = False
         StyleManager = PaneStyle1
         ParentStyleManager = False
-        ImageIndex = 0
+        ImageIndex = 6
+        Images = ImageList1
         OnClick = BtnNavClick
       end
       object btnAbbrechenStamm: TJvNavPanelButtonTop
@@ -190,7 +197,8 @@ object frmPersonen: TfrmPersonen
         ParentFont = False
         StyleManager = PaneStyle1
         ParentStyleManager = False
-        ImageIndex = 0
+        ImageIndex = 7
+        Images = ImageList1
         OnClick = BtnNavClick
         ExplicitLeft = 377
       end
@@ -211,7 +219,8 @@ object frmPersonen: TfrmPersonen
         ParentFont = False
         StyleManager = PaneStyle1
         ParentStyleManager = False
-        ImageIndex = 0
+        ImageIndex = 8
+        Images = ImageList1
         OnClick = BtnNavClick
         ExplicitLeft = 438
       end
@@ -698,13 +707,16 @@ object frmPersonen: TfrmPersonen
             Height = 15
             Caption = 'Emailtyp'
           end
-          object cboEmailAdr: TDBComboBox
+          object cboEmailAdr: TJvDBLookupCombo
             Left = 8
             Top = 22
             Width = 300
             Height = 23
-            DataField = 'email_adresse'
-            DataSource = dmPersonen.dstblEmailadresse
+            DataField = 'email_id'
+            DataSource = dmPersonen.dstblPersonEmail
+            LookupField = 'email_id'
+            LookupDisplay = 'email_adresse'
+            LookupSource = dmPersonen.dstblEmailadresse
             TabOrder = 0
           end
           object cboEmailTyp: TJvDBLookupCombo
@@ -807,13 +819,16 @@ object frmPersonen: TfrmPersonen
             Height = 15
             Caption = 'Telefontyp'
           end
-          object cboTelefonNr: TDBComboBox
+          object cboTelefonNr: TJvDBLookupCombo
             Left = 8
             Top = 22
             Width = 200
             Height = 23
-            DataField = 'nummer'
-            DataSource = dmPersonen.dstblTelefonnummer
+            DataField = 'telefonnummer_id'
+            DataSource = dmPersonen.dstblPersonTelefonnummer
+            LookupField = 'telefonnummer_id'
+            LookupDisplay = 'nummer'
+            LookupSource = dmPersonen.dstblTelefonnummer
             TabOrder = 0
           end
           object cboTelefonTyp: TJvDBLookupCombo
@@ -987,8 +1002,7 @@ object frmPersonen: TfrmPersonen
             TabOrder = 5
             ValueChecked = 'True'
             ValueUnchecked = 'False'
-          end
-          object cbxKlient: TDBCheckBox
+          end          object cbxKlient: TDBCheckBox
             Left = 944
             Top = 24
             Width = 80
@@ -1036,46 +1050,55 @@ object frmPersonen: TfrmPersonen
     Top = 560
     object actPersErster: TAction
       Caption = 'Erster'
+      ImageIndex = 0
       OnExecute = PersNavExecute
     end
     object actPersZurueck: TAction
       Tag = 1
-      Caption = 'Zurück'
+      Caption = 'ZurÃ¼ck'
+      ImageIndex = 1
       OnExecute = PersNavExecute
     end
     object actPersWeiter: TAction
       Tag = 2
       Caption = 'Weiter'
+      ImageIndex = 2
       OnExecute = PersNavExecute
     end
     object actPersLetzter: TAction
       Tag = 3
       Caption = 'Letzter'
+      ImageIndex = 3
       OnExecute = PersNavExecute
     end
     object actPersNeu: TAction
       Tag = 4
       Caption = 'Neu'
+      ImageIndex = 4
       OnExecute = PersNavExecute
     end
     object actPersBearbeiten: TAction
       Tag = 5
-      Caption = 'Ändern'
+      Caption = 'Ã„ndern'
+      ImageIndex = 5
       OnExecute = PersNavExecute
     end
     object actPersSpeichern: TAction
       Tag = 6
       Caption = 'Speichern'
+      ImageIndex = 6
       OnExecute = PersNavExecute
     end
     object actPersAbbrechen: TAction
       Tag = 7
       Caption = 'Abbrechen'
+      ImageIndex = 7
       OnExecute = PersNavExecute
     end
     object actPersAktualisieren: TAction
       Tag = 8
       Caption = 'Neu laden'
+      ImageIndex = 8
       OnExecute = PersNavExecute
     end
   end

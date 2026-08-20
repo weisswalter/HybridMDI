@@ -11,13 +11,13 @@ uses
   Vcl.ExtCtrls,
   PythonEngine, VarPyth,
   EventBus,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmPython = class(TdmModuleTemplate)
     Timer1: TTimer;
     procedure DataModuleCreate(Sender: TObject);
-    procedure DataModuleDestroy(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
   private
     FEngine: TPythonEngine;
@@ -34,7 +34,7 @@ implementation
 {$R *.dfm}
 
 uses
-  Winapi.Windows, System.IOUtils;
+  Winapi.Windows, System.IOUtils, ZentraleDatenDm;
 
 procedure TdmPython.DataModuleCreate(Sender: TObject);
 var
@@ -55,10 +55,6 @@ begin
   Timer1.Enabled := True;
 end;
 
-procedure TdmPython.DataModuleDestroy(Sender: TObject);
-begin
-  // Deregistrierung übernimmt TdmModuleTemplate.Destroy
-end;
 
 procedure TdmPython.AddPythonPath(const ADir: string);
 var

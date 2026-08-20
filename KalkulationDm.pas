@@ -1,4 +1,4 @@
-﻿unit KalkulationDm;
+unit KalkulationDm;
 
 // Kalkulation — Delphi-Seite.
 //
@@ -16,7 +16,7 @@
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
@@ -26,23 +26,24 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmKalkulation = class(TdmModuleTemplate)
-    tblKalkulation: TFDTable;
+    tblKalkulation: TFDMemTable;
     dsKalkulation: TDataSource;
-    tblPosition: TFDTable;
+    tblPosition: TFDMemTable;
     dsPosition: TDataSource;
     qryBlatt: TFDQuery;
     dsBlatt: TDataSource;
-    tblZuschlag: TFDTable;
+    tblZuschlag: TFDMemTable;
     dsZuschlag: TDataSource;
-    tblKostenart: TFDTable;
+    tblKostenart: TFDMemTable;
     dsKostenart: TDataSource;
-    tblKostenstelle: TFDTable;
+    tblKostenstelle: TFDMemTable;
     dsKostenstelle: TDataSource;
-    tblKonto: TFDTable;
+    tblKonto: TFDMemTable;
     dsKonto: TDataSource;
     qryKontoLookup: TFDQuery;
     dsKontoLookup: TDataSource;
@@ -58,6 +59,9 @@ type
   private
     FMandantId: Integer;
     function Conn: TFDConnection;
+    // Holt alle Speichertabellen dieses Moduls aus dem zentralen
+    // Datenmodul (geklont) bzw. holt sie notfalls selbst.
+    procedure TabellenLaden;
   public
     class function GetInstance: TObject;
     procedure OpenKalkulation;
@@ -98,31 +102,40 @@ implementation
 {$R *.dfm}
 
 uses
+  ZentraleDatenDm,
   System.DateUtils,
-  Vcl.Forms, Vcl.Dialogs,
-  PGManagerDm,
+  Vcl.Dialogs,
   MandantDm,
-  KalkulationFrm;
+  KalkulationFrm, System.SyncObjs;
+
+var
+  GSperreKalkulation: TCriticalSection;
 
 class function TdmKalkulation.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmKalkulation) then
+  begin
+    GSperreKalkulation.Enter;
+    try
+      if not Assigned(dmKalkulation) then
+        Application.CreateForm(TdmKalkulation, dmKalkulation);
+    finally
+      GSperreKalkulation.Leave;
+    end;
+  end;
   Result := dmKalkulation;
 end;
 
 function TdmKalkulation.Conn: TFDConnection;
 begin
-  Result := PGManagerDm.dmPGManager.FDConnection1;
+  Result := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 end;
 
 procedure TdmKalkulation.DataModuleCreate(Sender: TObject);
 begin
-  tblKalkulation.Connection  := Conn;
-  tblPosition.Connection     := Conn;
   qryBlatt.Connection        := Conn;
-  tblZuschlag.Connection     := Conn;
-  tblKostenart.Connection    := Conn;
-  tblKostenstelle.Connection := Conn;
-  tblKonto.Connection        := Conn;
   qryKontoLookup.Connection  := Conn;
   qryArtikel.Connection      := Conn;
 
@@ -159,7 +172,8 @@ procedure TdmKalkulation.LadeDetails(AKalkulationId: Integer);
 begin
   tblPosition.Filtered := False;
   if not tblPosition.Active then
-    tblPosition.Open;
+    // Speichertabellen kommen aus dem zentralen Datenmodul
+    TabellenLaden;
   tblPosition.Filter := Format('kalkulation_id=%d', [AKalkulationId]);
   tblPosition.Filtered := True;
 
@@ -206,7 +220,9 @@ begin
   end;
   LQry.Free;
 
-  tblKalkulation.Refresh;
+  // Speichertabelle neu aus dem zentralen Bestand holen
+
+  TabellenLaden;
   if tblKalkulation.Locate('kalkulation_id', LId, []) then
     LadeDetails(LId);
 end;
@@ -224,7 +240,8 @@ begin
     LQry.ParamByName('k').AsInteger := AKalkulationId;
     LQry.Open;
     Result := Format('OK: Angebotspreis %.2f', [LQry.Fields[0].AsFloat]);
-    tblKalkulation.Refresh;
+    // Speichertabelle neu aus dem zentralen Bestand holen
+    TabellenLaden;
     LadeDetails(AKalkulationId);
   except
     on E: Exception do
@@ -320,7 +337,8 @@ begin
     LQry.ParamByName('s').AsString := AStatus;
     LQry.ParamByName('k').AsInteger := AKalkulationId;
     LQry.ExecSQL;
-    tblKalkulation.Refresh;
+    // Speichertabelle neu aus dem zentralen Bestand holen
+    TabellenLaden;
     if AStatus = 'freigegeben' then
       Result := 'OK: Freigegeben. Die Kalkulation wird jetzt nicht mehr neu ' +
         'gerechnet - so bleibt ein hinausgegangenes Angebot nachvollziehbar.'
@@ -346,7 +364,8 @@ begin
     LQry.SQL.Text := 'DELETE FROM kalkulation WHERE kalkulation_id = :k';
     LQry.ParamByName('k').AsInteger := AKalkulationId;
     LQry.ExecSQL;
-    tblKalkulation.Refresh;
+    // Speichertabelle neu aus dem zentralen Bestand holen
+    TabellenLaden;
     LadeDetails(AktuelleKalkulation);
     Result := 'OK: Kalkulation gel' + #246 + 'scht.';
   except
@@ -381,7 +400,8 @@ begin
     else
       LQry.ParamByName('hk').Clear;
     LQry.Open;
-    tblZuschlag.Refresh;
+    // Speichertabelle neu aus dem zentralen Bestand holen
+    TabellenLaden;
     Result := Format('OK: %d Bereiche ermittelt. Von Hand gesetzte S'#228'tze ' +
       'bleiben unver'#228'ndert.', [LQry.Fields[0].AsInteger]);
   except
@@ -401,7 +421,8 @@ begin
     LQry.SQL.Text := 'SELECT fn_kontenrahmen_kmu(:m)';
     LQry.ParamByName('m').AsInteger := FMandantId;
     LQry.Open;
-    tblKonto.Refresh;
+    // Speichertabelle neu aus dem zentralen Bestand holen
+    TabellenLaden;
     qryKontoLookup.Close;
     qryKontoLookup.Open;
     Result := Format('OK: %d Konten erg'#228'nzt. Vorhandene bleiben unver'#228'ndert.',
@@ -423,8 +444,10 @@ begin
     LQry.SQL.Text := 'SELECT fn_kostenarten_standard(:m)';
     LQry.ParamByName('m').AsInteger := FMandantId;
     LQry.Open;
-    tblKostenart.Refresh;
-    tblKostenstelle.Refresh;
+    // Speichertabelle neu aus dem zentralen Bestand holen
+    TabellenLaden;
+    // Speichertabelle neu aus dem zentralen Bestand holen
+    TabellenLaden;
     Result := Format('OK: %d Kostenarten und -stellen erg'#228'nzt.',
       [LQry.Fields[0].AsInteger]);
   except
@@ -569,27 +592,22 @@ begin
   qryArtikel.Open;
 
   tblKalkulation.Filtered := False;
-  tblKalkulation.Open;
   tblKalkulation.Filter := Format('mandant_id=%d', [FMandantId]);
   tblKalkulation.Filtered := True;
 
   tblZuschlag.Filtered := False;
-  tblZuschlag.Open;
   tblZuschlag.Filter := Format('mandant_id=%d', [FMandantId]);
   tblZuschlag.Filtered := True;
 
   tblKostenart.Filtered := False;
-  tblKostenart.Open;
   tblKostenart.Filter := Format('mandant_id=%d', [FMandantId]);
   tblKostenart.Filtered := True;
 
   tblKostenstelle.Filtered := False;
-  tblKostenstelle.Open;
   tblKostenstelle.Filter := Format('mandant_id=%d', [FMandantId]);
   tblKostenstelle.Filtered := True;
 
   tblKonto.Filtered := False;
-  tblKonto.Open;
   tblKonto.Filter := Format('mandant_id=%d', [FMandantId]);
   tblKonto.Filtered := True;
 
@@ -599,5 +617,25 @@ begin
     frmKalkulation := TfrmKalkulation.Create(Application);
   frmKalkulation.Show;
 end;
+
+
+procedure TdmKalkulation.TabellenLaden;
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
+    Zuordnung(tblKalkulation, 'kalkulation'),
+    Zuordnung(tblKonto, 'konto'),
+    Zuordnung(tblKostenart, 'kostenart'),
+    Zuordnung(tblKostenstelle, 'kostenstelle'),
+    Zuordnung(tblPosition, 'kalkulation_position'),
+    Zuordnung(tblZuschlag, 'zuschlagssatz')]);
+end;
+
+
+
+initialization
+  GSperreKalkulation := TCriticalSection.Create;
+
+finalization
+  GSperreKalkulation.Free;
 
 end.

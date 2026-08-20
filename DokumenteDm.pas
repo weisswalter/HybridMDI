@@ -6,7 +6,7 @@
 interface
 
 uses
-  System.SysUtils, System.Classes, System.IOUtils, System.Variants,
+  Winapi.Windows, System.SysUtils, System.Classes, System.IOUtils, System.Variants,
   ComObj, ActiveX,
   WIA_TLB,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
@@ -18,6 +18,7 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 const
@@ -26,27 +27,24 @@ const
 
 type
   TdmDokumente = class(TdmModuleTemplate)
-    FDConnection: TFDConnection;
-    qryDokumente: TFDQuery;
+    // Kopie aus dem zentralen Datenmodul. Die frueher persistenten Felder
+    // sind bewusst weg: sie deckten nur 10 der 21 Spalten ab, weshalb
+    // FieldByName('datei_pfad') im Formular ins Leere lief.
+    qryDokumente: TFDMemTable;
     dsDokumente: TDataSource;
-    qryDokumentedokument_id: TIntegerField;
-    qryDokumentetyp_id: TIntegerField;
-    qryDokumentetitel: TWideStringField;
-    qryDokumenteocr_text: TWideMemoField;
-    qryDokumentemime_type: TWideStringField;
-    qryDokumentequelle: TWideStringField;
-    qryDokumentedateigroesse_kb: TIntegerField;
-    qryDokumentesprache: TWideStringField;
-    qryDokumentescan_datum: TSQLTimeStampField;
-    qryDokumentecreated_at: TSQLTimeStampField;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
   private
     procedure SetupConnection;
+    procedure TabellenLaden;
   protected
   public
     class function GetInstance: TObject;
     procedure OpenDokumente;
+
+    // Schreiben ausschliesslich ueber die Datenbankfunktionen.
+    function SatzSpeichern: Boolean;
+    function SatzLoeschen: Boolean;
     // WIA-Scan (Einzugsscanner) — HP Officejet Pro 8620, kein TWAIN-Treiber mehr
     // verfügbar, deshalb über WIA. Gibt den Dateinamen der gespeicherten JPEG zurück.
     function ScanHP8620: string;
@@ -63,8 +61,8 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms, Vcl.Dialogs,
-  DokumenteFrm;
+  Vcl.Dialogs,
+  DokumenteFrm, System.SyncObjs, ZentraleDatenDm;
 
 procedure TdmDokumente.btnScanClick(Sender: TObject);
 begin
@@ -80,46 +78,101 @@ procedure TdmDokumente.DataModuleDestroy(Sender: TObject);
 begin
   if qryDokumente.Active then
     qryDokumente.Close;
-  if FDConnection.Connected then
-    FDConnection.Close;
+  // Keine eigene Verbindung mehr zu schliessen.
 end;
+
+var
+  GSperreDokumente: TCriticalSection;
 
 class function TdmDokumente.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmDokumente) then
+  begin
+    GSperreDokumente.Enter;
+    try
+      if not Assigned(dmDokumente) then
+        Application.CreateForm(TdmDokumente, dmDokumente);
+    finally
+      GSperreDokumente.Leave;
+    end;
+  end;
   Result := dmDokumente;
 end;
 
 procedure TdmDokumente.SetupConnection;
 begin
-  FDConnection.Params.DriverID  := 'PG';
-  FDConnection.Params.Database  := 'TRTHeisenberg';
-  FDConnection.Params.UserName  := 'postgres';
-  FDConnection.Params.Password  := 'postgres';
-  FDConnection.Params.Add('Server=localhost');
-  FDConnection.Params.Add('Port=5432');
-  FDConnection.LoginPrompt := False;
-
-  qryDokumente.Connection := FDConnection;
-  qryDokumente.SQL.Text   :=
-    'SELECT dokument_id, typ_id, titel, ocr_text, ' +
-    '       mime_type, quelle, dateigroesse_kb, sprache, ' +
-    '       scan_datum, created_at ' +
-    'FROM dokument ' +
-    'ORDER BY dokument_id';
-  // UpdateOptions damit Navigator Edit/Post funktioniert
-  qryDokumente.UpdateOptions.UpdateTableName := 'dokument';
-  qryDokumente.UpdateOptions.KeyFields       := 'dokument_id';
-
+  // Keine eigene Verbindung mehr: gelesen wird als Kopie aus dem zentralen
+  // Datenmodul, geschrieben ueber SatzSpeichern -> fn_dokument_speichern.
   dsDokumente.DataSet := qryDokumente;
+end;
+
+function TdmDokumente.SatzSpeichern: Boolean;
+var
+  LZentral: TdmZentraleDaten;
+  LId: Variant;
+
+  function Wert(const AFeld: string): Variant;
+  var
+    LFeld: TField;
+  begin
+    LFeld := qryDokumente.FindField(AFeld);
+    if not Assigned(LFeld) or LFeld.IsNull then
+      Result := Null
+    else
+      Result := LFeld.AsVariant;
+  end;
+
+begin
+  Result := False;
+  if not qryDokumente.Active then
+    Exit;
+  if qryDokumente.State in dsEditModes then
+    qryDokumente.Post;
+
+  LZentral := TdmZentraleDaten(TdmZentraleDaten.GetInstance);
+  LId := LZentral.SpAufrufen('fn_dokument_speichern',
+    [Wert('dokument_id'), Wert('titel'), Wert('typ_id'), Wert('ocr_text'),
+     Wert('datei_pfad'), Wert('mime_type'), Wert('quelle'),
+     Wert('dateigroesse_kb'), Wert('sprache'), Wert('scan_datum')]);
+  if VarIsNull(LId) then
+    Exit;
+
+  LZentral.TabelleAuffrischen('dokument');
+  TabellenLaden;
+  Result := True;
+end;
+
+function TdmDokumente.SatzLoeschen: Boolean;
+var
+  LZentral: TdmZentraleDaten;
+begin
+  Result := False;
+  if not qryDokumente.Active or qryDokumente.IsEmpty then
+    Exit;
+  if qryDokumente.State in dsEditModes then
+    qryDokumente.Cancel;
+
+  LZentral := TdmZentraleDaten(TdmZentraleDaten.GetInstance);
+  LZentral.SpAufrufen('fn_dokument_loeschen',
+    [qryDokumente.FieldByName('dokument_id').AsInteger]);
+  LZentral.TabelleAuffrischen('dokument');
+  TabellenLaden;
+  Result := True;
+end;
+
+procedure TdmDokumente.TabellenLaden;
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen(
+    [Zuordnung(qryDokumente, 'dokument')]);
+  qryDokumente.IndexFieldNames := 'dokument_id';
 end;
 
 procedure TdmDokumente.OpenDokumente;
 begin
   try
-    if not FDConnection.Connected then
-      FDConnection.Open;
-    if not qryDokumente.Active then
-      qryDokumente.Open;
+    TabellenLaden;
   except
     on E: Exception do
     begin
@@ -194,5 +247,12 @@ begin
     CoUninitialize;
   end;
 end;
+
+
+initialization
+  GSperreDokumente := TCriticalSection.Create;
+
+finalization
+  GSperreDokumente.Free;
 
 end.

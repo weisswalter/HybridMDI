@@ -1,4 +1,4 @@
-unit PGManagerDm;
+﻿unit PGManagerDm;
 
 // BL des DB-Managers — aus PostgresTest1 (uDmPGManager) uebernommen und an die
 // Heisenberg-Modulkonvention angepasst: von TdmModuleTemplate abgeleitet,
@@ -17,7 +17,8 @@ unit PGManagerDm;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.IOUtils,
+  Winapi.Windows, System.SysUtils, System.Classes, System.IOUtils,
+  uTunnel,
   Data.DB,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
@@ -28,6 +29,7 @@ uses
   FireDAC.Comp.DataSet, FireDAC.Comp.Client,
   FireDAC.Comp.Script, FireDAC.Comp.ScriptCommands,
   FireDAC.Stan.StorageJSON, FireDAC.Stan.StorageBin,
+  Vcl.Forms,
   udmModuleTemplate, FireDAC.Stan.Util, System.NetEncoding;
 
 type
@@ -50,7 +52,12 @@ type
     procedure DataModuleDestroy(Sender: TObject);
   private
     FActiveDatabase: string;
+    FTunnel: TSshTunnel;
     procedure InitMemTables;
+    // Baut den SSH-Tunnel auf, falls noch keiner steht, und liefert den
+    // lokalen Port zurueck. 0 = kein Tunnel zustande gekommen.
+    function TunnelOeffnen(const AServer, ABenutzer,
+      ASchluessel: string): Integer;
   public
     // Heisenberg-Modul-Einstieg (OpenGui('PGManager') / mtModulCall)
     class function GetInstance: TObject;
@@ -101,14 +108,28 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms,
-  PGManagerFrm;
+  PGManagerFrm, System.SyncObjs, ZentraleDatenDm;
 
 const
   OBF_KEY = 'Heisenberg-DBMgr-Key-2026';
 
+var
+  GSperrePGManager: TCriticalSection;
+
 class function TdmPGManager.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmPGManager) then
+  begin
+    GSperrePGManager.Enter;
+    try
+      if not Assigned(dmPGManager) then
+        Application.CreateForm(TdmPGManager, dmPGManager);
+    finally
+      GSperrePGManager.Leave;
+    end;
+  end;
   Result := dmPGManager;
 end;
 
@@ -120,6 +141,10 @@ begin
 end;
 
 procedure TdmPGManager.DataModuleCreate(Sender: TObject);
+{$IFDEF DEBUG}
+var
+  LPort: Integer;
+{$ENDIF}
 begin
   InitMemTables;
   DataSource2.DataSet := FDMemTable_Profiles;
@@ -131,13 +156,32 @@ begin
   if FileExists(GetJSONPath) then
     LoadProfilesFromJSON;
 
+  // ── SSH-Tunnel stillgelegt ────────────────────────────────────────────────
+  // Seit dem Umbau haelt das zentrale Datenmodul die einzige Verbindung, und
+  // die geht direkt ueber Tailscale. Der Tunnel darunter wuerde nur noch eine
+  // zweite, langsamere Leitung aufmachen, die niemand benutzt - samt eigener
+  // ssh.exe bei jedem Debug-Start.
+  //
+  // Der Code bleibt bewusst stehen: wer kein Tailscale hat, kommt ueber den
+  // Tunnel an den Server. Zum Reaktivieren einfach dieses Exit loeschen.
+  Exit;
+
   {$IFDEF DEBUG}
   // Entwicklungsphase: automatisch mit der lokalen Heisenberg-DB verbinden,
   // damit sich Module (ArtikelStamm, Personen, Lager, ...) ohne den manuellen
   // PGManager-Schritt oeffnen lassen. NUR im Debug-Build aktiv — im
   // Release-Build erfolgt die Verbindung ueber die PGManager-GUI/Profile.
   try
-    ConnectDB('localhost', '5432', 'postgres', 'postgres', 'TRTHeisenberg');
+    // Entwicklungszugang auf den netcup-Server. Erst den Tunnel, dann
+    // ueber DESSEN Port -- frueher stand hier fest '5455', und wenn dort
+    // zufaellig etwas anderes horchte, verband sich Heisenberg
+    // stillschweigend dorthin.
+    LPort := TunnelOeffnen('159.195.218.117', 'wwe123',
+      GetEnvironmentVariable('USERPROFILE') + '\.ssh\id_ed25519');
+    if LPort = 0 then
+      raise Exception.Create('Tunnel kam nicht zustande: ' + FTunnel.Fehler);
+    ConnectDB('localhost', IntToStr(LPort), 'wwe123',
+      'a4cX7pAp29WRK7XHkGHBzs4DIhjAM14Z', 'TRTHeisenberg');
   except
     // DB nicht erreichbar (z.B. Postgres nicht gestartet) -> stillschweigend
     // weiter; der "Bitte zuerst verbinden"-Hinweis in den Modulen greift dann
@@ -146,8 +190,34 @@ begin
   {$ENDIF}
 end;
 
+// Baut den Tunnel selbst auf, statt sich auf einen zufaellig offenen zu
+// verlassen. Der lokale Port wird gesucht, nicht geraten: ein belegter
+// Port laesst den Tunnel still scheitern, und die Anwendung landet dann
+// unbemerkt auf einer anderen Datenbank.
+function TdmPGManager.TunnelOeffnen(const AServer, ABenutzer,
+  ASchluessel: string): Integer;
+begin
+  Result := 0;
+  if not Assigned(FTunnel) then
+    FTunnel := TSshTunnel.Create;
+  if FTunnel.Laeuft then
+    Exit(FTunnel.LokalerPort);
+
+  FTunnel.Server      := AServer;
+  FTunnel.Benutzer    := ABenutzer;
+  FTunnel.Schluessel  := ASchluessel;
+  FTunnel.ZielHost    := '127.0.0.1';
+  FTunnel.ZielPort    := 5432;
+  FTunnel.LokalerPort := 0;          // 0 = freien Port suchen
+
+  if FTunnel.Oeffnen(15000) then
+    Result := FTunnel.LokalerPort;
+end;
+
 procedure TdmPGManager.DataModuleDestroy(Sender: TObject);
 begin
+  // Ohne das bleibt ssh.exe stehen und belegt den Port beim naechsten Start.
+  FreeAndNil(FTunnel);
   if FDMemTable_Profiles.RecordCount > 0 then
   try
     FDMemTable_Profiles.SaveToFile(GetJSONPath, sfJSON);
@@ -502,7 +572,7 @@ begin
   FDMemTable_Profiles.Append;
   FDMemTable_Profiles.FieldByName('ProfilName').AsString         := AName;
   FDMemTable_Profiles.FieldByName('Host').AsString               := AHost;
-  FDMemTable_Profiles.FieldByName('Port').AsInteger              := StrToIntDef(APort, 5432);
+  FDMemTable_Profiles.FieldByName('Port').AsInteger              := StrToIntDef(APort, 5455);
   FDMemTable_Profiles.FieldByName('Benutzer').AsString           := AUser;
   FDMemTable_Profiles.FieldByName('Passwort').AsString           := Obfuscate(APassword);
   FDMemTable_Profiles.FieldByName('Datenbank').AsString          := ADatabase;
@@ -586,5 +656,12 @@ begin
     Result := S;   // Altbestand im Klartext -> unveraendert zurueck
   end;
 end;
+
+
+initialization
+  GSperrePGManager := TCriticalSection.Create;
+
+finalization
+  GSperrePGManager.Free;
 
 end.

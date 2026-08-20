@@ -6,12 +6,11 @@ uses
   System.SysUtils, System.Classes,
   EventBus,
   uAppEvents,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmArtikel = class(TdmModuleTemplate)
-    procedure DataModuleCreate(Sender: TObject);
-    procedure DataModuleDestroy(Sender: TObject);
   private
     procedure LoadData;
   public
@@ -30,26 +29,32 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms,
-  ArtikelFrm;
+  ArtikelFrm, System.SyncObjs, ZentraleDatenDm;
 
-procedure TdmArtikel.DataModuleCreate(Sender: TObject);
-begin
-  // Registrierung übernimmt TdmModuleTemplate.Create (SilentRegisterSubscriberForEvents)
-end;
 
-procedure TdmArtikel.DataModuleDestroy(Sender: TObject);
-begin
-  // Deregistrierung übernimmt TdmModuleTemplate.Destroy
-end;
 
 procedure TdmArtikel.LoadData;
 begin
   // Geschäftslogik: Artikeldaten laden
 end;
 
+var
+  GSperreArtikel: TCriticalSection;
+
 class function TdmArtikel.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmArtikel) then
+  begin
+    GSperreArtikel.Enter;
+    try
+      if not Assigned(dmArtikel) then
+        Application.CreateForm(TdmArtikel, dmArtikel);
+    finally
+      GSperreArtikel.Leave;
+    end;
+  end;
   Result := dmArtikel;
 end;
 
@@ -66,5 +71,12 @@ procedure TdmArtikel.OnArtikelResult(AEvent: IArtikelResultEvent);
 begin
   // Rückmeldung vom Fenster verarbeiten
 end;
+
+
+initialization
+  GSperreArtikel := TCriticalSection.Create;
+
+finalization
+  GSperreArtikel.Free;
 
 end.

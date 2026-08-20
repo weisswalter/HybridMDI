@@ -1,0 +1,206 @@
+@startuml lagerbestand_er
+' ============================================================================
+' Lagerbestand — Entity Relationship, Stand 09.08.2026
+' Aus dem laufenden Schema gelesen (pg_constraint), nicht aus dem Gedaechtnis.
+'
+' Der eigentliche Bestand steht in EINER Spalte: artikel_fach.bestand.
+' Alles darueber ist Ortshierarchie, alles daneben ist Beiwerk.
+' ============================================================================
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam class {
+  BackgroundColor White
+  BorderColor #4A6070
+  ArrowColor #4A6070
+}
+skinparam note {
+  BackgroundColor #FFF8DC
+  BorderColor #C8B560
+}
+
+' ── Ortshierarchie: Adresse -> Raum -> Regal -> Fach ───────────────────────
+entity adresse {
+  * adresse_id : integer <<PK>>
+  --
+  strasse, hausnummer
+  plz, ort
+  land_id, bezirk_id
+}
+
+entity adressinfo {
+  * adressinfo_id : integer <<PK>>
+  --
+  # adresse_id
+  beschreibung
+}
+
+entity raum {
+  * raum_id : integer <<PK>>
+  --
+  # adresse_id
+  # adressinfo_id
+  bezeichnung
+  laenge, breite, hoehe
+  max_personen
+  ist_mehrzweck
+}
+
+entity regal {
+  * regal_id : integer <<PK>>
+  --
+  # raum_id
+  bezeichnung
+  beschreibung
+}
+
+entity regal_fach {
+  * fach_id : integer <<PK>>
+  --
+  # mandant_id
+  # regal_id
+  bezeichnung
+  kapazitaet
+  # einheit_id
+}
+
+' ── Der Bestand selbst ─────────────────────────────────────────────────────
+entity artikel_fach <<Bestand>> #FFE9C7 {
+  * artikel_fach_id : integer <<PK>>
+  --
+  # mandant_id
+  # artikel_id
+  # fach_id
+  # variante_id
+  **bestand : numeric(12,3)**
+  # einheit_id
+}
+
+' ── Der Artikel und sein Umfeld ────────────────────────────────────────────
+entity artikel {
+  * artikel_id : integer <<PK>>
+  --
+  # mandant_id
+  artikel_nr
+  artikelname
+  beschreibung
+}
+
+entity artikel_variante {
+  * artikel_variante_id : integer <<PK>>
+  --
+  # artikel_id
+}
+
+entity einheit {
+  * mandant_id, einheit_id <<PK>>
+  --
+  name
+}
+
+' ── Zulauf: bestellt / unterwegs / eingegangen ─────────────────────────────
+entity artikel_zugang {
+  * zugang_id : integer <<PK>>
+  --
+  # mandant_id
+  # artikel_id
+  # variante_id
+  menge
+  # einheit_id
+  # status_id
+  erwartet_am
+  eingegangen_am
+}
+
+entity zugang_status {
+  * mandant_id, status_id <<PK>>
+  --
+  bezeichnung
+}
+
+' ── Lagerort-Etikett (Barcode/QR/Foto), NICHT der Bestand ──────────────────
+entity lager {
+  * lager_id : integer <<PK>>
+  --
+  # mandant_id
+  # adresse_id
+  # raum_id
+  # regal_id
+  barcode, qrcode
+  photo, beschreibung
+}
+
+entity mandant {
+  * mandant_id : integer <<PK>>
+  --
+  mandanten_name
+}
+
+' ── Beziehungen ────────────────────────────────────────────────────────────
+adresse    ||--o{ adressinfo
+adresse    ||--o{ raum
+adressinfo |o--o{ raum
+raum       ||--o{ regal
+regal      ||--o{ regal_fach
+regal_fach ||--o{ artikel_fach
+
+artikel          ||--o{ artikel_fach
+artikel          ||--o{ artikel_variante
+artikel_variante |o--o{ artikel_fach
+einheit          |o--o{ artikel_fach
+einheit          |o--o{ regal_fach
+
+artikel          ||--o{ artikel_zugang
+artikel_variante |o--o{ artikel_zugang
+einheit          |o--o{ artikel_zugang
+zugang_status    ||--o{ artikel_zugang
+
+adresse |o--o{ lager
+raum    |o--o{ lager
+regal   |o--o{ lager
+
+mandant ||--o{ artikel
+mandant ||--o{ artikel_fach
+mandant ||--o{ regal_fach
+mandant ||--o{ einheit
+mandant ||--o{ artikel_zugang
+mandant ||--o{ lager
+
+note right of artikel_fach
+  Hier und nur hier steht die Menge.
+  Ein Satz = ein Artikel (ggf. eine
+  Variante) in einem Fach.
+  fn_lagerort_bestand(artikel_id)
+  laeuft die Kette nach oben und
+  summiert je Regal, Raum, Adresse —
+  das ist der Bestand-Baum im Modul.
+end note
+
+note bottom of regal_fach
+  kapazitaet ist eine Warnschwelle,
+  keine Sperre: ueberschreiten ist
+  erlaubt, es wird nur gemeldet.
+end note
+
+note bottom of lager
+  Kein Bestand! Nur die Beschriftung
+  eines Lagerorts mit Barcode, QR-Code
+  und Foto. Zeigt wahlweise auf eine
+  Adresse, einen Raum oder ein Regal.
+end note
+
+note bottom of artikel_zugang
+  Der Zulauf: was bestellt ist und noch
+  nicht im Fach liegt. Wird beim
+  Eingang zu einer Buchung auf
+  artikel_fach.bestand.
+end note
+
+note top of raum
+  raum haengt NICHT am Mandanten —
+  ein Raum gehoert zur Adresse, und
+  mehrere Mandanten koennen dieselbe
+  Adresse nutzen.
+end note
+
+@enduml

@@ -1,7 +1,7 @@
-﻿unit PersonenDm;
+unit PersonenDm;
 
 // DataModule fuer Personenverwaltung — TRTHeisenberg PostgreSQL via FireDAC.
-// Arbeitet komplett mit TFDTable-Objekten in einer Master-Detail-Kette:
+// Arbeitet komplett mit TFDMemTable-Objekten in einer Master-Detail-Kette:
 //   tblMandant -> tblPersonMandant -> tblPerson sowie die Bruecken
 //   person_adresse/person_email/person_telefonnummer/person_beziehung mit
 //   ihren aufgeloesten Stammtabellen (adresse/emailadresse/telefonnummer).
@@ -12,7 +12,7 @@
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes, System.StrUtils,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
@@ -22,34 +22,33 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  System.Generics.Collections,
+  uMemTabellen, ZentraleDatenDm,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmPersonen = class(TdmModuleTemplate)
-    FDConnection: TFDConnection;
-    qryPersonen: TFDQuery;
     dsPersonen: TDataSource;
-    qryAdressen: TFDQuery;
     dsAdressen: TDataSource;
-    qryEmails: TFDQuery;
     dsEmails: TDataSource;
-    tblPerson: TFDTable;
-    tblAdresse: TFDTable;
-    tblEmailadresse: TFDTable;
-    tblPersonAdresse: TFDTable;
-    tblPersonEmail: TFDTable;
-    tblPersonMandant: TFDTable;
-    tblPersonTyp: TFDTable;
-    tblAdressentyp: TFDTable;
-    tblEmailtyp: TFDTable;
-    tblTelefonnummertyp: TFDTable;
-    tblTelefonnummer: TFDTable;
-    tblPersonTelefonnummer: TFDTable;
-    tblRolleTyp: TFDTable;
-    tblPersonBeziehung: TFDTable;
-    tblMandant: TFDTable;
-    tblLand: TFDTable;
-    tblBezirk: TFDTable;
+    tblPerson: TFDMemTable;
+    tblAdresse: TFDMemTable;
+    tblEmailadresse: TFDMemTable;
+    tblPersonAdresse: TFDMemTable;
+    tblPersonEmail: TFDMemTable;
+    tblPersonMandant: TFDMemTable;
+    tblPersonTyp: TFDMemTable;
+    tblAdressentyp: TFDMemTable;
+    tblEmailtyp: TFDMemTable;
+    tblTelefonnummertyp: TFDMemTable;
+    tblTelefonnummer: TFDMemTable;
+    tblPersonTelefonnummer: TFDMemTable;
+    tblRolleTyp: TFDMemTable;
+    tblPersonBeziehung: TFDMemTable;
+    tblMandant: TFDMemTable;
+    tblLand: TFDMemTable;
+    tblBezirk: TFDMemTable;
     dstblPerson: TDataSource;
     dstblAdresse: TDataSource;
     dstblEmailadresse: TDataSource;
@@ -74,16 +73,22 @@ type
     procedure tblEmailadresseAfterPost(DataSet: TDataSet);
     procedure tblTelefonnummerAfterPost(DataSet: TDataSet);
   private
-    FNeuTbl: TFDTable;        // Stammtabelle mit offener Neuanlage (Master abgekoppelt)
-    FNeuBruecke: TFDTable;    // zugehoerige Bruecke, gleich mit im Insert-Modus
+    FNeuTbl: TFDMemTable;        // Stammtabelle mit offener Neuanlage (Master abgekoppelt)
+    FNeuBruecke: TFDMemTable;    // zugehoerige Bruecke, gleich mit im Insert-Modus
     FNeuMaster: TDataSource;  // gemerkte MasterSource fuers Wiederankoppeln
     FMandantId: Integer;      // aktueller Mandant (in OpenPersonen gesetzt)
+    FHerkunft: TDictionary<TFDMemTable, TMemHerkunft>;
+    memPersonenListe: TFDMemTable;   // person_id + anzeige, fuer die Combo
+    memAdressListe:   TFDMemTable;   // adresse_id + anzeige, fuer die Combo
+    procedure ListenAufbauen;
+    function Conn: TFDConnection;
+    procedure HerkunftSetzen;
     procedure SetupConnection;
     // OnNewRecord fuer mandantengebundene Typ-Tabellen: mandant_id explizit
     // vorbelegen. Die Master-Detail-Vorbelegung greift beim Append in ein
     // leeres Detail-Set nicht zuverlaessig (Telefontyp liess sich nicht anlegen).
     procedure TypOnNewRecord(DataSet: TDataSet);
-    procedure StammVerknuepfen(ATbl, ABruecke: TFDTable; const AIdFeld: string);
+    procedure StammVerknuepfen(ATbl, ABruecke: TFDMemTable; const AIdFeld: string);
     function EmailIdFuerAdresse(const AAdresse: string): Integer;
     function TelefonIdFuerNummer(const ANummer: string): Integer;
     // Vorhandenen Pool-Satz verknuepfen: offenen Stamm-Insert verwerfen und
@@ -92,6 +97,15 @@ type
   public
     class function GetInstance: TObject;
     procedure OpenPersonen;
+    // Holt alle Tabellen einmal vom Server in den Speicher. Darf dauern —
+    // danach laeuft die Bedienung ohne Netzzugriff.
+    procedure AllesLaden;
+    // Schreibt alle gesammelten Aenderungen zurueck; Ergebnis = Zeilen.
+    // Stammtabellen zuerst, Bruecken zuletzt: eine Bruecke darf nicht auf
+    // eine ID zeigen, die es auf dem Server noch nicht gibt.
+    function AllesSpeichern: Integer;
+    // Wieviel ist noch nicht gespeichert?
+    function OffeneAenderungen: Integer;
     // Neuanlage von Stammdaten (person/adresse/emailadresse/telefonnummer):
     // Die Stammtabellen sind Details ihrer Brueckentabellen — beim Append
     // wuerde die ID vom Master vorbelegt. Deshalb: Master-Kopplung der
@@ -107,9 +121,7 @@ type
     // verknuepft. Sonst normaler Post (neue Adresse) -> AfterPost verknuepft.
     procedure StammSpeichern(AStammDs: TDataSource);
     // Fuellt AItems mit allen vorhandenen E-Mail-Adressen (fuer die Combo).
-    procedure FuelleEmailAdressen(AItems: TStrings);
     // Fuellt AItems mit allen vorhandenen Telefonnummern (fuer die Combo).
-    procedure FuelleTelefonNummern(AItems: TStrings);
   end;
 
 var
@@ -120,9 +132,9 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms, Vcl.Dialogs,
+  Vcl.Dialogs,
   MandantDm,
-  PersonenFrm;
+  PersonenFrm, System.SyncObjs;
 
 procedure TdmPersonen.DataModuleCreate(Sender: TObject);
 begin
@@ -137,11 +149,27 @@ begin
   for I := 0 to ComponentCount - 1 do
     if Components[I] is TFDDataSet then
       TFDDataSet(Components[I]).Close;
-  if FDConnection.Connected then FDConnection.Close;
+  // Die Verbindung gehoert diesem Modul nicht mehr — nicht schliessen.
+  FreeAndNil(FHerkunft);
 end;
+
+var
+  GSperrePersonen: TCriticalSection;
 
 class function TdmPersonen.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmPersonen) then
+  begin
+    GSperrePersonen.Enter;
+    try
+      if not Assigned(dmPersonen) then
+        Application.CreateForm(TdmPersonen, dmPersonen);
+    finally
+      GSperrePersonen.Leave;
+    end;
+  end;
   Result := dmPersonen;
 end;
 
@@ -151,31 +179,40 @@ begin
     DataSet.FieldByName('mandant_id').AsInteger := FMandantId;
 end;
 
+// Gemeinsame Verbindung — dieses Modul haelt keine eigene mehr. Dieselbe
+// Stelle wie in AnlagenDm, LohnDm, BenutzerDm & Co.
+function TdmPersonen.Conn: TFDConnection;
+begin
+  Result := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+end;
+
+// Woher jede Speichertabelle kommt und wie sie zurueckfindet. Die Schluessel
+// stammen aus den Primaerschluesseln der Datenbank, nicht aus dem Gedaechtnis.
+procedure TdmPersonen.HerkunftSetzen;
+begin
+  FHerkunft := TDictionary<TFDMemTable, TMemHerkunft>.Create;
+  FHerkunft.Add(tblPerson,             Herkunft('person', 'person_id', 'person_id'));
+  FHerkunft.Add(tblAdresse,            Herkunft('adresse', 'adresse_id', 'adresse_id'));
+  FHerkunft.Add(tblEmailadresse,       Herkunft('emailadresse', 'email_id', 'email_id'));
+  FHerkunft.Add(tblTelefonnummer,      Herkunft('telefonnummer', 'telefonnummer_id', 'telefonnummer_id'));
+  FHerkunft.Add(tblPersonAdresse,      Herkunft('person_adresse', 'person_id;adresse_id;mandant_id'));
+  FHerkunft.Add(tblPersonEmail,        Herkunft('person_email', 'person_id;email_id;mandant_id'));
+  FHerkunft.Add(tblPersonTelefonnummer,Herkunft('person_telefonnummer', 'person_id;telefonnummer_id;mandant_id'));
+  FHerkunft.Add(tblPersonMandant,      Herkunft('person_mandant', 'person_id;mandant_id'));
+  FHerkunft.Add(tblPersonBeziehung,    Herkunft('person_beziehung', 'mandant_id;beziehungs_id', 'beziehungs_id'));
+  FHerkunft.Add(tblPersonTyp,          Herkunft('person_typ', 'typ_id', 'typ_id'));
+  FHerkunft.Add(tblAdressentyp,        Herkunft('adressentyp', 'mandant_id;adressentyp_id', 'adressentyp_id'));
+  FHerkunft.Add(tblEmailtyp,           Herkunft('emailtyp', 'mandant_id;emailtyp_id', 'emailtyp_id'));
+  FHerkunft.Add(tblTelefonnummertyp,   Herkunft('telefonnummertyp', 'mandant_id;telefonnummertyp_id', 'telefonnummertyp_id'));
+  FHerkunft.Add(tblRolleTyp,           Herkunft('rolle_typ', 'mandant_id;rolle_id', 'rolle_id'));
+  FHerkunft.Add(tblMandant,            Herkunft('mandant', 'mandant_id'));
+  FHerkunft.Add(tblLand,               Herkunft('land', 'land_id'));
+  FHerkunft.Add(tblBezirk,             Herkunft('bezirk', 'bezirk_id'));
+end;
+
 procedure TdmPersonen.SetupConnection;
 begin
-  FDConnection.Params.DriverID  := 'PG';
-  FDConnection.Params.Database  := 'TRTHeisenberg';
-  FDConnection.Params.UserName  := 'postgres';
-  FDConnection.Params.Password  := 'postgres';
-  FDConnection.Params.Add('Server=localhost');
-  FDConnection.Params.Add('Port=5432');
-  FDConnection.LoginPrompt := False;
-
-  // PostgreSQL vergibt die *_id-Spalten per SERIAL. FireDAC muss diese Felder
-  // als serverseitig generiert kennen, damit es sie NICHT ins INSERT schreibt
-  // und den Wert nach dem Post per RETURNING zurueckholt — sonst bleibt die ID
-  // im Dataset leer und die anschliessende Bruecken-Verknuepfung (adresse_id=0
-  // -> FK-Verletzung) bzw. das Locate laeuft ins Leere (der "Indexfehler").
-  tblPerson.UpdateOptions.AutoIncFields          := 'person_id';
-  tblAdresse.UpdateOptions.AutoIncFields         := 'adresse_id';
-  tblEmailadresse.UpdateOptions.AutoIncFields    := 'email_id';
-  tblTelefonnummer.UpdateOptions.AutoIncFields   := 'telefonnummer_id';
-  tblPersonTyp.UpdateOptions.AutoIncFields       := 'typ_id';
-  tblAdressentyp.UpdateOptions.AutoIncFields     := 'adressentyp_id';
-  tblEmailtyp.UpdateOptions.AutoIncFields        := 'emailtyp_id';
-  tblTelefonnummertyp.UpdateOptions.AutoIncFields := 'telefonnummertyp_id';
-  tblRolleTyp.UpdateOptions.AutoIncFields        := 'rolle_id';
-  tblPersonBeziehung.UpdateOptions.AutoIncFields  := 'beziehungs_id';
+  HerkunftSetzen;
 
   // mandant_id bei Neuanlage explizit setzen (siehe TypOnNewRecord)
   tblAdressentyp.OnNewRecord      := TypOnNewRecord;
@@ -183,56 +220,204 @@ begin
   tblTelefonnummertyp.OnNewRecord := TypOnNewRecord;
   tblRolleTyp.OnNewRecord         := TypOnNewRecord;
 
-  // Personenliste (alle Personen des Mandanten) als reine Lookup-Quelle, z.B.
-  // fuer die Zielperson einer Beziehung. Bewusst NICHT master-detail gekoppelt,
-  // damit alle Personen zur Auswahl stehen (tblPerson zeigt nur die aktuelle).
-  // Anzeige: "Nachname/Firma, Vorname" (Vorname weggelassen, wenn leer).
-  qryPersonen.Connection := FDConnection;
-  // CAST auf varchar ist wichtig: ohne den Cast liefert PostgreSQL den
-  // verketteten Ausdruck als Typ "text" (unbegrenzt), und FireDAC mappt das
-  // auf ein Memo-Feld -> die Lookup-Combo zeigt dann nur "(WIDEMEMO)".
-  qryPersonen.SQL.Text :=
-    'SELECT p.person_id, ' +
-    '  CAST(COALESCE(p.nachname_firmenname, '''') || ' +
-    '    CASE WHEN COALESCE(p.vorname, '''') <> '''' ' +
-    '         THEN '', '' || p.vorname ELSE '''' END ' +
-    '    AS varchar(200)) AS anzeige ' +
-    'FROM person p ' +
-    'JOIN person_mandant pm ON pm.person_id = p.person_id ' +
-    'WHERE pm.mandant_id = :mandant_id ' +
-    'ORDER BY p.nachname_firmenname, p.vorname';
-  dsPersonen.DataSet := qryPersonen;
+  // Die drei Lookup-Abfragen bleiben Abfragen — sie liefern zusammengesetzte
+  // Anzeigetexte, die es so in keiner Tabelle gibt. Sie laufen einmal beim
+  // Oeffnen und danach nicht mehr.
+  // Die beiden Lookup-Listen sind eigene Speichertabellen mit genau zwei
+  // Feldern: Schluessel und Anzeigetext. Frueher lieferten das drei Abfragen
+  // mit verketteten Ausdruecken. Jetzt entstehen sie im Speicher aus den
+  // bereits geladenen Tabellen — ohne eine einzige Fahrt zum Server.
+  memPersonenListe := TFDMemTable.Create(Self);
+  memPersonenListe.FieldDefs.Add('person_id', ftInteger);
+  memPersonenListe.FieldDefs.Add('anzeige', ftString, 200);
+  memPersonenListe.CreateDataSet;
+  dsPersonen.DataSet := memPersonenListe;
 
-  // Liste aller vorhandenen E-Mail-Adressen (poolweit) fuer die editierbare
-  // Adress-Combo im Email-Tab. emailadresse ist m:n zur Person (person_email),
-  // eine Adresse kann also mehreren Personen zugeordnet sein.
-  qryEmails.Connection := FDConnection;
-  qryEmails.SQL.Text :=
-    'SELECT email_id, email_adresse FROM emailadresse ORDER BY email_adresse';
-  dsEmails.DataSet := qryEmails;
+  memAdressListe := TFDMemTable.Create(Self);
+  memAdressListe.FieldDefs.Add('adresse_id', ftInteger);
+  memAdressListe.FieldDefs.Add('anzeige', ftString, 300);
+  memAdressListe.CreateDataSet;
+  dsAdressen.DataSet := memAdressListe;
 
-  // Liste aller Adressen (poolweit) fuer die Auswahl-Combo im Adressen-Tab.
-  // adresse ist m:n zur Person (person_adresse) — mehrere Personen koennen
-  // dieselbe Adresse haben (Wohnblock, WG, gleicher Arbeitgeber). CAST auf
-  // varchar, sonst liefert die Verkettung Typ "text" -> Combo zeigt "(WIDEMEMO)".
-  qryAdressen.Connection := FDConnection;
-  qryAdressen.SQL.Text :=
-    'SELECT adresse_id, ' +
-    '  CAST(COALESCE(strasse, '''') || '' '' || COALESCE(hausnummer, '''') || ' +
-    '    '', '' || COALESCE(plz, '''') || '' '' || COALESCE(ort, '''') ' +
-    '    AS varchar(300)) AS anzeige ' +
-    'FROM adresse ORDER BY strasse, hausnummer';
-  dsAdressen.DataSet := qryAdressen;
+  // Die Emailliste braucht keinen zusammengesetzten Text — die Tabelle
+  // selbst genuegt.
+  dsEmails.DataSet := tblEmailadresse;
+end;
+
+// Holt alle Speichertabellen einmal vom Server. Das darf dauern — danach
+// laeuft die Bedienung ohne einen einzigen Netzzugriff.
+// Baut die beiden Lookup-Listen aus den bereits geladenen Tabellen.
+// Reine Speicherarbeit — kein Netzzugriff.
+procedure TdmPersonen.ListenAufbauen;
+var
+  LLesezeichen: TBookmark;
+begin
+  // ── Personen des Mandanten ──────────────────────────────────────────────
+  // person hat kein mandant_id; die Zugehoerigkeit steht in person_mandant.
+  // Das ist bereits ueber die Master-Detail-Kette auf den Mandanten
+  // gefiltert, also genuegt es, dort durchzugehen — tblPerson folgt als
+  // Detail mit.
+  memPersonenListe.EmptyDataSet;
+  if tblPersonMandant.Active then
+  begin
+    tblPersonMandant.DisableControls;
+    LLesezeichen := tblPersonMandant.GetBookmark;
+    try
+      tblPersonMandant.First;
+      while not tblPersonMandant.Eof do
+      begin
+        if tblPerson.Active and not tblPerson.IsEmpty then
+        begin
+          memPersonenListe.Append;
+          memPersonenListe.FieldByName('person_id').AsInteger :=
+            tblPerson.FieldByName('person_id').AsInteger;
+          memPersonenListe.FieldByName('anzeige').AsString :=
+            tblPerson.FieldByName('nachname_firmenname').AsString +
+            IfThen(Trim(tblPerson.FieldByName('vorname').AsString) <> '',
+                   ', ' + tblPerson.FieldByName('vorname').AsString, '');
+          memPersonenListe.Post;
+        end;
+        tblPersonMandant.Next;
+      end;
+    finally
+      if Assigned(LLesezeichen) then
+      begin
+        tblPersonMandant.GotoBookmark(LLesezeichen);
+        tblPersonMandant.FreeBookmark(LLesezeichen);
+      end;
+      tblPersonMandant.EnableControls;
+    end;
+  end;
+  memPersonenListe.IndexFieldNames := 'anzeige';
+  memPersonenListe.First;
+
+  // ── Adressen (poolweit, wie vorher die Abfrage) ────────────────────────
+  memAdressListe.EmptyDataSet;
+  if tblAdresse.Active then
+  begin
+    tblAdresse.DisableControls;
+    LLesezeichen := tblAdresse.GetBookmark;
+    try
+      tblAdresse.First;
+      while not tblAdresse.Eof do
+      begin
+        memAdressListe.Append;
+        memAdressListe.FieldByName('adresse_id').AsInteger :=
+          tblAdresse.FieldByName('adresse_id').AsInteger;
+        memAdressListe.FieldByName('anzeige').AsString :=
+          Trim(tblAdresse.FieldByName('strasse').AsString + ' ' +
+               tblAdresse.FieldByName('hausnummer').AsString) + ', ' +
+          Trim(tblAdresse.FieldByName('plz').AsString + ' ' +
+               tblAdresse.FieldByName('ort').AsString);
+        memAdressListe.Post;
+        tblAdresse.Next;
+      end;
+    finally
+      if Assigned(LLesezeichen) then
+      begin
+        tblAdresse.GotoBookmark(LLesezeichen);
+        tblAdresse.FreeBookmark(LLesezeichen);
+      end;
+      tblAdresse.EnableControls;
+    end;
+  end;
+  memAdressListe.IndexFieldNames := 'anzeige';
+  memAdressListe.First;
+end;
+
+procedure TdmPersonen.AllesLaden;
+var
+  LMem: TFDMemTable;
+  LMerker: TDictionary<TFDMemTable, TDataSource>;
+  LZentral: TdmZentraleDaten;
+  LName: string;
+begin
+  // Das zentrale Datenmodul hat die Tabellen schon. Statt sie hier ein
+  // zweites Mal zu holen, wird geklont: derselbe Datenbestand, eigener
+  // Satzzeiger, eigener Filter, eigene Sortierung — und kein Netzzugriff.
+  // Ist dort nichts geladen, wird wie bisher direkt geholt.
+  LZentral := TdmZentraleDaten(TdmZentraleDaten.GetInstance);
+
+  // Master-Detail waehrend des Fuellens loesen. Sonst filtert die Kette bei
+  // jeder einzelnen Tabelle nach, und ein Detail, dessen Master noch leer
+  // ist, kaeme leer zurueck.
+  LMerker := TDictionary<TFDMemTable, TDataSource>.Create;
+  try
+    for LMem in FHerkunft.Keys do
+      if Assigned(LMem.MasterSource) then
+      begin
+        LMerker.Add(LMem, LMem.MasterSource);
+        LMem.MasterSource := nil;
+      end;
+
+    for LMem in FHerkunft.Keys do
+    begin
+      LName := FHerkunft[LMem].Tabelle;
+      if Assigned(LZentral) then
+        LZentral.ModulFuellen([Zuordnung(LMem, LName)])
+      else
+        Laden(LMem, Conn, FHerkunft[LMem].SQL);
+    end;
+
+    // Erst wenn alles im Speicher liegt, die Kette wieder einhaengen.
+    for LMem in LMerker.Keys do
+      LMem.MasterSource := LMerker[LMem];
+  finally
+    LMerker.Free;
+  end;
+end;
+
+// Schreibt alles Gesammelte zurueck. Reihenfolge zaehlt: erst die
+// Stammtabellen, dann die Bruecken — sonst zeigt eine Bruecke auf eine ID,
+// die es auf dem Server noch nicht gibt.
+function TdmPersonen.AllesSpeichern: Integer;
+
+  function Schreibe(AMem: TFDMemTable): Integer;
+  begin
+    Result := Zurueckschreiben(AMem, Conn, FHerkunft[AMem]);
+  end;
+
+begin
+  Result := 0;
+  // 1. Stammdaten und Typen
+  Inc(Result, Schreibe(tblLand));
+  Inc(Result, Schreibe(tblBezirk));
+  Inc(Result, Schreibe(tblPersonTyp));
+  Inc(Result, Schreibe(tblAdressentyp));
+  Inc(Result, Schreibe(tblEmailtyp));
+  Inc(Result, Schreibe(tblTelefonnummertyp));
+  Inc(Result, Schreibe(tblRolleTyp));
+  Inc(Result, Schreibe(tblMandant));
+  Inc(Result, Schreibe(tblPerson));
+  Inc(Result, Schreibe(tblAdresse));
+  Inc(Result, Schreibe(tblEmailadresse));
+  Inc(Result, Schreibe(tblTelefonnummer));
+  // 2. Bruecken zuletzt
+  Inc(Result, Schreibe(tblPersonMandant));
+  Inc(Result, Schreibe(tblPersonAdresse));
+  Inc(Result, Schreibe(tblPersonEmail));
+  Inc(Result, Schreibe(tblPersonTelefonnummer));
+  Inc(Result, Schreibe(tblPersonBeziehung));
+end;
+
+function TdmPersonen.OffeneAenderungen: Integer;
+var
+  LMem: TFDMemTable;
+begin
+  Result := 0;
+  for LMem in FHerkunft.Keys do
+    if HatAenderungen(LMem) then
+      Inc(Result, LMem.ChangeCount);
 end;
 
 // ── Neuanlage-Logik fuer Stammtabellen an Brueckentabellen ──────────────────
 
 procedure TdmPersonen.StammNeu(AStammDs, ABrueckeDs: TDataSource);
 var
-  LTbl, LBruecke: TFDTable;
+  LTbl, LBruecke: TFDMemTable;
 begin
-  LTbl := AStammDs.DataSet as TFDTable;
-  LBruecke := ABrueckeDs.DataSet as TFDTable;
+  LTbl := AStammDs.DataSet as TFDMemTable;
+  LBruecke := ABrueckeDs.DataSet as TFDMemTable;
   if FNeuTbl <> nil then
   begin
     ShowMessage('Bitte zuerst die offene Neuanlage speichern oder abbrechen.', '');
@@ -252,9 +437,9 @@ end;
 
 procedure TdmPersonen.StammAbbrechen(AStammDs: TDataSource);
 var
-  LTbl: TFDTable;
+  LTbl: TFDMemTable;
 begin
-  LTbl := AStammDs.DataSet as TFDTable;
+  LTbl := AStammDs.DataSet as TFDMemTable;
   if (FNeuBruecke <> nil) and (FNeuBruecke.State in dsEditModes) then
     FNeuBruecke.Cancel;
   if LTbl.State in dsEditModes then
@@ -274,7 +459,7 @@ end;
 // gewaehlte Zusatzfelder wie adressentyp_id). Danach Stammtabelle wieder als
 // Detail ankoppeln und die Bruecke auf den neuen Satz stellen.
 // Die neue ID holt FireDAC bei PostgreSQL-Serials via RETURNING (AutoIncFields).
-procedure TdmPersonen.StammVerknuepfen(ATbl, ABruecke: TFDTable; const AIdFeld: string);
+procedure TdmPersonen.StammVerknuepfen(ATbl, ABruecke: TFDMemTable; const AIdFeld: string);
 var
   LId: Integer;
 begin
@@ -296,42 +481,30 @@ end;
 // Rueckgabe: email_id oder -1, wenn die Adresse noch nicht existiert.
 function TdmPersonen.EmailIdFuerAdresse(const AAdresse: string): Integer;
 var
-  LQry: TFDQuery;
+  LKlon: TFDMemTable;
 begin
+  // Im Speicher suchen statt fragen. Locate mit loCaseInsensitive ersetzt
+  // das frueher hier gebaute lower(...)=lower(...) mitsamt seiner Fahrt.
   Result := -1;
-  LQry := TFDQuery.Create(nil);
-  try
-    LQry.Connection := FDConnection;
-    LQry.SQL.Text :=
-      'SELECT email_id FROM emailadresse WHERE lower(email_adresse) = lower(:adr)';
-    LQry.ParamByName('adr').AsString := AAdresse;
-    LQry.Open;
-    if not LQry.IsEmpty then
-      Result := LQry.FieldByName('email_id').AsInteger;
-  finally
-    LQry.Free;
-  end;
+  LKlon := tblEmailadresse;
+  if not LKlon.Active then
+    Exit;
+  if LKlon.Locate('email_adresse', AAdresse, [loCaseInsensitive]) then
+    Result := LKlon.FieldByName('email_id').AsInteger;
 end;
 
 // Sucht eine vorhandene Telefonnummer im Pool.
 // Rueckgabe: telefonnummer_id oder -1, wenn die Nummer noch nicht existiert.
 function TdmPersonen.TelefonIdFuerNummer(const ANummer: string): Integer;
 var
-  LQry: TFDQuery;
+  LKlon: TFDMemTable;
 begin
   Result := -1;
-  LQry := TFDQuery.Create(nil);
-  try
-    LQry.Connection := FDConnection;
-    LQry.SQL.Text :=
-      'SELECT telefonnummer_id FROM telefonnummer WHERE nummer = :nr';
-    LQry.ParamByName('nr').AsString := ANummer;
-    LQry.Open;
-    if not LQry.IsEmpty then
-      Result := LQry.FieldByName('telefonnummer_id').AsInteger;
-  finally
-    LQry.Free;
-  end;
+  LKlon := tblTelefonnummer;
+  if not LKlon.Active then
+    Exit;
+  if LKlon.Locate('nummer', ANummer, []) then
+    Result := LKlon.FieldByName('telefonnummer_id').AsInteger;
 end;
 
 // Verwirft den offenen Stamm-Insert (FNeuTbl) und verknuepft stattdessen den
@@ -357,10 +530,10 @@ end;
 //   Adresse: die Auswahl-Combo hat adresse_id bereits in die Bruecke gesetzt.
 procedure TdmPersonen.StammSpeichern(AStammDs: TDataSource);
 var
-  LTbl: TFDTable;
+  LTbl: TFDMemTable;
   LId: Integer;
 begin
-  LTbl := AStammDs.DataSet as TFDTable;
+  LTbl := AStammDs.DataSet as TFDMemTable;
   if not (LTbl.State in dsEditModes) then
   begin
     // Inkonsistenter Zustand: eine Stamm+Bruecke-Neuanlage laeuft noch
@@ -410,53 +583,7 @@ begin
   LTbl.Post;  // Normalfall: neue Stammdaten -> AfterPost verknuepft die Bruecke
 end;
 
-// Fuellt AItems mit allen vorhandenen E-Mail-Adressen fuer die Dropdown-Liste
-// der editierbaren Adress-Combo.
-procedure TdmPersonen.FuelleEmailAdressen(AItems: TStrings);
-begin
-  AItems.BeginUpdate;
-  try
-    AItems.Clear;
-    if not qryEmails.Active then
-      Exit;
-    qryEmails.First;
-    while not qryEmails.Eof do
-    begin
-      AItems.Add(qryEmails.FieldByName('email_adresse').AsString);
-      qryEmails.Next;
-    end;
-  finally
-    AItems.EndUpdate;
-  end;
-end;
 
-// Fuellt AItems mit allen vorhandenen Telefonnummern fuer die Dropdown-Liste
-// der editierbaren Nummern-Combo. Eigene Query, da tblTelefonnummer als
-// Detail nur die Nummern der aktuellen Person zeigt.
-procedure TdmPersonen.FuelleTelefonNummern(AItems: TStrings);
-var
-  LQry: TFDQuery;
-begin
-  AItems.BeginUpdate;
-  try
-    AItems.Clear;
-    LQry := TFDQuery.Create(nil);
-    try
-      LQry.Connection := FDConnection;
-      LQry.SQL.Text := 'SELECT nummer FROM telefonnummer ORDER BY nummer';
-      LQry.Open;
-      while not LQry.Eof do
-      begin
-        AItems.Add(LQry.FieldByName('nummer').AsString);
-        LQry.Next;
-      end;
-    finally
-      LQry.Free;
-    end;
-  finally
-    AItems.EndUpdate;
-  end;
-end;
 
 procedure TdmPersonen.tblPersonAfterPost(DataSet: TDataSet);
 begin
@@ -491,46 +618,30 @@ begin
   FMandantId := LMandantId;  // fuer TypOnNewRecord (mandant_id-Vorbelegung)
 
   try
-    if not FDConnection.Connected then
-      FDConnection.Open;
+    if not Conn.Connected then
+      Conn.Open;
 
-    // Master zuerst, dann die Details — die Kette filtert sich selbst:
+    // EINMAL alles holen. Das darf dauern — danach laeuft die Bedienung
+    // ohne einen einzigen Netzzugriff. Die Master-Detail-Kette filtert
+    // anschliessend im Speicher:
     // tblMandant -> person_mandant -> person / Adress-, Email-, Telefonbruecken.
-    tblMandant.Open;
+    AllesLaden;
     tblMandant.Locate('mandant_id', LMandantId, []);
 
-    // Typ-/Lookup-Tabellen (mandantengebundene filtern ueber den Master mit)
-    tblPersonTyp.Open;
-    tblAdressentyp.Open;
-    tblEmailtyp.Open;
-    tblTelefonnummertyp.Open;
-    tblRolleTyp.Open;
-    tblLand.Open;   // Lookup-Liste fuer die Land-Combo (mandantunabhaengig)
+    // Lookup-Listen im Speicher aufbauen (keine Abfrage, keine Fahrt)
+    ListenAufbauen;
 
-    // Personenliste fuer Zielperson-Lookup (alle Personen des Mandanten)
-    qryPersonen.Close;
-    qryPersonen.ParamByName('mandant_id').AsInteger := LMandantId;
-    qryPersonen.Open;
-
-    // Liste aller E-Mail-Adressen fuer die editierbare Adress-Combo
-    qryEmails.Close;
-    qryEmails.Open;
-
-    // Liste aller Adressen fuer die Adress-Auswahl-Combo
-    qryAdressen.Close;
-    qryAdressen.Open;
-
-    tblPersonMandant.Open;
-    tblPerson.Open;
-    tblPersonAdresse.Open;
-    tblAdresse.Open;
-    tblBezirk.Open;   // Detail von adresse (land_id) -> Bezirke des Adress-Landes
-    tblPersonEmail.Open;
-    tblEmailadresse.Open;
-    tblPersonTelefonnummer.Open;
-    tblTelefonnummer.Open;
+    // tblPersonMandant ist bereits im Speicher (AllesLaden)
+    // tblPerson ist bereits im Speicher (AllesLaden)
+    // tblPersonAdresse ist bereits im Speicher (AllesLaden)
+    // tblAdresse ist bereits im Speicher (AllesLaden)
+    // tblBezirk ist bereits im Speicher (AllesLaden)
+    // tblPersonEmail ist bereits im Speicher (AllesLaden)
+    // tblEmailadresse ist bereits im Speicher (AllesLaden)
+    // tblPersonTelefonnummer ist bereits im Speicher (AllesLaden)
+    // tblTelefonnummer ist bereits im Speicher (AllesLaden)
     try
-      tblPersonBeziehung.Open;  // Tabelle evtl. noch nicht angelegt (sql/person_beziehung.sql)
+      // tblPersonBeziehung ist bereits im Speicher (AllesLaden)
     except
     end;
   except
@@ -545,5 +656,12 @@ begin
     frmPersonen := TfrmPersonen.Create(Application);
   frmPersonen.Show;
 end;
+
+
+initialization
+  GSperrePersonen := TCriticalSection.Create;
+
+finalization
+  GSperrePersonen.Free;
 
 end.

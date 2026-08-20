@@ -2,7 +2,7 @@ unit LieferantenBestellungDm;
 
 // Modul 2: Hauptperson bestellt bei Lieferant.
 // Strukturell identisch zu KundenBestellungDm (siehe dort fuer die
-// allgemeinen Konventionen) -- vorgangsart ist HIER FEST 'Lieferung' (vom
+// allgemeinen Konventionen) -- belegart ist HIER FEST 'Lieferung' (vom
 // Modul vorgegeben, in der GUI nicht aenderbar). Gegenpartei (person_id) ist
 // der Lieferant -- ermittelt ueber person_beziehung.ist_lieferant gegen die
 // Hauptperson des aktuellen Mandanten.
@@ -10,7 +10,7 @@ unit LieferantenBestellungDm;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
@@ -20,21 +20,23 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 const
-  cVorgangsart = 'Lieferung';
+  cBelegart = 'Lieferung';
   cStandardRechnungstyp = 'Bestellung';
 
 type
   TdmLieferantenBestellung = class(TdmModuleTemplate)
-    tblBeleg: TFDTable;
-    tblBelegPosition: TFDTable;
+    tblBeleg: TFDMemTable;
+    tblBelegPosition: TFDMemTable;
     dstblBeleg: TDataSource;
     dstblBelegPosition: TDataSource;
-    qryPersonAuswahl: TFDQuery;
+    // Kopien der Views aus dem zentralen Datenmodul.
+    qryPersonAuswahl: TFDMemTable;
     dsPersonAuswahl: TDataSource;
-    qryRechnungstypAuswahl: TFDQuery;
+    qryRechnungstypAuswahl: TFDMemTable;
     dsRechnungstypAuswahl: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure tblBelegNewRecord(DataSet: TDataSet);
@@ -42,10 +44,18 @@ type
   private
     FMandantId: Integer;
     function StandardRechnungstypId: Integer;
+    // Holt alle Speichertabellen dieses Moduls aus dem zentralen
+    // Datenmodul (geklont) bzw. holt sie notfalls selbst.
+    procedure TabellenLaden;
   public
     class function GetInstance: TObject;
     procedure OpenLieferantenBestellung;
     function HauptpersonVorhanden: Boolean;
+    // Visieren, Briefkopf und Ablage der .tex-Quelle laufen ueber das
+    // Datenmodul - das Formular hat keinen Zugriff auf die Datenbank.
+    function BelegVisieren: string;
+    function Absender: string;
+    procedure TexSpeichern(const ATex: string);
     procedure LadeArtikelAuswahl(AItems: TStrings);
     procedure LadeLeistungAuswahl(AItems: TStrings);
     procedure AddPosition(AArtikelId, ALeistungId: Integer;
@@ -60,22 +70,33 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms, Vcl.Dialogs,
-  PGManagerDm,
+  ZentraleDatenDm,
+  Vcl.Dialogs,
   MandantDm,
-  LieferantenBestellungFrm;
+  LieferantenBestellungFrm, System.SyncObjs;
+
+var
+  GSperreLieferantenBestellung: TCriticalSection;
 
 class function TdmLieferantenBestellung.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmLieferantenBestellung) then
+  begin
+    GSperreLieferantenBestellung.Enter;
+    try
+      if not Assigned(dmLieferantenBestellung) then
+        Application.CreateForm(TdmLieferantenBestellung, dmLieferantenBestellung);
+    finally
+      GSperreLieferantenBestellung.Leave;
+    end;
+  end;
   Result := dmLieferantenBestellung;
 end;
 
 procedure TdmLieferantenBestellung.DataModuleCreate(Sender: TObject);
 begin
-  tblBeleg.Connection         := PGManagerDm.dmPGManager.FDConnection1;
-  tblBelegPosition.Connection := PGManagerDm.dmPGManager.FDConnection1;
-  qryPersonAuswahl.Connection := PGManagerDm.dmPGManager.FDConnection1;
-  qryRechnungstypAuswahl.Connection := PGManagerDm.dmPGManager.FDConnection1;
 
   tblBeleg.UpdateOptions.AutoIncFields         := 'beleg_id';
   tblBelegPosition.UpdateOptions.AutoIncFields := 'position_id';
@@ -84,134 +105,99 @@ begin
   tblBelegPosition.MasterFields    := 'beleg_id';
   tblBelegPosition.IndexFieldNames := 'beleg_id';
 
-  qryPersonAuswahl.SQL.Text :=
-    'SELECT p.person_id, p.nachname_firmenname ' +
-    'FROM person_beziehung pb ' +
-    'JOIN person p ON p.person_id = pb.quell_person_id ' +
-    'WHERE pb.mandant_id = :m ' +
-    '  AND pb.ist_lieferant = true ' +
-    '  AND pb.ziel_person_id = (SELECT pm.person_id FROM person_mandant pm ' +
-    '                            WHERE pm.mandant_id = :m AND pm.ist_hauptperson = true) ' +
-    'ORDER BY p.nachname_firmenname';
 
-  qryRechnungstypAuswahl.SQL.Text :=
-    'SELECT rechnungstyp_id, bezeichnung FROM rechnungstyp ' +
-    'WHERE mandant_id = :m AND aktiv = true ' +
-    'ORDER BY reihenfolge NULLS LAST, bezeichnung';
 end;
 
 function TdmLieferantenBestellung.HauptpersonVorhanden: Boolean;
-var
-  LQry: TFDQuery;
 begin
-  LQry := TFDQuery.Create(nil);
-  try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
-    LQry.SQL.Text := 'SELECT 1 FROM person_mandant WHERE mandant_id = :m AND ist_hauptperson = true';
-    LQry.ParamByName('m').AsInteger := FMandantId;
-    LQry.Open;
-    Result := not LQry.IsEmpty;
-  finally
-    LQry.Free;
-  end;
+  Result := TdmZentraleDaten(TdmZentraleDaten.GetInstance).SpAufrufen(
+    'fn_hat_hauptperson', [FMandantId]) = True;
 end;
 
 function TdmLieferantenBestellung.StandardRechnungstypId: Integer;
-var
-  LQry: TFDQuery;
 begin
-  Result := 0;
-  LQry := TFDQuery.Create(nil);
-  try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
-    LQry.SQL.Text := 'SELECT rechnungstyp_id FROM rechnungstyp WHERE mandant_id = :m AND bezeichnung = :b';
-    LQry.ParamByName('m').AsInteger := FMandantId;
-    LQry.ParamByName('b').AsString := cStandardRechnungstyp;
-    LQry.Open;
-    if not LQry.IsEmpty then
-      Result := LQry.FieldByName('rechnungstyp_id').AsInteger;
-  finally
-    LQry.Free;
-  end;
+  Result := AlsZahl(TdmZentraleDaten(TdmZentraleDaten.GetInstance)
+    .SpAufrufen('fn_rechnungstyp_id',
+                [FMandantId, cStandardRechnungstyp]));
 end;
 
 procedure TdmLieferantenBestellung.tblBelegNewRecord(DataSet: TDataSet);
 begin
   DataSet.FieldByName('mandant_id').AsInteger  := FMandantId;
-  DataSet.FieldByName('vorgangsart').AsString  := cVorgangsart;
+  DataSet.FieldByName('belegart').AsString  := cBelegart;
   DataSet.FieldByName('beleg_datum').AsDateTime := Date;
   DataSet.FieldByName('status').AsString       := 'offen';
   DataSet.FieldByName('rechnungstyp_id').AsInteger := StandardRechnungstypId;
 end;
 
 procedure TdmLieferantenBestellung.tblBelegPositionNewRecord(DataSet: TDataSet);
-var
-  LQry: TFDQuery;
 begin
   DataSet.FieldByName('mandant_id').AsInteger := FMandantId;
-  LQry := TFDQuery.Create(nil);
-  try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
-    LQry.SQL.Text := 'SELECT COALESCE(MAX(position_nr),0)+1 AS next_nr FROM beleg_position WHERE beleg_id = :b';
-    LQry.ParamByName('b').AsInteger := tblBeleg.FieldByName('beleg_id').AsInteger;
-    LQry.Open;
-    DataSet.FieldByName('position_nr').AsInteger := LQry.FieldByName('next_nr').AsInteger;
-  finally
-    LQry.Free;
-  end;
+  DataSet.FieldByName('position_nr').AsInteger :=
+    AlsZahl(TdmZentraleDaten(TdmZentraleDaten.GetInstance).SpAufrufen(
+      'fn_naechste_position',
+      [tblBeleg.FieldByName('beleg_id').AsInteger]));
 end;
 
 procedure TdmLieferantenBestellung.LadeArtikelAuswahl(AItems: TStrings);
 var
-  LQry: TFDQuery;
+  LMem: TFDMemTable;
 begin
-  LQry := TFDQuery.Create(nil);
+  // Liste kommt aus dem Speicher; die Kopie gehoert uns und
+  // wird nach dem Durchlauf wieder freigegeben.
+  LMem := TdmZentraleDaten(TdmZentraleDaten.GetInstance)
+            .KopieHolen('artikel');
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
-    LQry.SQL.Text := 'SELECT artikel_id, artikelname FROM artikel WHERE mandant_id = :m ORDER BY artikelname';
-    LQry.ParamByName('m').AsInteger := FMandantId;
-    LQry.Open;
+    LMem.Filtered := False;
+    LMem.Filter := Format('mandant_id = %d', [FMandantId]);
+    LMem.Filtered := True;
+    LMem.IndexFieldNames := 'artikelname';
     AItems.BeginUpdate;
     try
       AItems.Clear;
-      while not LQry.Eof do
+      LMem.First;
+      while not LMem.Eof do
       begin
-        AItems.AddObject(LQry.FieldByName('artikelname').AsString,
-          TObject(NativeInt(LQry.FieldByName('artikel_id').AsInteger)));
-        LQry.Next;
+        AItems.AddObject(LMem.FieldByName('artikelname').AsString,
+          TObject(NativeInt(LMem.FieldByName('artikel_id').AsInteger)));
+        LMem.Next;
       end;
     finally
       AItems.EndUpdate;
     end;
   finally
-    LQry.Free;
+    LMem.Free;
   end;
 end;
 
 procedure TdmLieferantenBestellung.LadeLeistungAuswahl(AItems: TStrings);
 var
-  LQry: TFDQuery;
+  LMem: TFDMemTable;
 begin
-  LQry := TFDQuery.Create(nil);
+  // Liste kommt aus dem Speicher; die Kopie gehoert uns und
+  // wird nach dem Durchlauf wieder freigegeben.
+  LMem := TdmZentraleDaten(TdmZentraleDaten.GetInstance)
+            .KopieHolen('leistung');
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
-    LQry.SQL.Text := 'SELECT leistung_id, bezeichnung FROM leistung WHERE mandant_id = :m ORDER BY bezeichnung';
-    LQry.ParamByName('m').AsInteger := FMandantId;
-    LQry.Open;
+    LMem.Filtered := False;
+    LMem.Filter := Format('mandant_id = %d', [FMandantId]);
+    LMem.Filtered := True;
+    LMem.IndexFieldNames := 'bezeichnung';
     AItems.BeginUpdate;
     try
       AItems.Clear;
-      while not LQry.Eof do
+      LMem.First;
+      while not LMem.Eof do
       begin
-        AItems.AddObject(LQry.FieldByName('bezeichnung').AsString,
-          TObject(NativeInt(LQry.FieldByName('leistung_id').AsInteger)));
-        LQry.Next;
+        AItems.AddObject(LMem.FieldByName('bezeichnung').AsString,
+          TObject(NativeInt(LMem.FieldByName('leistung_id').AsInteger)));
+        LMem.Next;
       end;
     finally
       AItems.EndUpdate;
     end;
   finally
-    LQry.Free;
+    LMem.Free;
   end;
 end;
 
@@ -233,7 +219,7 @@ end;
 
 procedure TdmLieferantenBestellung.OpenLieferantenBestellung;
 begin
-  if not PGManagerDm.dmPGManager.FDConnection1.Connected then
+  if not TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung.Connected then
   begin
     ShowMessage('Bitte zuerst im PGManager die Datenbankverbindung herstellen.', '');
     Exit;
@@ -253,25 +239,89 @@ begin
     Exit;
   end;
 
-  qryPersonAuswahl.Close;
-  qryPersonAuswahl.ParamByName('m').AsInteger := FMandantId;
-  qryPersonAuswahl.Open;
 
-  qryRechnungstypAuswahl.Close;
-  qryRechnungstypAuswahl.ParamByName('m').AsInteger := FMandantId;
-  qryRechnungstypAuswahl.Open;
 
   tblBeleg.Filtered := False;
-  tblBeleg.Open;
-  tblBeleg.Filter := Format('mandant_id=%d AND vorgangsart=''%s''', [FMandantId, cVorgangsart]);
+  // Speichertabellen kommen aus dem zentralen Datenmodul
+  TabellenLaden;
+  tblBeleg.Filter := Format('mandant_id=%d AND belegart=''%s''', [FMandantId, cBelegart]);
   tblBeleg.Filtered := True;
   tblBeleg.IndexFieldNames := 'beleg_id';
 
-  tblBelegPosition.Open;
 
   if not Assigned(frmLieferantenBestellung) then
     frmLieferantenBestellung := TfrmLieferantenBestellung.Create(Application);
   frmLieferantenBestellung.Show;
 end;
+
+
+procedure TdmLieferantenBestellung.TabellenLaden;
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
+    Zuordnung(tblBeleg, 'beleg'),
+    Zuordnung(tblBelegPosition, 'beleg_position'),
+    Zuordnung(qryPersonAuswahl, 'v_beleg_person_auswahl'),
+    Zuordnung(qryRechnungstypAuswahl, 'v_rechnungstyp_auswahl')]);
+  qryPersonAuswahl.Filtered := False;
+  qryPersonAuswahl.Filter := Format('mandant_id = %d', [FMandantId]);
+  qryPersonAuswahl.Filtered := True;
+  qryRechnungstypAuswahl.Filtered := False;
+  qryRechnungstypAuswahl.Filter := Format('mandant_id = %d', [FMandantId]);
+  qryRechnungstypAuswahl.Filtered := True;
+end;
+
+
+
+function TdmLieferantenBestellung.BelegVisieren: string;
+var
+  LZentral: TdmZentraleDaten;
+begin
+  Result := '';
+  if tblBeleg.IsEmpty then
+    Exit('Kein Beleg gew' + #228 + 'hlt.');
+
+  LZentral := TdmZentraleDaten(TdmZentraleDaten.GetInstance);
+  try
+    Result := 'Visiert als ' + VarToStr(LZentral.SpAufrufen('fn_beleg_visieren',
+      [tblBeleg.FieldByName('beleg_id').AsInteger, Null]));
+  except
+    on E: Exception do
+      Exit(E.Message);
+  end;
+
+  // Nummer, Status und die eingefrorenen Werte kommen aus der Datenbank
+  // zurueck - ohne das zeigt die Maske den alten Stand.
+  LZentral.TabelleAuffrischen('beleg');
+  LZentral.TabelleAuffrischen('beleg_position');
+  TabellenLaden;
+end;
+
+function TdmLieferantenBestellung.Absender: string;
+begin
+  // Briefkopf des Mandanten. Steht bewusst nicht im Beleg: eine Firma kann
+  // verkauft oder umbenannt werden, den Stand von damals haelt die
+  // gespeicherte .tex-Quelle.
+  if tblBeleg.IsEmpty then
+    Exit('');
+  Result := VarToStr(TdmZentraleDaten(TdmZentraleDaten.GetInstance)
+    .SpAufrufen('fn_mandant_absender',
+      [tblBeleg.FieldByName('mandant_id').AsInteger]));
+end;
+
+procedure TdmLieferantenBestellung.TexSpeichern(const ATex: string);
+begin
+  if tblBeleg.IsEmpty then
+    Exit;
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).SpAufrufen(
+    'fn_beleg_tex_speichern',
+    [tblBeleg.FieldByName('beleg_id').AsInteger, ATex]);
+end;
+
+initialization
+  GSperreLieferantenBestellung := TCriticalSection.Create;
+
+finalization
+  GSperreLieferantenBestellung.Free;
+
 
 end.

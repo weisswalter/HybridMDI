@@ -14,7 +14,7 @@
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
@@ -24,24 +24,28 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmAnlagen = class(TdmModuleTemplate)
-    tblAnlage: TFDTable;
+    tblAnlage: TFDMemTable;
     dsAnlage: TDataSource;
-    qryPlan: TFDQuery;
+    // Kopien aus dem zentralen Datenmodul.
+    qryPlan: TFDMemTable;
     dsPlan: TDataSource;
-    qryKonto: TFDQuery;
+    qryKonto: TFDMemTable;
     dsKonto: TDataSource;
-    qryRaum: TFDQuery;
+    qryRaum: TFDMemTable;
     dsRaum: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure tblAnlageNewRecord(DataSet: TDataSet);
-    procedure tblAnlageAfterScroll(DataSet: TDataSet);
   private
     FMandantId: Integer;
     function Conn: TFDConnection;
+    // Holt alle Speichertabellen dieses Moduls aus dem zentralen
+    // Datenmodul (geklont) bzw. holt sie notfalls selbst.
+    procedure TabellenLaden;
   public
     class function GetInstance: TObject;
     procedure OpenAnlagen;
@@ -70,49 +74,43 @@ implementation
 {$R *.dfm}
 
 uses
-  System.DateUtils,
-  Vcl.Forms, Vcl.Dialogs,
-  PGManagerDm,
+  ZentraleDatenDm,
+  System.DateUtils, System.Variants,
+  Vcl.Dialogs,
   MandantDm,
-  AnlagenFrm;
+  AnlagenFrm, System.SyncObjs;
+
+var
+  GSperreAnlagen: TCriticalSection;
 
 class function TdmAnlagen.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmAnlagen) then
+  begin
+    GSperreAnlagen.Enter;
+    try
+      if not Assigned(dmAnlagen) then
+        Application.CreateForm(TdmAnlagen, dmAnlagen);
+    finally
+      GSperreAnlagen.Leave;
+    end;
+  end;
   Result := dmAnlagen;
 end;
 
 function TdmAnlagen.Conn: TFDConnection;
 begin
-  Result := PGManagerDm.dmPGManager.FDConnection1;
+  Result := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 end;
 
 procedure TdmAnlagen.DataModuleCreate(Sender: TObject);
 begin
-  tblAnlage.Connection := Conn;
-  qryPlan.Connection   := Conn;
-  qryKonto.Connection  := Conn;
-  qryRaum.Connection   := Conn;
-
+  // Kein Inline-SQL mehr: die drei Listen kommen als Kopie aus dem zentralen
+  // Datenmodul (v_anlage_jahr / v_konto_auswahl / v_raum_auswahl_einfach),
+  // gefiltert wird im Speicher.
   tblAnlage.UpdateOptions.AutoIncFields := 'anlage_id';
-
-  // Die Sicht liefert beide Reihen und die Differenz bereits ausgerechnet
-  qryPlan.SQL.Text :=
-    'SELECT jahr, nutzungsjahr, buchwert_anfang, abschreibung_bilanz, ' +
-    '       buchwert_ende, kalk_basis, abschreibung_kalk, kalk_zins, ' +
-    '       kalk_gesamt, differenz, stundensatz ' +
-    'FROM v_anlage_jahr WHERE anlage_id = :a ORDER BY jahr';
-
-  // Nur bebuchbare Konten anbieten — auf Sammelkonten wird nicht gebucht
-  qryKonto.SQL.Text :=
-    'SELECT konto_id, nummer || '' '' || bezeichnung AS anzeige ' +
-    'FROM konto WHERE mandant_id = :m AND aktiv AND NOT ist_sammelkonto ' +
-    'ORDER BY nummer';
-
-  qryRaum.SQL.Text :=
-    'SELECT r.raum_id, r.bezeichnung || COALESCE('' ('' || a.ort || '')'', '''') ' +
-    '       AS anzeige ' +
-    'FROM raum r LEFT JOIN adresse a ON a.adresse_id = r.adresse_id ' +
-    'ORDER BY 2';
 end;
 
 function TdmAnlagen.AktuelleAnlage: Integer;
@@ -123,64 +121,50 @@ begin
     Result := 0;
 end;
 
+// Der Plan haengt per MasterSource/MasterFields an tblAnlage (im DFM
+// eingetragen) - beim Blaettern zieht er von selbst nach. Hier ist nichts
+// mehr zu tun; die Methode bleibt, weil das Formular sie ruft.
 procedure TdmAnlagen.LadePlan(AAnlageId: Integer);
 begin
-  qryPlan.Close;
-  qryPlan.ParamByName('a').AsInteger := AAnlageId;
-  qryPlan.Open;
-end;
-
-// Beim Blaettern durch die Anlagen zieht der Plan automatisch nach — sonst
-// zeigt er die Zahlen der vorher gewaehlten Anlage und niemand merkt es.
-procedure TdmAnlagen.tblAnlageAfterScroll(DataSet: TDataSet);
-begin
-  if tblAnlage.Active and not (tblAnlage.State in dsEditModes) then
-    LadePlan(AktuelleAnlage);
+  if not qryPlan.Active then
+    TabellenLaden;
 end;
 
 function TdmAnlagen.PlanRechnen(AAnlageId: Integer): string;
 var
-  LQry: TFDQuery;
+  LZentral: TdmZentraleDaten;
 begin
   if AAnlageId <= 0 then
     Exit('FEHLER: Bitte zuerst eine Anlage w' + #228 + 'hlen.');
-  LQry := TFDQuery.Create(nil);
+  LZentral := TdmZentraleDaten(TdmZentraleDaten.GetInstance);
   try
-    LQry.Connection := Conn;
-    LQry.SQL.Text := 'SELECT fn_anlage_plan(:a)';
-    LQry.ParamByName('a').AsInteger := AAnlageId;
-    LQry.Open;
     Result := Format('OK: Plan '#252'ber %d Jahre berechnet.',
-      [LQry.Fields[0].AsInteger]);
+      [AlsZahl(LZentral.SpAufrufen('fn_anlage_plan', [AAnlageId]))]);
+    // Der Plan ist neu geschrieben -> zentralen Stand nachziehen.
+    LZentral.TabelleAuffrischen('v_anlage_jahr');
+    TabellenLaden;
     LadePlan(AAnlageId);
   except
     on E: Exception do
       Result := 'FEHLER: ' + E.Message;
   end;
-  LQry.Free;
 end;
 
 function TdmAnlagen.PlanRechnenAlle: string;
 var
-  LQry: TFDQuery;
-  LAnzahl: Integer;
+  LZentral: TdmZentraleDaten;
 begin
-  LQry := TFDQuery.Create(nil);
+  LZentral := TdmZentraleDaten(TdmZentraleDaten.GetInstance);
   try
-    LQry.Connection := Conn;
-    LQry.SQL.Text :=
-      'SELECT count(fn_anlage_plan(anlage_id)) FROM anlage ' +
-      'WHERE mandant_id = :m AND aktiv';
-    LQry.ParamByName('m').AsInteger := FMandantId;
-    LQry.Open;
-    LAnzahl := LQry.Fields[0].AsInteger;
-    Result := Format('OK: %d Anlagen neu berechnet.', [LAnzahl]);
+    Result := Format('OK: %d Anlagen neu berechnet.',
+      [AlsZahl(LZentral.SpAufrufen('fn_anlage_plan_alle', [FMandantId]))]);
+    LZentral.TabelleAuffrischen('v_anlage_jahr');
+    TabellenLaden;
     LadePlan(AktuelleAnlage);
   except
     on E: Exception do
       Result := 'FEHLER: ' + E.Message;
   end;
-  LQry.Free;
 end;
 
 // Liefert einen fertigen Satz fuer die Anzeige. Ist kein Stundensatz
@@ -188,30 +172,27 @@ end;
 // soll auffallen, nicht die Kalkulation stillschweigend verbilligen.
 function TdmAnlagen.Stundensatz(AAnlageId, AJahr: Integer): string;
 var
-  LQry: TFDQuery;
+  LWert: Variant;
 begin
   if AAnlageId <= 0 then
     Exit('Keine Anlage gew' + #228 + 'hlt.');
-  LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := Conn;
-    LQry.SQL.Text := 'SELECT fn_maschinenstundensatz(:a, :j)';
-    LQry.ParamByName('a').AsInteger := AAnlageId;
-    LQry.ParamByName('j').AsInteger := AJahr;
-    LQry.Open;
-    if LQry.IsEmpty then
-      Result := Format('F'#252'r %d gibt es keine Planzeile - bitte den Plan ' +
-        'berechnen.', [AJahr])
-    else if LQry.Fields[0].IsNull then
-      Result := 'Kein Stundensatz: es sind keine Betriebsstunden hinterlegt.'
+    LWert := TdmZentraleDaten(TdmZentraleDaten.GetInstance).SpAufrufen(
+      'fn_maschinenstundensatz', [AAnlageId, AJahr]);
+    if VarIsNull(LWert) then
+      // Die Funktion liefert NULL, wenn es keine Planzeile gibt ODER keine
+      // Betriebsstunden hinterlegt sind - beides ist ein fehlender Wert,
+      // der auffallen soll statt still als 0 durchzugehen.
+      Result := Format('Kein Stundensatz f'#252'r %d: entweder fehlt die ' +
+        'Planzeile (dann Plan berechnen) oder es sind keine Betriebsstunden ' +
+        'hinterlegt.', [AJahr])
     else
       Result := Format('Maschinenstundensatz %d: %.2f pro Stunde',
-        [AJahr, LQry.Fields[0].AsFloat]);
+        [AJahr, Double(LWert)]);
   except
     on E: Exception do
       Result := 'Stundensatz nicht lesbar: ' + E.Message;
   end;
-  LQry.Free;
 end;
 
 procedure TdmAnlagen.tblAnlageNewRecord(DataSet: TDataSet);
@@ -254,7 +235,36 @@ begin
   if not (tblAnlage.State in dsEditModes) then
     Exit;
   try
+    // Post bringt die Feldwerte nur aus dem Editiermodus in den Satz; in die
+    // Datenbank geht es ueber fn_anlage_speichern.
     tblAnlage.Post;
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).SpAufrufen(
+      'fn_anlage_speichern',
+      [FeldOderNull(tblAnlage, 'anlage_id'), FMandantId,
+       FeldOderNull(tblAnlage, 'bezeichnung'),
+       FeldOderNull(tblAnlage, 'inventar_nr'),
+       FeldOderNull(tblAnlage, 'gruppe'),
+       FeldOderNull(tblAnlage, 'konto_id'),
+       FeldOderNull(tblAnlage, 'aufwand_konto_id'),
+       FeldOderNull(tblAnlage, 'anschaffung_datum'),
+       FeldOderNull(tblAnlage, 'anschaffung_wert'),
+       FeldOderNull(tblAnlage, 'restwert'),
+       FeldOderNull(tblAnlage, 'nutzungsdauer_jahre'),
+       FeldOderNull(tblAnlage, 'methode'),
+       FeldOderNull(tblAnlage, 'degressiv_prozent'),
+       FeldOderNull(tblAnlage, 'wiederbeschaffung_wert'),
+       FeldOderNull(tblAnlage, 'inflation_prozent'),
+       FeldOderNull(tblAnlage, 'kalk_nutzungsdauer_jahre'),
+       FeldOderNull(tblAnlage, 'kalk_zins_prozent'),
+       FeldOderNull(tblAnlage, 'betriebsstunden_jahr'),
+       FeldOderNull(tblAnlage, 'unterhalt_jahr'),
+       FeldOderNull(tblAnlage, 'energie_pro_stunde'),
+       FeldOderNull(tblAnlage, 'raum_id'),
+       FeldOderNull(tblAnlage, 'ausser_betrieb_am'),
+       FeldOderNull(tblAnlage, 'aktiv'),
+       FeldOderNull(tblAnlage, 'bemerkung')]);
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).TabelleAuffrischen('anlage');
+    TabellenLaden;
   except
     on E: Exception do
     begin
@@ -292,7 +302,11 @@ begin
     Exit;
   try
     // anlage_abschreibung haengt mit ON DELETE CASCADE dran
-    tblAnlage.Delete;
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).SpAufrufen(
+      'fn_anlage_loeschen',
+      [tblAnlage.FieldByName('anlage_id').AsInteger, FMandantId]);
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).TabelleAuffrischen('anlage');
+    TabellenLaden;
   except
     on E: Exception do
       Result := E.Message;
@@ -314,13 +328,10 @@ begin
     Exit;
   end;
 
-  qryKonto.Close;
-  qryKonto.ParamByName('m').AsInteger := FMandantId;
-  qryKonto.Open;
-  qryRaum.Open;
 
   tblAnlage.Filtered := False;
-  tblAnlage.Open;
+  // Speichertabellen kommen aus dem zentralen Datenmodul
+  TabellenLaden;
   tblAnlage.Filter := Format('mandant_id=%d', [FMandantId]);
   tblAnlage.Filtered := True;
 
@@ -330,5 +341,30 @@ begin
     frmAnlagen := TfrmAnlagen.Create(Application);
   frmAnlagen.Show;
 end;
+
+
+procedure TdmAnlagen.TabellenLaden;
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
+    Zuordnung(tblAnlage, 'anlage'),
+    Zuordnung(qryPlan, 'v_anlage_jahr'),
+    Zuordnung(qryKonto, 'v_konto_auswahl'),
+    Zuordnung(qryRaum, 'v_raum_auswahl_einfach')]);
+
+  // Konten sind mandantenbezogen, Raeume nicht (physische Gebaeudefakten).
+  qryKonto.Filtered := False;
+  qryKonto.Filter := Format('mandant_id = %d', [FMandantId]);
+  qryKonto.Filtered := True;
+  qryKonto.IndexFieldNames := 'nummer';
+  qryRaum.IndexFieldNames := 'anzeige';
+end;
+
+
+
+initialization
+  GSperreAnlagen := TCriticalSection.Create;
+
+finalization
+  GSperreAnlagen.Free;
 
 end.

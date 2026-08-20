@@ -7,13 +7,12 @@ unit PyArtikelDm;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmPyArtikel = class(TdmModuleTemplate)
-    procedure DataModuleCreate(Sender: TObject);
-    procedure DataModuleDestroy(Sender: TObject);
   public
     class function GetInstance: TObject;
     procedure OpenPyArtikel;
@@ -27,22 +26,28 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms,
   PythonDm,
-  PyArtikelFrm;
+  PyArtikelFrm, System.SyncObjs, ZentraleDatenDm;
 
-procedure TdmPyArtikel.DataModuleCreate(Sender: TObject);
-begin
-  // Registrierung übernimmt TdmModuleTemplate.Create (SilentRegisterSubscriberForEvents)
-end;
 
-procedure TdmPyArtikel.DataModuleDestroy(Sender: TObject);
-begin
-  // Deregistrierung übernimmt TdmModuleTemplate.Destroy
-end;
+
+var
+  GSperrePyArtikel: TCriticalSection;
 
 class function TdmPyArtikel.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmPyArtikel) then
+  begin
+    GSperrePyArtikel.Enter;
+    try
+      if not Assigned(dmPyArtikel) then
+        Application.CreateForm(TdmPyArtikel, dmPyArtikel);
+    finally
+      GSperrePyArtikel.Leave;
+    end;
+  end;
   Result := dmPyArtikel;
 end;
 
@@ -56,5 +61,12 @@ begin
     'import importlib, modul_artikel; importlib.reload(modul_artikel); modul_artikel.ModulArtikel().show(%d)',
     [frmPyArtikel.Handle]));
 end;
+
+
+initialization
+  GSperrePyArtikel := TCriticalSection.Create;
+
+finalization
+  GSperrePyArtikel.Free;
 
 end.

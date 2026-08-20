@@ -30,36 +30,43 @@ type
 implementation
 
 uses
-  MandantDm;
+  MandantDm, BenutzerDm;
 
 {$R *.dfm}
 
+// Zeigt NUR die Mandanten, die der angemeldete Benutzer sehen darf. Der
+// globale Administrator (Rolle administrator im Stammmandanten) bekommt alle,
+// alle anderen genau ihre zugeordneten - das ist die Stelle, an der Walters
+// Regel "wer zu Mandant 3 gehoert, kann nur Dinge aus Mandant 3 machen"
+// tatsaechlich wirkt.
+//
+// Ist niemand angemeldet (noch kein Benutzer angelegt), liefert
+// LadeErlaubteMandanten alle - dann verhaelt sich der Dialog wie bisher.
 procedure TfrmMandantWaehlen.FormShow(Sender: TObject);
 var
   LDm: TdmMandant;
   LMandantId, i, LSelectIndex: Integer;
 begin
   LDm := TdmMandant(TdmMandant.GetInstance);
-  LDm.LoadMandanten;
-  cboMandant.Items.Clear;
+  dmBenutzer.LadeErlaubteMandanten(cboMandant.Items);
+
   LSelectIndex := -1;
-  LDm.qryMandant.First;
-  while not LDm.qryMandant.Eof do
+  for i := 0 to cboMandant.Items.Count - 1 do
   begin
-    LMandantId := LDm.qryMandant.FieldByName('mandant_id').AsInteger;
-    i := cboMandant.Items.AddObject(
-      LDm.qryMandant.FieldByName('mandanten_name').AsString,
-      TObject(LMandantId));
+    LMandantId := Integer(NativeInt(cboMandant.Items.Objects[i]));
     if LMandantId = LDm.CurrentMandantId then
       LSelectIndex := i;
-    LDm.qryMandant.Next;
   end;
+
   if cboMandant.Items.Count > 0 then
   begin
     if LSelectIndex < 0 then
       LSelectIndex := 0;
     cboMandant.ItemIndex := LSelectIndex;
-  end;
+  end
+  else
+    ShowMessage('F' + #252 + 'r Ihren Zugang ist kein Mandant freigegeben. ' +
+      'Bitte an den Administrator wenden.');
 end;
 
 function TfrmMandantWaehlen.GetSelectedMandantId: Integer;

@@ -17,7 +17,7 @@
 interface
 
 uses
-  System.SysUtils, System.Classes, System.DateUtils,
+  Winapi.Windows, System.SysUtils, System.Classes, System.DateUtils,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
@@ -27,11 +27,12 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmKurs = class(TdmModuleTemplate)
-    tblKurs: TFDTable;
+    tblKurs: TFDMemTable;
     dstblKurs: TDataSource;
     qryUnterkurse: TFDQuery;
     dstblUnterkurse: TDataSource;
@@ -72,6 +73,9 @@ type
   private
     FMandantId: Integer;
     function Ausfuehren(const ASql: string; const AParams: array of Variant): Integer;
+    // Holt alle Speichertabellen dieses Moduls aus dem zentralen
+    // Datenmodul (geklont) bzw. holt sie notfalls selbst.
+    procedure TabellenLaden;
   public
     class function GetInstance: TObject;
     property MandantId: Integer read FMandantId;
@@ -125,7 +129,7 @@ type
       const AThema: string): string;
     procedure TerminEntfernen(ATerminId: Integer);
 
-    // Erzeugt aus v_kurs_materialbedarf einen Entnahme-Beleg (vorgangsart
+    // Erzeugt aus v_kurs_materialbedarf einen Entnahme-Beleg (belegart
     // 'Entnahme') fuer den Kursleiter. Rueckgabe: Klartext-Ergebnis.
     function EntnahmeErzeugen(ADurchfuehrungId: Integer): string;
   end;
@@ -138,13 +142,28 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms, Vcl.Dialogs,
-  PGManagerDm,
+  ZentraleDatenDm,
+  Vcl.Dialogs,
   MandantDm,
-  KursFrm;
+  KursFrm, System.SyncObjs;
+
+var
+  GSperreKurs: TCriticalSection;
 
 class function TdmKurs.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmKurs) then
+  begin
+    GSperreKurs.Enter;
+    try
+      if not Assigned(dmKurs) then
+        Application.CreateForm(TdmKurs, dmKurs);
+    finally
+      GSperreKurs.Leave;
+    end;
+  end;
   Result := dmKurs;
 end;
 
@@ -154,10 +173,9 @@ var
 begin
   // Alle Datasets an die zentrale Connection
   for I := 0 to ComponentCount - 1 do
+    // Nur Abfragen brauchen eine Verbindung, Speichertabellen nicht
     if Components[I] is TFDCustomQuery then
-      TFDCustomQuery(Components[I]).Connection := PGManagerDm.dmPGManager.FDConnection1
-    else if Components[I] is TFDTable then
-      TFDTable(Components[I]).Connection := PGManagerDm.dmPGManager.FDConnection1;
+      TFDCustomQuery(Components[I]).Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 
   tblKurs.UpdateOptions.AutoIncFields := 'kurs_id';
 
@@ -277,7 +295,7 @@ var
 begin
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := ASql;
     for I := 0 to High(AParams) do
       LQry.Params[I].Value := AParams[I];
@@ -429,7 +447,7 @@ var
 begin
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text :=
       'INSERT INTO kurs_durchfuehrung (kurs_id, mandant_id, semester_id, ' +
       '  bezeichnung, leiter_person_id, raum_id) ' +
@@ -536,7 +554,7 @@ end;
 
 // ── Materialbedarf -> Entnahme-Beleg ───────────────────────────────────────
 // Nutzt v_kurs_materialbedarf (Curriculum-Material x bestaetigte Teilnehmer)
-// und legt daraus einen Beleg mit vorgangsart 'Entnahme' an — dasselbe
+// und legt daraus einen Beleg mit belegart 'Entnahme' an — dasselbe
 // Format, das LagerEntnahmeFrm anzeigt und verbucht.
 function TdmKurs.EntnahmeErzeugen(ADurchfuehrungId: Integer): string;
 var
@@ -546,7 +564,7 @@ var
 begin
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 
     // Kursleiter als Belegperson
     LQry.SQL.Text := 'SELECT leiter_person_id FROM kurs_durchfuehrung WHERE durchfuehrung_id=:d';
@@ -569,7 +587,7 @@ begin
 
     // Beleg-Kopf
     LQry.SQL.Text :=
-      'INSERT INTO beleg (mandant_id, vorgangsart, rechnungstyp_id, person_id, ' +
+      'INSERT INTO beleg (mandant_id, belegart, rechnungstyp_id, person_id, ' +
       '  bemerkung, durchfuehrung_id) ' +
       'VALUES (:m, ''Entnahme'', :t, :p, :b, :d) RETURNING beleg_id';
     LQry.ParamByName('m').AsInteger := FMandantId;
@@ -640,7 +658,7 @@ procedure TdmKurs.OpenKurs;
   end;
 
 begin
-  if not PGManagerDm.dmPGManager.FDConnection1.Connected then
+  if not TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung.Connected then
   begin
     ShowMessage('Bitte zuerst im PGManager die Datenbankverbindung herstellen.', '');
     Exit;
@@ -654,7 +672,8 @@ begin
   end;
 
   tblKurs.Filtered := False;
-  tblKurs.Open;
+  // Speichertabellen kommen aus dem zentralen Datenmodul
+  TabellenLaden;
   tblKurs.Filter := Format('mandant_id=%d', [FMandantId]);
   tblKurs.Filtered := True;
 
@@ -673,5 +692,20 @@ begin
     frmKurs := TfrmKurs.Create(Application);
   frmKurs.Show;
 end;
+
+
+procedure TdmKurs.TabellenLaden;
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
+    Zuordnung(tblKurs, 'kurs')]);
+end;
+
+
+
+initialization
+  GSperreKurs := TCriticalSection.Create;
+
+finalization
+  GSperreKurs.Free;
 
 end.

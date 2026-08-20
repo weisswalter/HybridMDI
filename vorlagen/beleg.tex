@@ -1,0 +1,72 @@
+% ===========================================================================
+% Vorlage fuer Angebot, Rechnung, Bestellung, Lieferung, Entnahme.
+% Wird von Tools\uBelegDruck.pas gefuellt und mit lualatex uebersetzt.
+%
+% ACHTUNG: In dieser Datei duerfen die Platzhalter und die Positionsmarken
+% NIRGENDS ausserhalb ihrer eigentlichen Stelle vorkommen -- auch nicht in
+% einem Kommentar. Die Ersetzung laeuft ueber die ganze Datei, und ein
+% mehrzeiliger Wert (die Anschrift!) bricht sonst aus dem Kommentar aus und
+% steht als echter Text vor \begin{document}. Genau das ist beim ersten
+% Versuch passiert. Die Liste der Platzhalter steht deshalb im Quelltext von
+% uBelegDruck.pas, nicht hier.
+%
+% Alle Werte kommen bereits maskiert an (TexMaskieren) -- hier also kein
+% weiteres Escaping noetig und auch keines einbauen.
+% ===========================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage[ngerman]{babel}
+\usepackage[top=25mm,bottom=25mm,left=25mm,right=20mm]{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+
+\setmainfont{Latin Modern Roman}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\footnotesize Seite \thepage\ von \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0pt}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+% ── Absender: klein ueber dem Anschriftenfeld, wie im Fensterkuvert ────────
+{\footnotesize @ABSENDER@}
+
+\vspace{4mm}
+
+% ── Empfaengerblock ────────────────────────────────────────────────────────
+@EMPFAENGER@
+
+\vspace{12mm}
+
+% ── Betreffzeile ───────────────────────────────────────────────────────────
+\hfill @DATUM@
+
+\vspace{4mm}
+
+{\large\bfseries @BELEGART@ @BELEGNR@}
+
+\vspace{8mm}
+
+% ── Positionen ─────────────────────────────────────────────────────────────
+\begin{longtable}{@{}r>{\raggedright\arraybackslash}p{72mm}rlrr@{}}
+\hline
+\textbf{Pos} & \textbf{Bezeichnung} & \textbf{Menge} & &
+\textbf{Einzelpreis} & \textbf{Betrag} \\
+\hline
+\endhead
+%%POSITIONEN_ANFANG%%@POS@ & @BEZEICHNUNG@ & @MENGE@ & @EINHEIT@ & @EINZELPREIS@ & @BETRAG@ \\
+%%POSITIONEN_ENDE%%\hline
+\multicolumn{5}{@{}r}{\textbf{Summe}} & \textbf{@SUMME@} \\
+\hline
+\end{longtable}
+
+\vspace{8mm}
+
+@BEMERKUNG@
+
+\end{document}

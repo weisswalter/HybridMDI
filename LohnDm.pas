@@ -18,7 +18,7 @@
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  Winapi.Windows, System.SysUtils, System.Classes,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
@@ -28,6 +28,7 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
@@ -36,11 +37,11 @@ type
     dsPerioden: TDataSource;
     qryPositionen: TFDQuery;
     dsPositionen: TDataSource;
-    tblLohn: TFDTable;
+    tblLohn: TFDMemTable;
     dsLohn: TDataSource;
-    tblZulage: TFDTable;
+    tblZulage: TFDMemTable;
     dsZulage: TDataSource;
-    tblAbzug: TFDTable;
+    tblAbzug: TFDMemTable;
     dsAbzug: TDataSource;
     qryPersonen: TFDQuery;
     dsPersonen: TDataSource;
@@ -52,6 +53,9 @@ type
     FMandantId: Integer;
     FPersonId: Integer;
     function Conn: TFDConnection;
+    // Holt alle Speichertabellen dieses Moduls aus dem zentralen
+    // Datenmodul (geklont) bzw. holt sie notfalls selbst.
+    procedure TabellenLaden;
   public
     class function GetInstance: TObject;
     procedure OpenLohn;
@@ -97,28 +101,40 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms, Vcl.Dialogs,
-  PGManagerDm,
+  ZentraleDatenDm,
+  Vcl.Dialogs,
   MandantDm,
-  LohnFrm;
+  LohnFrm, System.SyncObjs;
+
+var
+  GSperreLohn: TCriticalSection;
 
 class function TdmLohn.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmLohn) then
+  begin
+    GSperreLohn.Enter;
+    try
+      if not Assigned(dmLohn) then
+        Application.CreateForm(TdmLohn, dmLohn);
+    finally
+      GSperreLohn.Leave;
+    end;
+  end;
   Result := dmLohn;
 end;
 
 function TdmLohn.Conn: TFDConnection;
 begin
-  Result := PGManagerDm.dmPGManager.FDConnection1;
+  Result := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 end;
 
 procedure TdmLohn.DataModuleCreate(Sender: TObject);
 begin
   qryPerioden.Connection   := Conn;
   qryPositionen.Connection := Conn;
-  tblLohn.Connection       := Conn;
-  tblZulage.Connection     := Conn;
-  tblAbzug.Connection      := Conn;
   qryPersonen.Connection   := Conn;
 
   tblLohn.UpdateOptions.AutoIncFields   := 'lohn_id';
@@ -178,7 +194,8 @@ begin
 
   tblLohn.Filtered := False;
   if not tblLohn.Active then
-    tblLohn.Open;
+    // Speichertabellen kommen aus dem zentralen Datenmodul
+    TabellenLaden;
   if APersonId > 0 then
     tblLohn.Filter := Format('mandant_id=%d and person_id=%d',
       [FMandantId, APersonId])
@@ -188,7 +205,6 @@ begin
 
   tblZulage.Filtered := False;
   if not tblZulage.Active then
-    tblZulage.Open;
   if APersonId > 0 then
     tblZulage.Filter := Format('mandant_id=%d and person_id=%d',
       [FMandantId, APersonId])
@@ -201,7 +217,6 @@ procedure TdmLohn.LadeAbzuege;
 begin
   tblAbzug.Filtered := False;
   if not tblAbzug.Active then
-    tblAbzug.Open;
   tblAbzug.Filter := Format('mandant_id=%d', [FMandantId]);
   tblAbzug.Filtered := True;
 end;
@@ -459,5 +474,22 @@ begin
     frmLohn := TfrmLohn.Create(Application);
   frmLohn.Show;
 end;
+
+
+procedure TdmLohn.TabellenLaden;
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
+    Zuordnung(tblAbzug, 'lohn_abzugsart'),
+    Zuordnung(tblLohn, 'person_lohn'),
+    Zuordnung(tblZulage, 'lohn_zulage')]);
+end;
+
+
+
+initialization
+  GSperreLohn := TCriticalSection.Create;
+
+finalization
+  GSperreLohn.Free;
 
 end.

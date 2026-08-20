@@ -18,7 +18,7 @@ unit AnwesenheitDm;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.DateUtils,
+  Winapi.Windows, System.SysUtils, System.Classes, System.DateUtils,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
   FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
@@ -28,6 +28,7 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
@@ -118,13 +119,27 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms, Vcl.Dialogs,
-  PGManagerDm,
+  Vcl.Dialogs,
   MandantDm,
-  AnwesenheitFrm;
+  AnwesenheitFrm, System.SyncObjs, ZentraleDatenDm;
+
+var
+  GSperreAnwesenheit: TCriticalSection;
 
 class function TdmAnwesenheit.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmAnwesenheit) then
+  begin
+    GSperreAnwesenheit.Enter;
+    try
+      if not Assigned(dmAnwesenheit) then
+        Application.CreateForm(TdmAnwesenheit, dmAnwesenheit);
+    finally
+      GSperreAnwesenheit.Leave;
+    end;
+  end;
   Result := dmAnwesenheit;
 end;
 
@@ -134,9 +149,9 @@ var
 begin
   for I := 0 to ComponentCount - 1 do
     if Components[I] is TFDCustomQuery then
-      TFDCustomQuery(Components[I]).Connection := PGManagerDm.dmPGManager.FDConnection1
+      TFDCustomQuery(Components[I]).Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung
     else if Components[I] is TFDTable then
-      TFDTable(Components[I]).Connection := PGManagerDm.dmPGManager.FDConnection1;
+      TFDTable(Components[I]).Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 
   // Alle Listen kommen aus Datenbankfunktionen — kein Inline-Join hier.
   qryTag.SQL.Text          := 'SELECT * FROM fn_tagesliste(:m, :d)';
@@ -186,7 +201,7 @@ var
 begin
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := ASql;
     for I := 0 to High(AParams) do
       LQry.Params[I].Value := AParams[I];
@@ -205,7 +220,7 @@ var
 begin
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := ASql;
     for I := 0 to High(AParams) do
       LQry.Params[I].Value := AParams[I];
@@ -367,7 +382,7 @@ var
 begin
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text :=
       'UPDATE anwesenheit_check SET anwesend = :a, entschuldigt = :e, ' +
       '  art_id = :art, fehlminuten = :f, bemerkung = :b, erfasst_am = now() ' +
@@ -500,7 +515,7 @@ begin
 
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text :=
       'INSERT INTO person_arbeitszeit (mandant_id, person_id, gueltig_ab, ' +
       '  erfassungsart, raster_id, pensum_prozent, adresse_id) ' +
@@ -572,7 +587,7 @@ procedure TdmAnwesenheit.OpenAnwesenheit;
   end;
 
 begin
-  if not PGManagerDm.dmPGManager.FDConnection1.Connected then
+  if not TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung.Connected then
   begin
     ShowMessage('Bitte zuerst im PGManager die Datenbankverbindung herstellen.', '');
     Exit;
@@ -597,5 +612,12 @@ begin
     frmAnwesenheit := TfrmAnwesenheit.Create(Application);
   frmAnwesenheit.Show;
 end;
+
+
+initialization
+  GSperreAnwesenheit := TCriticalSection.Create;
+
+finalization
+  GSperreAnwesenheit.Free;
 
 end.

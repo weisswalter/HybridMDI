@@ -20,9 +20,8 @@ object dmLohn: TdmLohn
     Left = 152
     Top = 96
   end
-  object tblLohn: TFDTable
+  object tblLohn: TFDMemTable
     OnNewRecord = tblLohnNewRecord
-    TableName = 'person_lohn'
     Left = 40
     Top = 160
   end
@@ -31,9 +30,8 @@ object dmLohn: TdmLohn
     Left = 152
     Top = 160
   end
-  object tblZulage: TFDTable
+  object tblZulage: TFDMemTable
     OnNewRecord = tblZulageNewRecord
-    TableName = 'lohn_zulage'
     Left = 40
     Top = 224
   end
@@ -42,9 +40,8 @@ object dmLohn: TdmLohn
     Left = 152
     Top = 224
   end
-  object tblAbzug: TFDTable
+  object tblAbzug: TFDMemTable
     OnNewRecord = tblAbzugNewRecord
-    TableName = 'lohn_abzugsart'
     Left = 40
     Top = 288
   end

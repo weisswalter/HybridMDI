@@ -43,11 +43,12 @@ uses
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
   MailGraph,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmMail = class(TdmModuleTemplate)
-    tblKonto: TFDTable;
+    tblKonto: TFDMemTable;
     dstblKonto: TDataSource;
     qryOrdner: TFDQuery;
     dstblOrdner: TDataSource;
@@ -55,7 +56,7 @@ type
     dstblNachrichten: TDataSource;
     qryAnhaenge: TFDQuery;
     dstblAnhaenge: TDataSource;
-    tblDokument: TFDTable;
+    tblDokument: TFDMemTable;
     dstblDokument: TDataSource;
     qryOptProtokoll: TFDQuery;
     dsOptProtokoll: TDataSource;
@@ -77,6 +78,9 @@ type
     // Graph nichts davon merken.
     FGraph: TGraphMail;
     function Graph: TGraphMail;
+    // Holt alle Speichertabellen dieses Moduls aus dem zentralen
+    // Datenmodul (geklont) bzw. holt sie notfalls selbst.
+    procedure TabellenLaden;
   public
     destructor Destroy; override;
     class function GetInstance: TObject;
@@ -151,24 +155,39 @@ implementation
 {$R *.dfm}
 
 uses
+  ZentraleDatenDm,
   Winapi.ShellAPI, Winapi.Windows,
-  Vcl.Forms, Vcl.Dialogs,
-  PGManagerDm,
+  Vcl.Dialogs,
   MandantDm,
   CSharpDm,
-  MailFrm;
+  MailFrm, System.SyncObjs;
+
+var
+  GSperreMail: TCriticalSection;
 
 class function TdmMail.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmMail) then
+  begin
+    GSperreMail.Enter;
+    try
+      if not Assigned(dmMail) then
+        Application.CreateForm(TdmMail, dmMail);
+    finally
+      GSperreMail.Leave;
+    end;
+  end;
   Result := dmMail;
 end;
 
 procedure TdmMail.DataModuleCreate(Sender: TObject);
 begin
-  qryOptProtokoll.Connection  := PGManagerDm.dmPGManager.FDConnection1;
-  qryOptSicherheit.Connection := PGManagerDm.dmPGManager.FDConnection1;
-  qryOptAuth.Connection       := PGManagerDm.dmPGManager.FDConnection1;
-  qryOptFlow.Connection       := PGManagerDm.dmPGManager.FDConnection1;
+  qryOptProtokoll.Connection  := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+  qryOptSicherheit.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+  qryOptAuth.Connection       := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+  qryOptFlow.Connection       := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 
   // Auswahllisten kommen aus email_option, nicht als feste Items im Formular.
   // Neue Werte lassen sich damit ohne Neuuebersetzung ergaenzen.
@@ -181,11 +200,9 @@ begin
   qryOptFlow.SQL.Text :=
     'SELECT wert, anzeige FROM email_option WHERE feld = ''oauth_flow'' ORDER BY reihenfolge';
 
-  tblKonto.Connection       := PGManagerDm.dmPGManager.FDConnection1;
-  qryOrdner.Connection      := PGManagerDm.dmPGManager.FDConnection1;
-  qryNachrichten.Connection := PGManagerDm.dmPGManager.FDConnection1;
-  qryAnhaenge.Connection    := PGManagerDm.dmPGManager.FDConnection1;
-  tblDokument.Connection    := PGManagerDm.dmPGManager.FDConnection1;
+  qryOrdner.Connection      := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+  qryNachrichten.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+  qryAnhaenge.Connection    := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
 
   tblKonto.UpdateOptions.AutoIncFields := 'konto_id';
 
@@ -245,7 +262,8 @@ var
 begin
   Result := False;
   if not tblDokument.Active then
-    tblDokument.Open;
+    // Speichertabellen kommen aus dem zentralen Datenmodul
+    TabellenLaden;
   if not tblDokument.Locate('dokument_id', ADokumentId, []) then
   begin
     ShowMessage('Dokument nicht gefunden.', '');
@@ -294,7 +312,7 @@ var
 begin
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'UPDATE email_nachricht SET gelesen = :g WHERE nachricht_id = :n';
     LQry.ParamByName('g').AsBoolean := AGelesen;
     LQry.ParamByName('n').AsInteger := ANachrichtId;
@@ -379,7 +397,7 @@ begin
 
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'SELECT fn_konto_passwort_setzen(:k, :p, :s)';
     LQry.ParamByName('k').AsInteger := AKontoId;
     LQry.ParamByName('p').AsString := APasswort;
@@ -409,7 +427,7 @@ begin
 
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'SELECT fn_konto_passwort_klartext(:k, :p)';
     LQry.ParamByName('k').AsInteger := AKontoId;
     LQry.ParamByName('p').AsString := APasswort;
@@ -434,7 +452,7 @@ begin
     Exit;
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'SELECT fn_konto_passwort_status(:k)';
     LQry.ParamByName('k').AsInteger := AKontoId;
     LQry.Open;
@@ -457,7 +475,7 @@ begin
 
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     if AKlartext then
     begin
       LQry.SQL.Text := 'SELECT fn_konto_smtp_passwort_klartext(:k, :p)';
@@ -495,7 +513,7 @@ begin
     Exit;
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'SELECT fn_konto_smtp_passwort_status(:k)';
     LQry.ParamByName('k').AsInteger := AKontoId;
     LQry.Open;
@@ -515,7 +533,7 @@ begin
     Exit;
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'SELECT fn_konto_hat_passwort(:k)';
     LQry.ParamByName('k').AsInteger := AKontoId;
     LQry.Open;
@@ -536,7 +554,7 @@ end;
 function TdmMail.Graph: TGraphMail;
 begin
   if FGraph = nil then
-    FGraph := TGraphMail.Create(PGManagerDm.dmPGManager.FDConnection1, FSchluessel);
+    FGraph := TGraphMail.Create(TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung, FSchluessel);
   // Der Schluessel kann sich waehrend der Sitzung noch aendern (der Anwender
   // tippt ihn erst beim ersten Passwort ein) — deshalb jedes Mal nachziehen.
   FGraph.Schluessel := FSchluessel;
@@ -566,7 +584,7 @@ begin
 
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text :=
       'SELECT protokoll, (oauth_refresh_crypt IS NOT NULL) AS angemeldet ' +
       'FROM email_konto WHERE konto_id = :k';
@@ -606,7 +624,7 @@ begin
     Exit;
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'SELECT protokoll FROM email_konto WHERE konto_id = :k';
     LQry.ParamByName('k').AsInteger := AKontoId;
     LQry.Open;
@@ -677,7 +695,7 @@ var
 begin
   LQry := TFDQuery.Create(nil);
   try
-    LQry.Connection := PGManagerDm.dmPGManager.FDConnection1;
+    LQry.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
     LQry.SQL.Text := 'SELECT konto_id FROM email_nachricht WHERE nachricht_id = :n';
     LQry.ParamByName('n').AsInteger := ANachrichtId;
     LQry.Open;
@@ -704,7 +722,7 @@ end;
 
 procedure TdmMail.OpenMail;
 begin
-  if not PGManagerDm.dmPGManager.FDConnection1.Connected then
+  if not TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung.Connected then
   begin
     ShowMessage('Bitte zuerst im PGManager die Datenbankverbindung herstellen.', '');
     Exit;
@@ -723,15 +741,29 @@ begin
   qryOptFlow.Open;
 
   tblKonto.Filtered := False;
-  tblKonto.Open;
   tblKonto.Filter := Format('mandant_id=%d', [FMandantId]);
   tblKonto.Filtered := True;
 
-  tblDokument.Open;
 
   if not Assigned(frmMail) then
     frmMail := TfrmMail.Create(Application);
   frmMail.Show;
 end;
+
+
+procedure TdmMail.TabellenLaden;
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
+    Zuordnung(tblDokument, 'dokument'),
+    Zuordnung(tblKonto, 'email_konto')]);
+end;
+
+
+
+initialization
+  GSperreMail := TCriticalSection.Create;
+
+finalization
+  GSperreMail.Free;
 
 end.

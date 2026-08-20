@@ -1,0 +1,14 @@
+Kopfschalter: 10   Tabsheets im Panel: 0
+
+  0 Personentyp        -> tsPersonentyp
+  1 Rollentyp          -> tsRollentyp
+  2 Adressentyp        -> tsAdressentyp
+  3 Emailtyp           -> tsEmailtyp
+  4 Telefonnummertyp   -> tsTelefonnummertyp
+  5 Rechnungstyp       -> tsRechnungstyp
+  6 Lead-Quelle        -> tsLeadquellentyp
+  7 Kompetenztyp       -> tsKompetenztyp
+  8 Artikelkategorie   -> tsKategorie
+  9 Website            -> tsWebsite
+
+Jeder Reiter ist erreichbar.

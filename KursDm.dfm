@@ -2,9 +2,8 @@ object dmKurs: TdmKurs
   Left = 0
   Top = 0
   OnCreate = DataModuleCreate
-  object tblKurs: TFDTable
+  object tblKurs: TFDMemTable
     OnNewRecord = tblKursNewRecord
-    TableName = 'kurs'
     Left = 40
     Top = 32
   end

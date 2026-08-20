@@ -1,0 +1,16 @@
+Artikelstamm geoeffnet                         True
+Kategorien in der Auswahl (6)                  True   Rohmaterial,Halbfertig,Fertigprodukt,Werkzeug,Verbrauch,Handelsware
+Vorher nicht zugeordnet                        True
+Haken setzen                                   True
+Zweite Kategorie dazu                          True
+Nochmal setzen bleibt eine Zeile               True
+Haken wegnehmen                                True
+Wieder leer                                    True
+Fremder Mandant wird abgelehnt                 True
+Einstellungsfenster offen                      True
+  ... Kategorie-Reiter ist Nummer 8            True
+Neue Kategorie gespeichert                     True
+Kategorie geaendert                            True
+  ... leere Bezeichnung wird abgelehnt         True
+
+Alles in Ordnung.

@@ -1,4 +1,4 @@
-unit MandantDm;
+﻿unit MandantDm;
 
 // Mandanten-Verwaltung — haelt den aktuell gewaehlten Mandanten (CurrentMandantId)
 // als zentralen Kontext, den andere Module (z.B. Personen) verwenden.
@@ -18,12 +18,13 @@ uses
   Data.DB,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmMandant = class(TdmModuleTemplate)
-    FDConnection: TFDConnection;
-    qryMandant: TFDQuery;
+    // Kopie aus dem zentralen Datenmodul statt eigener Query.
+    memMandant: TFDMemTable;
     dsMandant: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
@@ -49,6 +50,9 @@ var
 
 implementation
 
+uses
+  System.SyncObjs, System.Variants, ZentraleDatenDm;
+
 {$R *.dfm}
 
 procedure TdmMandant.DataModuleCreate(Sender: TObject);
@@ -59,53 +63,66 @@ end;
 
 procedure TdmMandant.DataModuleDestroy(Sender: TObject);
 begin
-  if qryMandant.Active then
-    qryMandant.Close;
-  if FDConnection.Connected then
-    FDConnection.Close;
+   if memMandant.Active then
+     memMandant.Close;
 end;
+
+var
+  GSperreMandant: TCriticalSection;
 
 class function TdmMandant.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmMandant) then
+  begin
+    GSperreMandant.Enter;
+    try
+      if not Assigned(dmMandant) then
+        Application.CreateForm(TdmMandant, dmMandant);
+    finally
+      GSperreMandant.Leave;
+    end;
+  end;
   Result := dmMandant;
 end;
 
 procedure TdmMandant.SetupConnection;
 begin
-  FDConnection.Params.DriverID  := 'PG';
-  FDConnection.Params.Database  := 'TRTHeisenberg';
-  FDConnection.Params.UserName  := 'postgres';
-  FDConnection.Params.Password  := 'postgres';
-  FDConnection.Params.Add('Server=localhost');
-  FDConnection.Params.Add('Port=5432');
-  FDConnection.LoginPrompt := False;
-
-  qryMandant.Connection := FDConnection;
-  qryMandant.SQL.Text   :=
-    'SELECT mandant_id, mandanten_name FROM mandant ORDER BY mandanten_name';
-
-  dsMandant.DataSet := qryMandant;
+  // Keine eigene Verbindung mehr: gelesen wird als Kopie aus dem zentralen
+  // Datenmodul, geschrieben ueber dessen SpAufrufen.
+  dsMandant.DataSet := memMandant;
 end;
 
 procedure TdmMandant.LoadMandanten;
 begin
-  if not FDConnection.Connected then
-    FDConnection.Open;
-  if not qryMandant.Active then
-    qryMandant.Open;
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen(
+    [Zuordnung(memMandant, 'mandant')]);
+  // Die Sortierung stand frueher im ORDER BY der Query.
+  memMandant.IndexFieldNames := 'mandanten_name';
 end;
 
 function TdmMandant.CreateMandant(const AName: string): Integer;
+var
+  LZentral: TdmZentraleDaten;
+  LId: Variant;
 begin
-  if not FDConnection.Connected then
-    FDConnection.Open;
+  Result := 0;
+  LZentral := TdmZentraleDaten(TdmZentraleDaten.GetInstance);
+  LId := LZentral.SpAufrufen('fn_mandant_speichern', [Null, AName, False]);
+  if VarIsNull(LId) then
+    Exit;
 
-  Result := FDConnection.ExecSQLScalar(
-    'INSERT INTO mandant (mandanten_name) VALUES (:n) RETURNING mandant_id',
-    [AName]);
-
-  if qryMandant.Active then
-    qryMandant.Refresh;
+  Result := LId;
+  LZentral.TabelleAuffrischen('mandant');
+  LoadMandanten;
 end;
+
+
+initialization
+  GSperreMandant := TCriticalSection.Create;
+
+finalization
+  GSperreMandant.Free;
 
 end.

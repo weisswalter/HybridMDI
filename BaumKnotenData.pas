@@ -96,6 +96,16 @@ function BaueBaumAusEbenen(ADataSet: TDataSet;
 // Boolean als Ja/leer, NULL als Leerstring.
 function FeldText(AFeld: TField): string;
 
+// Haengt an jeden Knoten (rekursiv) eine "+ Neu"-Zeile. Ueber die laeuft das
+// Anlegen im Baum: der Platzhalter traegt in ElternId den Knoten, unter dem
+// eingehaengt wird.
+//
+// Steht seit 20.08.2026 in der Schnittstelle - ein Modul, das seinen Baum
+// selbst im Speicher aufbaut (statt ueber BaueBaumAusEbenen), braucht sie
+// ebenfalls.
+procedure PlatzhalterAnhaengen(AKinder: TList<IBaumKnoten>;
+  const AText: string);
+
 implementation
 
 { TBaumKnoten }

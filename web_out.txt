@@ -1,0 +1,12 @@
+Fenster offen                                  True
+Website-Reiter ist Nummer 9                    True
+Werte gelesen                                  True   Shop=true, Waehrung=EUR, MwSt=19.0
+Shop eingeschaltet                             True
+Shop ausgeschaltet                             True
+Waehrung geaendert                             True
+  ... zurueckgesetzt                           True
+Sicht der Website stimmt ueberein              True
+Leerer Wert bringt die Sicht nicht um          True   mwst=0
+Ausgangszustand wiederhergestellt              True   Shop=true
+
+Alles in Ordnung.

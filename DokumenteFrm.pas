@@ -110,8 +110,7 @@ begin
       Exit;
     end;
 
-    LTypId := dmDokumentOcr.TypIdZuKategorie(
-      dmDokumente.FDConnection, LErgebnis.Kategorie);
+    LTypId := dmDokumentOcr.TypIdZuKategorie(LErgebnis.Kategorie);
 
     if LDs.State in dsEditModes then
       LDs.Post;
@@ -120,7 +119,11 @@ begin
       dmDokumentOcr.InDatensatzSchreiben(LDs, LErgebnis, LTypId);
       LDs.FieldByName('datei_pfad').AsString := LDlg.FileName;
       LDs.FieldByName('quelle').AsString := 'OCR';
-      LDs.Post;
+      // Speichern geht ueber die Datenbankfunktion, nicht per Post gegen
+      // die Datenbank - der Post innerhalb von SatzSpeichern bringt die
+      // Feldwerte nur aus dem Editiermodus in den Satz.
+      if not dmDokumente.SatzSpeichern then
+        raise Exception.Create('Das Dokument konnte nicht gespeichert werden.');
     except
       LDs.Cancel;
       raise;
@@ -148,6 +151,11 @@ end;
 
 procedure TfrmDokumente.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  // ZURUECK auf caFree am 09.08.2026: MDI-Kinder lassen sich
+  // nicht verstecken - weder per caHide (VCL wirft) noch per
+  // ShowWindow (der MDI-Client zeigt sie wieder an). Mit caNone
+  // gingen die Fenster gar nicht mehr zu. Das Wiederoeffnen
+  // bleibt damit langsam; ein anderer Weg muss her.
   Action := caFree;
   frmDokumente := nil;
 end;

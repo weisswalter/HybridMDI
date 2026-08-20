@@ -1,21 +1,15 @@
-object frmLager: TfrmLager
-  Left = 0
-  Top = 0
+inherited frmLager: TfrmLager
   Caption = 'Lager'
   ClientHeight = 700
   ClientWidth = 1100
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
-  Font.Style = []
   FormStyle = fsMDIChild
   Visible = True
-  OnClose = FormClose
+  StyleElements = [seFont, seClient, seBorder]
   OnCreate = FormCreate
+  ExplicitWidth = 1116
+  ExplicitHeight = 739
   TextHeight = 15
-  object pnlKopf: TPanel
+  object pnlKopf: TPanel [0]
     Left = 0
     Top = 0
     Width = 1100
@@ -26,6 +20,7 @@ object frmLager: TfrmLager
     ParentBackground = False
     ShowCaption = False
     TabOrder = 0
+    ExplicitWidth = 1098
     object hdrLager: TJvNavPanelHeader
       Left = 4
       Top = 0
@@ -35,7 +30,7 @@ object frmLager: TfrmLager
       Caption = 'Lager'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindow
-      Font.Height = -16
+      Font.Height = -20
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
@@ -56,7 +51,7 @@ object frmLager: TfrmLager
       Caption = 'R'#228'ume'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindow
-      Font.Height = -16
+      Font.Height = -20
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
@@ -77,7 +72,7 @@ object frmLager: TfrmLager
       Caption = 'Regale'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindow
-      Font.Height = -16
+      Font.Height = -20
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
@@ -98,7 +93,7 @@ object frmLager: TfrmLager
       Caption = 'Adressinfo'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindow
-      Font.Height = -16
+      Font.Height = -20
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
@@ -119,7 +114,7 @@ object frmLager: TfrmLager
       Caption = 'Ausstattung'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindow
-      Font.Height = -16
+      Font.Height = -20
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
@@ -131,7 +126,7 @@ object frmLager: TfrmLager
       OnClick = KopfClick
     end
   end
-  object pctrModule: TPageControl
+  object pctrModule: TPageControl [1]
     Left = 0
     Top = 31
     Width = 1100
@@ -141,6 +136,8 @@ object frmLager: TfrmLager
     Style = tsFlatButtons
     TabHeight = 10
     TabOrder = 1
+    ExplicitWidth = 1098
+    ExplicitHeight = 661
     object tsLager: TTabSheet
       Margins.Left = 0
       Margins.Top = 25
@@ -167,7 +164,7 @@ object frmLager: TfrmLager
           Caption = 'Erster'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -187,7 +184,7 @@ object frmLager: TfrmLager
           Caption = 'Zur'#252'ck'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -207,7 +204,7 @@ object frmLager: TfrmLager
           Caption = 'Weiter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -227,7 +224,7 @@ object frmLager: TfrmLager
           Caption = 'Letzter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -247,7 +244,7 @@ object frmLager: TfrmLager
           Caption = 'Neu'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -267,7 +264,7 @@ object frmLager: TfrmLager
           Caption = #196'ndern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -287,7 +284,7 @@ object frmLager: TfrmLager
           Caption = 'Speichern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -307,7 +304,7 @@ object frmLager: TfrmLager
           Caption = 'Abbrechen'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -327,7 +324,7 @@ object frmLager: TfrmLager
           Caption = 'Neu laden'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -541,7 +538,7 @@ object frmLager: TfrmLager
           Caption = 'Erster'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -561,7 +558,7 @@ object frmLager: TfrmLager
           Caption = 'Zur'#252'ck'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -581,7 +578,7 @@ object frmLager: TfrmLager
           Caption = 'Weiter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -601,7 +598,7 @@ object frmLager: TfrmLager
           Caption = 'Letzter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -621,7 +618,7 @@ object frmLager: TfrmLager
           Caption = 'Neu'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -641,7 +638,7 @@ object frmLager: TfrmLager
           Caption = #196'ndern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -661,7 +658,7 @@ object frmLager: TfrmLager
           Caption = 'Speichern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -681,7 +678,7 @@ object frmLager: TfrmLager
           Caption = 'Abbrechen'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -701,7 +698,7 @@ object frmLager: TfrmLager
           Caption = 'Neu laden'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -904,7 +901,7 @@ object frmLager: TfrmLager
             Caption = 'Erster'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -924,7 +921,7 @@ object frmLager: TfrmLager
             Caption = 'Zur'#252'ck'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -944,7 +941,7 @@ object frmLager: TfrmLager
             Caption = 'Weiter'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -964,7 +961,7 @@ object frmLager: TfrmLager
             Caption = 'Letzter'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -984,7 +981,7 @@ object frmLager: TfrmLager
             Caption = 'Neu'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1004,7 +1001,7 @@ object frmLager: TfrmLager
             Caption = #196'ndern'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1024,7 +1021,7 @@ object frmLager: TfrmLager
             Caption = 'Speichern'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1044,7 +1041,7 @@ object frmLager: TfrmLager
             Caption = 'Abbrechen'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1064,7 +1061,7 @@ object frmLager: TfrmLager
             Caption = 'Neu laden'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1155,7 +1152,7 @@ object frmLager: TfrmLager
           Caption = 'Erster'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1175,7 +1172,7 @@ object frmLager: TfrmLager
           Caption = 'Zur'#252'ck'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1195,7 +1192,7 @@ object frmLager: TfrmLager
           Caption = 'Weiter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1215,7 +1212,7 @@ object frmLager: TfrmLager
           Caption = 'Letzter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1235,7 +1232,7 @@ object frmLager: TfrmLager
           Caption = 'Neu'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1255,7 +1252,7 @@ object frmLager: TfrmLager
           Caption = #196'ndern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1275,7 +1272,7 @@ object frmLager: TfrmLager
           Caption = 'Speichern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1295,7 +1292,7 @@ object frmLager: TfrmLager
           Caption = 'Abbrechen'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1315,7 +1312,7 @@ object frmLager: TfrmLager
           Caption = 'Neu laden'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1432,7 +1429,7 @@ object frmLager: TfrmLager
             Caption = 'Erster'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1452,7 +1449,7 @@ object frmLager: TfrmLager
             Caption = 'Zur'#252'ck'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1472,7 +1469,7 @@ object frmLager: TfrmLager
             Caption = 'Weiter'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1492,7 +1489,7 @@ object frmLager: TfrmLager
             Caption = 'Letzter'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1512,7 +1509,7 @@ object frmLager: TfrmLager
             Caption = 'Neu'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1532,7 +1529,7 @@ object frmLager: TfrmLager
             Caption = #196'ndern'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1552,7 +1549,7 @@ object frmLager: TfrmLager
             Caption = 'Speichern'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1572,7 +1569,7 @@ object frmLager: TfrmLager
             Caption = 'Abbrechen'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1592,7 +1589,7 @@ object frmLager: TfrmLager
             Caption = 'Neu laden'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Segoe UI'
             Font.Style = [fsBold]
             ParentFont = False
@@ -1731,7 +1728,7 @@ object frmLager: TfrmLager
           Caption = 'Erster'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1751,7 +1748,7 @@ object frmLager: TfrmLager
           Caption = 'Zur'#252'ck'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1771,7 +1768,7 @@ object frmLager: TfrmLager
           Caption = 'Weiter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1791,7 +1788,7 @@ object frmLager: TfrmLager
           Caption = 'Letzter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1811,7 +1808,7 @@ object frmLager: TfrmLager
           Caption = 'Neu'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1831,7 +1828,7 @@ object frmLager: TfrmLager
           Caption = #196'ndern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1851,7 +1848,7 @@ object frmLager: TfrmLager
           Caption = 'Speichern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1871,7 +1868,7 @@ object frmLager: TfrmLager
           Caption = 'Abbrechen'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1891,7 +1888,7 @@ object frmLager: TfrmLager
           Caption = 'Neu laden'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -1988,6 +1985,7 @@ object frmLager: TfrmLager
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 0
+        ExplicitWidth = 1090
         object btnErsterAusstattung: TJvNavPanelButtonTop
           Left = 0
           Top = 0
@@ -1998,7 +1996,7 @@ object frmLager: TfrmLager
           Caption = 'Erster'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -2018,7 +2016,7 @@ object frmLager: TfrmLager
           Caption = 'Zur'#252'ck'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -2038,7 +2036,7 @@ object frmLager: TfrmLager
           Caption = 'Weiter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -2058,7 +2056,7 @@ object frmLager: TfrmLager
           Caption = 'Letzter'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -2078,7 +2076,7 @@ object frmLager: TfrmLager
           Caption = 'Neu'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -2098,7 +2096,7 @@ object frmLager: TfrmLager
           Caption = #196'ndern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -2118,7 +2116,7 @@ object frmLager: TfrmLager
           Caption = 'Speichern'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -2138,7 +2136,7 @@ object frmLager: TfrmLager
           Caption = 'Abbrechen'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False
@@ -2158,7 +2156,7 @@ object frmLager: TfrmLager
           Caption = 'Neu laden'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -12
+          Font.Height = -15
           Font.Name = 'Segoe UI'
           Font.Style = [fsBold]
           ParentFont = False

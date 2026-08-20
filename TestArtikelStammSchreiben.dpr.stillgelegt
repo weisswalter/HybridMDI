@@ -1,0 +1,412 @@
+program TestArtikelStammSchreiben;
+{$APPTYPE CONSOLE}
+// Prueft, dass im Artikelstamm wirklich ANKOMMT, was eingegeben wird.
+//
+// Vorgeschichte: nach der Umstellung auf das zentrale Datenmodul sind
+// tblArtikel, tblArtikelFach und tblArtikelFoto TFDMemTable -- Speicherkopien.
+// Append/Edit + Post darauf hat nichts gespeichert, ohne Fehlermeldung. Das
+// Modul galt eine Woche lang als fertig und war faktisch nur lesbar. Dieser
+// Pruefstand vergleicht deshalb nach jedem Schreibvorgang gegen die Datenbank.
+//
+//   1. Artikel anlegen, aendern, Doppelnummer abweisen
+//   2. Felder, die das Fenster nicht zeigt (im_shop), duerfen nicht kippen
+//   3. Bestand je Fach setzen und aendern
+//   4. Fotos: Blob ueber SpAufrufenBlob, Text ohne Bild, Loeschen
+//
+// Der MDI-Rahmen startet minimiert und ausserhalb des Bildschirms, damit der
+// Pruefstand niemandem den Fokus wegreisst.
+uses
+  System.SysUtils, System.Classes, System.StrUtils, System.IOUtils,
+  Data.DB, Vcl.Forms, Vcl.Controls,
+  FireDAC.Comp.Client,
+  ZentraleDatenDm, MandantDm, ArtikelStammDm, ArtikelStammFrm;
+
+type
+  TMdiRahmen = class(TForm)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TMdiRahmen.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+  FormStyle := fsMDIForm;
+  Position := poDesigned;
+  Left := -32000;
+  Top := -32000;
+  WindowState := wsMinimized;
+end;
+
+var
+  LRahmen: TMdiRahmen;
+  LDm: TdmArtikelStamm;
+  LFunk: TFDQuery;
+  LFehler: Integer = 0;
+
+procedure Sag(const ATitel: string; AGut: Boolean; const AText: string = '');
+begin
+  Writeln(Format('%-48s %s%s', [ATitel, BoolToStr(AGut, True),
+    IfThen(AText = '', '', '   ' + AText)]));
+  if not AGut then
+    Inc(LFehler);
+end;
+
+function Zaehle(const ASql: string): Integer;
+begin
+  LFunk.Close;
+  LFunk.SQL.Text := ASql;
+  LFunk.Open;
+  Result := LFunk.Fields[0].AsInteger;
+end;
+
+function Text(const ASql: string): string;
+begin
+  LFunk.Close;
+  LFunk.SQL.Text := ASql;
+  LFunk.Open;
+  Result := LFunk.Fields[0].AsString;
+end;
+
+procedure Aufraeumen;
+begin
+  LFunk.ExecSQL('DELETE FROM artikel_foto WHERE beschreibung LIKE ''ZZPruef%'' ' +
+               'OR beschreibung LIKE ''zzpruef_zieh%'' ' +
+               'OR artikel_id IN (SELECT artikel_id FROM artikel ' +
+               '                   WHERE artikel_nr LIKE ''ZZPRUEF%'')');
+  LFunk.ExecSQL('DELETE FROM artikel_fach WHERE artikel_id IN ' +
+                '(SELECT artikel_id FROM artikel WHERE artikel_nr LIKE ''ZZPRUEF%'')');
+  LFunk.ExecSQL('DELETE FROM artikel WHERE artikel_nr LIKE ''ZZPRUEF%''');
+end;
+
+// ------------------------------------------------------------------- Artikel
+// Legt einen Artikel so an, wie es das Fenster tut: Append auf die MemTable,
+// Felder fuellen, Speichern druecken.
+function ArtikelPruefen: Integer;
+var
+  LMeldung: string;
+  LId, LZweit: Integer;
+begin
+  Result := 0;
+
+  LDm.tblArtikel.Append;
+  LDm.tblArtikel.FieldByName('artikel_nr').AsString   := 'ZZPRUEF-1';
+  LDm.tblArtikel.FieldByName('artikelname').AsString  := 'Pruefartikel';
+  LDm.tblArtikel.FieldByName('serien_nr').AsString    := 'SN-1';
+  LDm.tblArtikel.FieldByName('beschreibung').AsString := 'angelegt vom Pruefstand';
+  LMeldung := LDm.ArtikelSpeichern(LId);
+  Sag('Artikel anlegen', (LMeldung = '') and (LId > 0), LMeldung);
+
+  Sag('  ... steht in der Tabelle',
+      Zaehle(Format('SELECT count(*) FROM artikel WHERE artikel_id=%d ' +
+                    'AND artikel_nr=''ZZPRUEF-1'' AND mandant_id=1', [LId])) = 1);
+
+  Sag('  ... Kopie steht auf dem neuen Satz',
+      LDm.tblArtikel.FieldByName('artikel_id').AsInteger = LId);
+
+  // Aendern
+  LDm.tblArtikel.Edit;
+  LDm.tblArtikel.FieldByName('artikelname').AsString := 'Pruefartikel geaendert';
+  LMeldung := LDm.ArtikelSpeichern(LId);
+  Sag('Artikel aendern', (LMeldung = '') and
+      (Text(Format('SELECT artikelname FROM artikel WHERE artikel_id=%d', [LId])) =
+       'Pruefartikel geaendert'), LMeldung);
+
+  // Was das Fenster nicht zeigt, darf beim Speichern nicht kippen.
+  LFunk.ExecSQL(Format('UPDATE artikel SET im_shop=true WHERE artikel_id=%d', [LId]));
+  LDm.ArtikelNachladen(LId);
+  LDm.tblArtikel.Edit;
+  LDm.tblArtikel.FieldByName('modul_nr').AsString := 'MOD-1';
+  LDm.ArtikelSpeichern(LId);
+  Sag('  ... im_shop ueberlebt das Speichern',
+      Zaehle(Format('SELECT count(*) FROM artikel WHERE artikel_id=%d ' +
+                    'AND im_shop=true', [LId])) = 1);
+
+  // Doppelte Artikelnummer
+  LDm.tblArtikel.Append;
+  LDm.tblArtikel.FieldByName('artikel_nr').AsString  := 'ZZPRUEF-1';
+  LDm.tblArtikel.FieldByName('artikelname').AsString := 'Doppelt';
+  LMeldung := LDm.ArtikelSpeichern(LZweit);
+  Sag('Doppelte Artikelnummer wird abgewiesen',
+      (LMeldung <> '') and (Pos('gibt es bei diesem Mandanten schon', LMeldung) > 0),
+      LMeldung);
+  if LDm.tblArtikel.State in dsEditModes then
+    LDm.tblArtikel.Cancel;
+
+  // Pflichtfeld leer
+  LDm.tblArtikel.Append;
+  LDm.tblArtikel.FieldByName('artikel_nr').AsString  := 'ZZPRUEF-3';
+  LDm.tblArtikel.FieldByName('artikelname').AsString := '   ';
+  LMeldung := LDm.ArtikelSpeichern(LZweit);
+  Sag('Leere Bezeichnung wird abgewiesen', LMeldung <> '', LMeldung);
+  if LDm.tblArtikel.State in dsEditModes then
+    LDm.tblArtikel.Cancel;
+
+  Sag('  ... nichts Halbes stehengeblieben',
+      Zaehle('SELECT count(*) FROM artikel WHERE artikel_nr LIKE ''ZZPRUEF%''') = 1);
+
+  LDm.ArtikelNachladen(LId);
+  Result := LId;
+end;
+
+// ------------------------------------------------------------------- Bestand
+procedure BestandPruefen(AArtikelId: Integer);
+var
+  LFach: Integer;
+begin
+  LFunk.Close;
+  LFunk.SQL.Text := 'SELECT fach_id FROM regal_fach ORDER BY fach_id LIMIT 1';
+  LFunk.Open;
+  if LFunk.IsEmpty then
+  begin
+    Sag('Bestand', False, 'kein Regalfach vorhanden');
+    Exit;
+  end;
+  LFach := LFunk.Fields[0].AsInteger;
+
+  LDm.SetBestand(LFach, 7.5);
+  Sag('Bestand setzen kommt in der Datenbank an',
+      Zaehle(Format('SELECT count(*) FROM artikel_fach WHERE artikel_id=%d ' +
+                    'AND fach_id=%d AND bestand=7.5', [AArtikelId, LFach])) = 1);
+
+  LDm.SetBestand(LFach, 12);
+  Sag('  ... zweite Eingabe aendert, legt nicht doppelt an',
+      (Zaehle(Format('SELECT count(*) FROM artikel_fach WHERE artikel_id=%d ' +
+                     'AND fach_id=%d', [AArtikelId, LFach])) = 1) and
+      (Zaehle(Format('SELECT count(*) FROM artikel_fach WHERE artikel_id=%d ' +
+                     'AND fach_id=%d AND bestand=12', [AArtikelId, LFach])) = 1));
+
+  Sag('  ... Kopie im Speicher zeigt denselben Wert',
+      LDm.tblArtikelFach.Locate('fach_id', LFach, []) and
+      (LDm.tblArtikelFach.FieldByName('bestand').AsFloat = 12));
+end;
+
+// --------------------------------------------------------------------- Fotos
+// Ein echtes PNG (1x1 Pixel). Es muss ein darstellbares Bild sein: das
+// Formular haengt mit einem TDBImage an derselben MemTable und zeichnet nach
+// jedem Nachladen neu. Die Bytes enthalten Werte ueber 127 (89, C4, AE, 9C) --
+// daran faellt auf, wenn unterwegs jemand sie als Zeichen umdeutet.
+const
+  CPngHex =
+    '89504e470d0a1a0a0000000d49484452000000010000000108060000' +
+    '001f15c4890000000b49444154789c6360000200000500017a5eab3f' +
+    '0000000049454e44ae426082';
+
+function AlsHex(const ABytes: TBytes): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to High(ABytes) do
+    Result := Result + LowerCase(IntToHex(ABytes[I], 2));
+end;
+
+function PruefBildSchreiben(const ADatei: string): TBytes;
+var
+  I: Integer;
+begin
+  SetLength(Result, Length(CPngHex) div 2);
+  for I := 0 to High(Result) do
+    Result[I] := StrToInt('$' + Copy(CPngHex, I * 2 + 1, 2));
+  TFile.WriteAllBytes(ADatei, Result);
+end;
+
+procedure FotosPruefen(AArtikelId: Integer);
+var
+  LDatei: string;
+  LBytes: TBytes;
+  LId1, LId2: Integer;
+begin
+  LDatei := TPath.Combine(TPath.GetTempPath, 'zzpruef_foto.png');
+  LBytes := PruefBildSchreiben(LDatei);
+  try
+    LId1 := LDm.FotoSpeichern(0, LDatei, 'ZZPruef Bild eins', 0);
+    Sag('Foto anlegen liefert eine foto_id', LId1 > 0, 'foto_id=' + IntToStr(LId1));
+
+    Sag('  ... Satz steht in artikel_foto',
+        Zaehle(Format('SELECT count(*) FROM artikel_foto WHERE foto_id=%d ' +
+                      'AND artikel_id=%d AND mandant_id=1', [LId1, AArtikelId])) = 1);
+
+    Sag('  ... alle Bytes sind angekommen',
+        Zaehle(Format('SELECT octet_length(foto) FROM artikel_foto ' +
+                      'WHERE foto_id=%d', [LId1])) = Length(LBytes));
+
+    Sag('  ... Bild ist Byte fuer Byte gleich',
+        Text(Format('SELECT encode(foto, ''hex'') FROM artikel_foto ' +
+                    'WHERE foto_id=%d', [LId1])) = AlsHex(LBytes));
+
+    Sag('  ... reihenfolge auf 1 gesetzt',
+        Zaehle(Format('SELECT reihenfolge FROM artikel_foto WHERE foto_id=%d',
+                      [LId1])) = 1);
+
+    LDm.FotoSpeichern(LId1, '', 'ZZPruef geaendert', 0);
+    Sag('Speichern ohne Datei aendert nur den Text',
+        (Text(Format('SELECT beschreibung FROM artikel_foto WHERE foto_id=%d',
+                     [LId1])) = 'ZZPruef geaendert') and
+        (Zaehle(Format('SELECT octet_length(foto) FROM artikel_foto ' +
+                       'WHERE foto_id=%d', [LId1])) = Length(LBytes)));
+
+    LId2 := LDm.FotoSpeichern(0, LDatei, 'ZZPruef Bild zwei', 0);
+    Sag('Zweites Foto bekommt reihenfolge 2',
+        (LId2 > 0) and
+        (Zaehle(Format('SELECT reihenfolge FROM artikel_foto WHERE foto_id=%d',
+                       [LId2])) = 2));
+
+    Sag('Kopie im Speicher kennt beide',
+        Zaehle(Format('SELECT count(*) FROM artikel_foto WHERE artikel_id=%d',
+                      [AArtikelId])) = LDm.tblArtikelFoto.RecordCount);
+
+    LDm.FotoLoeschen(LId1);
+    LDm.FotoLoeschen(LId2);
+    Sag('Beide wieder geloescht',
+        Zaehle(Format('SELECT count(*) FROM artikel_foto WHERE foto_id IN (%d,%d)',
+                      [LId1, LId2])) = 0);
+  finally
+    if TFile.Exists(LDatei) then
+      TFile.Delete(LDatei);
+  end;
+end;
+
+// ── Foto-Schutz und Ziehen-und-Ablegen ──────────────────────────────────────
+// Der Fall, der in der Praxis aufgeschlagen ist: der Satzzeiger der
+// Fototabelle steht auf dem Bild eines ANDEREN Artikels. Frueher machte
+// "Foto laden" daraus ein UPDATE auf dieses fremde Bild -- danach zeigten
+// alle Artikel dasselbe Foto.
+procedure FotoSchutzPruefen(AArtikelA: Integer);
+var
+  LDatei: string;
+  LBytes: TBytes;
+  LArtikelB, LFotoA, LFotoB: Integer;
+  LMeldung: string;
+begin
+  LDatei := TPath.Combine(TPath.GetTempPath, 'zzpruef_foto.png');
+  LBytes := PruefBildSchreiben(LDatei);
+  try
+    // Zweiter Artikel
+    LDm.tblArtikel.Append;
+    LDm.tblArtikel.FieldByName('artikel_nr').AsString  := 'ZZPRUEF-B';
+    LDm.tblArtikel.FieldByName('artikelname').AsString := 'Pruefartikel B';
+    LDm.ArtikelSpeichern(LArtikelB);
+
+    LDm.tblArtikel.Locate('artikel_id', AArtikelA, []);
+    LFotoA := LDm.FotoSpeichern(0, LDatei, 'ZZPruef Bild von A', 0);
+    LDm.tblArtikel.Locate('artikel_id', LArtikelB, []);
+    LFotoB := LDm.FotoSpeichern(0, LDatei, 'ZZPruef Bild von B', 0);
+    Sag('Zwei Artikel, zwei eigene Fotos', (LFotoA > 0) and (LFotoB > 0) and
+        (LFotoA <> LFotoB));
+
+    // Jetzt der Angriff: bei Artikel B das Foto von A speichern wollen.
+    LMeldung := '';
+    try
+      LDm.FotoSpeichern(LFotoA, LDatei, 'darf nicht durchgehen', 0);
+    except
+      on E: Exception do
+        LMeldung := E.Message;
+    end;
+    Sag('Fremdes Foto laesst sich nicht ueberschreiben', LMeldung <> '',
+        LMeldung);
+    Sag('  ... A hat seine Beschreibung behalten',
+        Text(Format('SELECT beschreibung FROM artikel_foto WHERE foto_id=%d',
+                    [LFotoA])) = 'ZZPruef Bild von A');
+    Sag('  ... beide Fotos haengen noch am eigenen Artikel',
+        (Zaehle(Format('SELECT artikel_id FROM artikel_foto WHERE foto_id=%d',
+                       [LFotoA])) = AArtikelA) and
+        (Zaehle(Format('SELECT artikel_id FROM artikel_foto WHERE foto_id=%d',
+                       [LFotoB])) = LArtikelB));
+  finally
+    if TFile.Exists(LDatei) then
+      TFile.Delete(LDatei);
+  end;
+end;
+
+// Ziehen-und-Ablegen: mehrere Dateien auf einmal, eine davon kein Bild.
+procedure ZiehenPruefen(AArtikelId: Integer);
+var
+  LBild1, LBild2, LMuell: string;
+  LUebersprungen: TArray<string>;
+  LVorher, LAnzahl: Integer;
+begin
+  LBild1 := TPath.Combine(TPath.GetTempPath, 'zzpruef_zieh1.png');
+  LBild2 := TPath.Combine(TPath.GetTempPath, 'zzpruef_zieh2.png');
+  LMuell := TPath.Combine(TPath.GetTempPath, 'zzpruef_kein_bild.txt');
+  PruefBildSchreiben(LBild1);
+  PruefBildSchreiben(LBild2);
+  TFile.WriteAllText(LMuell, 'das ist kein Bild');
+  try
+    LDm.tblArtikel.Locate('artikel_id', AArtikelId, []);
+    LVorher := Zaehle(Format('SELECT count(*) FROM artikel_foto WHERE artikel_id=%d',
+                             [AArtikelId]));
+
+    LAnzahl := LDm.FotosAusDateien([LBild1, LMuell, LBild2], LUebersprungen);
+
+    Sag('Ziehen: zwei Bilder uebernommen', LAnzahl = 2);
+    Sag('  ... die Nicht-Bild-Datei wurde ausgelassen',
+        (Length(LUebersprungen) = 1) and (LUebersprungen[0] = LMuell));
+    Sag('  ... beide haengen am richtigen Artikel',
+        Zaehle(Format('SELECT count(*) FROM artikel_foto WHERE artikel_id=%d',
+                      [AArtikelId])) = LVorher + 2);
+    Sag('  ... Dateiname steht als Beschreibung drin',
+        Zaehle(Format('SELECT count(*) FROM artikel_foto WHERE artikel_id=%d ' +
+                      'AND beschreibung IN (''zzpruef_zieh1'', ''zzpruef_zieh2'')',
+                      [AArtikelId])) = 2);
+  finally
+    if TFile.Exists(LBild1) then TFile.Delete(LBild1);
+    if TFile.Exists(LBild2) then TFile.Delete(LBild2);
+    if TFile.Exists(LMuell) then TFile.Delete(LMuell);
+  end;
+end;
+
+var
+  LArtikelId: Integer;
+begin
+  try
+    Application.ShowMainForm := False;
+    Application.Initialize;
+    Application.CreateForm(TMdiRahmen, LRahmen);
+
+    LFunk := TFDQuery.Create(nil);
+    try
+      LFunk.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+      // Reste eines abgebrochenen Laufs zuerst weg, und zwar VOR dem Laden:
+      // ein Blob, das kein darstellbares Bild ist, laesst das
+      // Artikelstammfenster schon beim Oeffnen mit EInvalidGraphic fliegen
+      // (das TDBImage zeichnet, sobald die MemTable Daten hat).
+      Aufraeumen;
+
+      TdmZentraleDaten(TdmZentraleDaten.GetInstance).AlleTabellenLaden;
+      TdmMandant(TdmMandant.GetInstance).CurrentMandantId := 1;
+      LDm := TdmArtikelStamm(TdmArtikelStamm.GetInstance);
+      LDm.OpenArtikelStamm;
+
+      LArtikelId := ArtikelPruefen;
+      if LArtikelId > 0 then
+      begin
+        BestandPruefen(LArtikelId);
+        FotosPruefen(LArtikelId);
+        FotoSchutzPruefen(LArtikelId);
+        ZiehenPruefen(LArtikelId);
+      end;
+
+      Aufraeumen;
+      Sag('Aufgeraeumt',
+          Zaehle('SELECT count(*) FROM artikel WHERE artikel_nr LIKE ''ZZPRUEF%''') = 0);
+
+      Writeln;
+      if LFehler = 0 then
+        Writeln('Alles in Ordnung.')
+      else
+        Writeln(LFehler, ' Pruefung(en) fehlgeschlagen.');
+
+      if Assigned(frmArtikelStamm) then
+      begin
+        frmArtikelStamm.Close;
+        Application.ProcessMessages;
+      end;
+    finally
+      LFunk.Free;
+    end;
+  except
+    on E: Exception do
+      Writeln('FEHLER ', E.ClassName, ': ', E.Message);
+  end;
+  Halt(0);
+end.

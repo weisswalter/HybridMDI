@@ -24,6 +24,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti,
   PythonEngine,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
@@ -60,7 +61,7 @@ implementation
 
 uses
   Vcl.Dialogs,
-  PythonDm;
+  PythonDm, System.SyncObjs, ZentraleDatenDm;
 
 // Python-String-Literal: einfache Anfuehrungszeichen, Backslash und Umbrueche
 // escapen. Ohne das zerlegt ein Apostroph im Text den ganzen Aufruf.
@@ -110,8 +111,23 @@ begin
   end;
 end;
 
+var
+  GSperreCSharp: TCriticalSection;
+
 class function TdmCSharp.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmCSharp) then
+  begin
+    GSperreCSharp.Enter;
+    try
+      if not Assigned(dmCSharp) then
+        Application.CreateForm(TdmCSharp, dmCSharp);
+    finally
+      GSperreCSharp.Leave;
+    end;
+  end;
   Result := dmCSharp;
 end;
 
@@ -173,5 +189,13 @@ function TdmCSharp.TestAddition(A, B: Integer): string;
 begin
   Result := Call('cs_caller', 'call_cs_add', [A, B]);
 end;
+
+
+
+initialization
+  GSperreCSharp := TCriticalSection.Create;
+
+finalization
+  GSperreCSharp.Free;
 
 end.

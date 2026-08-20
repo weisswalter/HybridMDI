@@ -5,12 +5,22 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, System.Actions,
-  Vcl.ActnList;
+  Vcl.ActnList, System.ImageList, Vcl.ImgList, JvImageList;
 
 type
   TfrmTemplate = class(TForm)
-    ActionList1: TActionList;
+    ActionList: TActionList;
     Action1: TAction;
+    ilst16: TJvImageList;
+    actFirst: TAction;
+    actPrior: TAction;
+    actNext: TAction;
+    actLast: TAction;
+    actNew: TAction;
+    actEdit: TAction;
+    actCancel: TAction;
+    actRefresh: TAction;
+    ilst32: TJvImageList;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
   private

@@ -1,0 +1,230 @@
+program TestArtikelRest;
+{$APPTYPE CONSOLE}
+// Prueft die zuletzt umgestellten Stellen im Artikelstamm:
+//   1. LadeHauptpersonAdressen -- Kopien im Speicher gegen das alte SQL
+//   2. fn_stueckliste_hinzufuegen / _entfernen samt Ringpruefung
+//   3. fn_variante_umbenennen / _loeschen / _gleichsetzen / fn_aequivalenz_aufheben
+// Der MDI-Rahmen startet minimiert und ausserhalb des Bildschirms, damit der
+// Pruefstand niemandem den Fokus wegreisst.
+uses
+  System.SysUtils, System.Classes, System.StrUtils, Data.DB, Vcl.Forms, Vcl.Controls,
+  FireDAC.Comp.Client,
+  ZentraleDatenDm, MandantDm, ArtikelStammDm, ArtikelStammFrm;
+
+type
+  TMdiRahmen = class(TForm)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TMdiRahmen.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+  FormStyle := fsMDIForm;
+  Position := poDesigned;
+  Left := -32000;
+  Top := -32000;
+  WindowState := wsMinimized;
+end;
+
+var
+  LRahmen: TMdiRahmen;
+  LDm: TdmArtikelStamm;
+  LFunk: TFDQuery;
+  LFehler: Integer = 0;
+
+procedure Sag(const ATitel: string; AGut: Boolean; const AText: string = '');
+begin
+  Writeln(Format('%-46s %s%s', [ATitel, BoolToStr(AGut, True),
+    IfThen(AText = '', '', '   ' + AText)]));
+  if not AGut then
+    Inc(LFehler);
+end;
+
+// ------------------------------------------------------------------ Adressen
+procedure AdressenPruefen(AMandant: Integer);
+var
+  LNeu, LAlt: TStringList;
+  I: Integer;
+begin
+  LNeu := TStringList.Create;
+  LAlt := TStringList.Create;
+  try
+    LDm.LadeHauptpersonAdressen(AMandant, LNeu);
+
+    LFunk.Close;
+    LFunk.SQL.Text :=
+      'SELECT a.adresse_id, ' +
+      '  COALESCE(a.strasse, '''') || '' '' || COALESCE(a.hausnummer, '''') || ' +
+      '  '', '' || COALESCE(a.plz, '''') || '' '' || COALESCE(a.ort, '''') AS anzeige ' +
+      'FROM adresse a ' +
+      'JOIN person_adresse pa ON pa.adresse_id = a.adresse_id ' +
+      'WHERE pa.mandant_id = :m ' +
+      '  AND pa.person_id = (SELECT pm.person_id FROM person_mandant pm ' +
+      '                       WHERE pm.mandant_id = :m AND pm.ist_hauptperson = true) ' +
+      'ORDER BY a.ort, a.strasse';
+    LFunk.ParamByName('m').AsInteger := AMandant;
+    LFunk.Open;
+    while not LFunk.Eof do
+    begin
+      LAlt.Add(Trim(LFunk.FieldByName('anzeige').AsString) + ' #' +
+               LFunk.FieldByName('adresse_id').AsString);
+      LFunk.Next;
+    end;
+
+    for I := 0 to LNeu.Count - 1 do
+      LNeu[I] := Trim(LNeu[I]) + ' #' + IntToStr(NativeInt(LNeu.Objects[I]));
+
+    Sag(Format('Adressen Hauptperson M%d (%d Zeilen)', [AMandant, LAlt.Count]),
+        LNeu.Text = LAlt.Text);
+    if LNeu.Text <> LAlt.Text then
+    begin
+      Writeln('   NEU: ', StringReplace(LNeu.Text, sLineBreak, ' | ', [rfReplaceAll]));
+      Writeln('   ALT: ', StringReplace(LAlt.Text, sLineBreak, ' | ', [rfReplaceAll]));
+    end;
+  finally
+    LNeu.Free; LAlt.Free;
+  end;
+end;
+
+// ---------------------------------------------------------------- Stueckliste
+function Zaehle(const ASql: string): Integer;
+begin
+  LFunk.Close;
+  LFunk.SQL.Text := ASql;
+  LFunk.Open;
+  Result := LFunk.Fields[0].AsInteger;
+end;
+
+procedure StuecklistePruefen;
+var
+  LA, LB, LC: Integer;
+  LMeldung: string;
+begin
+  LFunk.Close;
+  LFunk.SQL.Text := 'SELECT artikel_id FROM artikel WHERE mandant_id = 1 ' +
+                    'ORDER BY artikel_id LIMIT 3';
+  LFunk.Open;
+  if LFunk.RecordCount < 3 then
+  begin
+    Sag('Stueckliste', False, 'zu wenige Artikel bei Mandant 1');
+    Exit;
+  end;
+  LA := LFunk.Fields[0].AsInteger; LFunk.Next;
+  LB := LFunk.Fields[0].AsInteger; LFunk.Next;
+  LC := LFunk.Fields[0].AsInteger;
+
+  LMeldung := LDm.StuecklisteHinzufuegen(LA, LB, 2);
+  Sag('Stueckliste: B unter A haengen', LMeldung = '', LMeldung);
+  Sag('  ... steht in der Tabelle',
+      Zaehle(Format('SELECT count(*) FROM artikel_artikel WHERE artikel_id=%d ' +
+                    'AND unter_artikel_id=%d AND menge=2', [LA, LB])) = 1);
+
+  LMeldung := LDm.StuecklisteHinzufuegen(LA, LB, 5);
+  Sag('  ... Menge aendern statt doppelt anlegen',
+      (LMeldung = '') and
+      (Zaehle(Format('SELECT count(*) FROM artikel_artikel WHERE artikel_id=%d ' +
+                     'AND unter_artikel_id=%d AND menge=5', [LA, LB])) = 1), LMeldung);
+
+  LMeldung := LDm.StuecklisteHinzufuegen(LA, LA, 1);
+  Sag('  ... Artikel in sich selbst wird abgelehnt', LMeldung <> '');
+
+  LDm.StuecklisteHinzufuegen(LB, LC, 1);
+  LMeldung := LDm.StuecklisteHinzufuegen(LC, LA, 1);
+  Sag('  ... Ring ueber drei Ebenen wird abgelehnt',
+      (LMeldung <> '') and (Pos('Ring', LMeldung) > 0), LMeldung);
+
+  LDm.StuecklisteEntfernen(LB, LC);
+  LDm.StuecklisteEntfernen(LA, LB);
+  // Nur die beiden selbst angelegten Paare zaehlen. Ein IN ueber die
+  // Artikel-Ids wuerde fremde Stuecklistenzeilen mitfangen.
+  Sag('  ... beide wieder ausgehaengt',
+      Zaehle(Format('SELECT count(*) FROM artikel_artikel ' +
+                    'WHERE (artikel_id=%d AND unter_artikel_id=%d) ' +
+                    '   OR (artikel_id=%d AND unter_artikel_id=%d)',
+                    [LA, LB, LB, LC])) = 0);
+end;
+
+// ------------------------------------------------------------------ Varianten
+procedure VariantenPruefen;
+var
+  LWurzel, LKind1, LKind2: Integer;
+  LMeldung: string;
+begin
+  LMeldung := LDm.VarianteAnlegen('ZZPruef Wurzel', 0, LWurzel);
+  Sag('Variante anlegen (Wurzel)', (LMeldung = '') and (LWurzel > 0), LMeldung);
+  LDm.VarianteAnlegen('ZZPruef Kind1', LWurzel, LKind1);
+  LDm.VarianteAnlegen('ZZPruef Kind2', LWurzel, LKind2);
+
+  LMeldung := LDm.VarianteUmbenennen(LWurzel, 'ZZPruef Wurzel neu');
+  Sag('Variante umbenennen', (LMeldung = '') and
+      (Zaehle(Format('SELECT count(*) FROM variante WHERE variante_id=%d ' +
+                     'AND name=''ZZPruef Wurzel neu''', [LWurzel])) = 1), LMeldung);
+
+  LMeldung := LDm.VarianteUmbenennen(LWurzel, '   ');
+  Sag('  ... leerer Name wird abgelehnt', LMeldung <> '');
+
+  LMeldung := LDm.VarianteLoeschen(LWurzel);
+  Sag('Loeschen mit Kindern wird abgelehnt', LMeldung <> '', LMeldung);
+
+  LMeldung := LDm.VarianteGleichsetzen(LKind1, LKind2);
+  Sag('Gleichsetzen', (LMeldung = '') and
+      (Zaehle(Format('SELECT count(*) FROM variante_variante WHERE bezug=''aequivalenz'' ' +
+                     'AND ((von_id=%d AND nach_id=%d) OR (von_id=%d AND nach_id=%d))',
+                     [LKind1, LKind2, LKind2, LKind1])) = 1), LMeldung);
+
+  LMeldung := LDm.VarianteGleichsetzen(LKind1, LKind2);
+  Sag('  ... zweimal gleichsetzen wird abgelehnt', LMeldung <> '');
+
+  LMeldung := LDm.AequivalenzAufheben(LKind1, LKind2);
+  Sag('Gleichwertigkeit aufheben', (LMeldung = '') and
+      (Zaehle(Format('SELECT count(*) FROM variante_variante WHERE bezug=''aequivalenz'' ' +
+                     'AND (von_id=%d OR nach_id=%d)', [LKind1, LKind1])) = 0), LMeldung);
+
+  LDm.VarianteLoeschen(LKind1);
+  LDm.VarianteLoeschen(LKind2);
+  LMeldung := LDm.VarianteLoeschen(LWurzel);
+  Sag('Loeschen von unten nach oben', (LMeldung = '') and
+      (Zaehle('SELECT count(*) FROM variante WHERE name LIKE ''ZZPruef %''') = 0),
+      LMeldung);
+end;
+
+begin
+  try
+    Application.ShowMainForm := False;
+    Application.Initialize;
+    Application.CreateForm(TMdiRahmen, LRahmen);
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).AlleTabellenLaden;
+
+    LFunk := TFDQuery.Create(nil);
+    try
+      LFunk.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+      TdmMandant(TdmMandant.GetInstance).CurrentMandantId := 1;
+      LDm := TdmArtikelStamm(TdmArtikelStamm.GetInstance);
+      LDm.OpenArtikelStamm;
+
+      AdressenPruefen(1);
+      AdressenPruefen(3);
+      StuecklistePruefen;
+      VariantenPruefen;
+
+      Writeln;
+      if LFehler = 0 then
+        Writeln('Alles in Ordnung.')
+      else
+        Writeln(LFehler, ' Pruefung(en) fehlgeschlagen.');
+
+      if Assigned(frmArtikelStamm) then
+      begin
+        frmArtikelStamm.Close;
+        Application.ProcessMessages;
+      end;
+    finally
+      LFunk.Free;
+    end;
+  except
+    on E: Exception do
+      Writeln('FEHLER ', E.ClassName, ': ', E.Message);
+  end;
+  Halt(0);
+end.

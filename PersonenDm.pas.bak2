@@ -1,0 +1,634 @@
+unit PersonenDm;
+
+// DataModule fuer Personenverwaltung — TRTHeisenberg PostgreSQL via FireDAC.
+// Arbeitet komplett mit TFDMemTable-Objekten in einer Master-Detail-Kette:
+//   tblMandant -> tblPersonMandant -> tblPerson sowie die Bruecken
+//   person_adresse/person_email/person_telefonnummer/person_beziehung mit
+//   ihren aufgeloesten Stammtabellen (adresse/emailadresse/telefonnummer).
+// Neuanlagen an den Bruecken laufen ueber StammNeu/StammAbbrechen + die
+// AfterPost-Handler (StammVerknuepfen) — siehe Kommentar an StammNeu.
+// Die alten qry*-Objekte sind stillgelegt und koennen im Designer entfallen.
+
+interface
+
+uses
+  System.SysUtils, System.Classes,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
+  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
+  FireDAC.Phys.PG, FireDAC.Phys.PGDef,
+  FireDAC.VCLUI.Wait,
+  FireDAC.Comp.Client,
+  Data.DB,
+  FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
+  FireDAC.Comp.DataSet,
+  System.Generics.Collections,
+  uMemTabellen, PGManagerDm,
+  udmModuleTemplate;
+
+type
+  TdmPersonen = class(TdmModuleTemplate)
+    qryPersonen: TFDQuery;
+    dsPersonen: TDataSource;
+    qryAdressen: TFDQuery;
+    dsAdressen: TDataSource;
+    qryEmails: TFDQuery;
+    dsEmails: TDataSource;
+    tblPerson: TFDMemTable;
+    tblAdresse: TFDMemTable;
+    tblEmailadresse: TFDMemTable;
+    tblPersonAdresse: TFDMemTable;
+    tblPersonEmail: TFDMemTable;
+    tblPersonMandant: TFDMemTable;
+    tblPersonTyp: TFDMemTable;
+    tblAdressentyp: TFDMemTable;
+    tblEmailtyp: TFDMemTable;
+    tblTelefonnummertyp: TFDMemTable;
+    tblTelefonnummer: TFDMemTable;
+    tblPersonTelefonnummer: TFDMemTable;
+    tblRolleTyp: TFDMemTable;
+    tblPersonBeziehung: TFDMemTable;
+    tblMandant: TFDMemTable;
+    tblLand: TFDMemTable;
+    tblBezirk: TFDMemTable;
+    dstblPerson: TDataSource;
+    dstblAdresse: TDataSource;
+    dstblEmailadresse: TDataSource;
+    dstblPersonAdresse: TDataSource;
+    dstblPersonEmail: TDataSource;
+    dstblPersonMandant: TDataSource;
+    dstblPersonTyp: TDataSource;
+    dstblAdressentyp: TDataSource;
+    dstblEmailtyp: TDataSource;
+    dstblTelefonnummertyp: TDataSource;
+    dstblTelefonnummer: TDataSource;
+    dstblPersonTelefonnummer: TDataSource;
+    dstblRolleTyp: TDataSource;
+    dstblPersonBeziehung: TDataSource;
+    dstblMandant: TDataSource;
+    dstblLand: TDataSource;
+    dstblBezirk: TDataSource;
+    procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
+    procedure tblPersonAfterPost(DataSet: TDataSet);
+    procedure tblAdresseAfterPost(DataSet: TDataSet);
+    procedure tblEmailadresseAfterPost(DataSet: TDataSet);
+    procedure tblTelefonnummerAfterPost(DataSet: TDataSet);
+  private
+    FNeuTbl: TFDMemTable;        // Stammtabelle mit offener Neuanlage (Master abgekoppelt)
+    FNeuBruecke: TFDMemTable;    // zugehoerige Bruecke, gleich mit im Insert-Modus
+    FNeuMaster: TDataSource;  // gemerkte MasterSource fuers Wiederankoppeln
+    FMandantId: Integer;      // aktueller Mandant (in OpenPersonen gesetzt)
+    FHerkunft: TDictionary<TFDMemTable, TMemHerkunft>;
+    function Conn: TFDConnection;
+    procedure HerkunftSetzen;
+    procedure SetupConnection;
+    // OnNewRecord fuer mandantengebundene Typ-Tabellen: mandant_id explizit
+    // vorbelegen. Die Master-Detail-Vorbelegung greift beim Append in ein
+    // leeres Detail-Set nicht zuverlaessig (Telefontyp liess sich nicht anlegen).
+    procedure TypOnNewRecord(DataSet: TDataSet);
+    procedure StammVerknuepfen(ATbl, ABruecke: TFDMemTable; const AIdFeld: string);
+    function EmailIdFuerAdresse(const AAdresse: string): Integer;
+    function TelefonIdFuerNummer(const ANummer: string): Integer;
+    // Vorhandenen Pool-Satz verknuepfen: offenen Stamm-Insert verwerfen und
+    // die uebergebene ID in die bereits offene Bruecke schreiben + posten.
+    procedure VerknuepfeVorhandene(const AIdFeld: string; AId: Integer);
+  public
+    class function GetInstance: TObject;
+    procedure OpenPersonen;
+    // Holt alle Tabellen einmal vom Server in den Speicher. Darf dauern —
+    // danach laeuft die Bedienung ohne Netzzugriff.
+    procedure AllesLaden;
+    // Schreibt alle gesammelten Aenderungen zurueck; Ergebnis = Zeilen.
+    // Stammtabellen zuerst, Bruecken zuletzt: eine Bruecke darf nicht auf
+    // eine ID zeigen, die es auf dem Server noch nicht gibt.
+    function AllesSpeichern: Integer;
+    // Wieviel ist noch nicht gespeichert?
+    function OffeneAenderungen: Integer;
+    // Neuanlage von Stammdaten (person/adresse/emailadresse/telefonnummer):
+    // Die Stammtabellen sind Details ihrer Brueckentabellen — beim Append
+    // wuerde die ID vom Master vorbelegt. Deshalb: Master-Kopplung der
+    // Stammtabelle loesen (Sequenz vergibt die ID). Die Bruecke wird GLEICH
+    // mit-appendet, damit Zusatzfelder der Zuordnung (z.B. adressentyp_id ueber
+    // die Lookup-Combo) sofort eingegeben werden koennen; der AfterPost traegt
+    // nur noch die neue Stamm-ID in den offenen Brueckensatz nach und postet ihn.
+    procedure StammNeu(AStammDs, ABrueckeDs: TDataSource);
+    procedure StammAbbrechen(AStammDs: TDataSource);
+    // Speichern einer offenen Stamm-Neuanlage. Kapselt den Sonderfall Email:
+    // Ist die eingegebene Adresse bereits im Pool vorhanden (m:n), wird KEINE
+    // neue emailadresse angelegt, sondern nur die bestehende mit der Person
+    // verknuepft. Sonst normaler Post (neue Adresse) -> AfterPost verknuepft.
+    procedure StammSpeichern(AStammDs: TDataSource);
+    // Fuellt AItems mit allen vorhandenen E-Mail-Adressen (fuer die Combo).
+    procedure FuelleEmailAdressen(AItems: TStrings);
+    // Fuellt AItems mit allen vorhandenen Telefonnummern (fuer die Combo).
+    procedure FuelleTelefonNummern(AItems: TStrings);
+  end;
+
+var
+  dmPersonen: TdmPersonen;
+
+implementation
+
+{$R *.dfm}
+
+uses
+  Vcl.Forms, Vcl.Dialogs,
+  MandantDm,
+  PersonenFrm;
+
+procedure TdmPersonen.DataModuleCreate(Sender: TObject);
+begin
+  SetupConnection;
+end;
+
+procedure TdmPersonen.DataModuleDestroy(Sender: TObject);
+var
+  I: Integer;
+begin
+  // Alle Datasets schliessen (Tabellen wie Queries), dann die Verbindung
+  for I := 0 to ComponentCount - 1 do
+    if Components[I] is TFDDataSet then
+      TFDDataSet(Components[I]).Close;
+  // Die Verbindung gehoert diesem Modul nicht mehr — nicht schliessen.
+  FreeAndNil(FHerkunft);
+end;
+
+class function TdmPersonen.GetInstance: TObject;
+begin
+  Result := dmPersonen;
+end;
+
+procedure TdmPersonen.TypOnNewRecord(DataSet: TDataSet);
+begin
+  if FMandantId > 0 then
+    DataSet.FieldByName('mandant_id').AsInteger := FMandantId;
+end;
+
+// Gemeinsame Verbindung — dieses Modul haelt keine eigene mehr. Dieselbe
+// Stelle wie in AnlagenDm, LohnDm, BenutzerDm & Co.
+function TdmPersonen.Conn: TFDConnection;
+begin
+  Result := PGManagerDm.dmPGManager.FDConnection1;
+end;
+
+// Woher jede Speichertabelle kommt und wie sie zurueckfindet. Die Schluessel
+// stammen aus den Primaerschluesseln der Datenbank, nicht aus dem Gedaechtnis.
+procedure TdmPersonen.HerkunftSetzen;
+begin
+  FHerkunft := TDictionary<TFDMemTable, TMemHerkunft>.Create;
+  FHerkunft.Add(tblPerson,             Herkunft('person', 'person_id', 'person_id'));
+  FHerkunft.Add(tblAdresse,            Herkunft('adresse', 'adresse_id', 'adresse_id'));
+  FHerkunft.Add(tblEmailadresse,       Herkunft('emailadresse', 'email_id', 'email_id'));
+  FHerkunft.Add(tblTelefonnummer,      Herkunft('telefonnummer', 'telefonnummer_id', 'telefonnummer_id'));
+  FHerkunft.Add(tblPersonAdresse,      Herkunft('person_adresse', 'person_id;adresse_id;mandant_id'));
+  FHerkunft.Add(tblPersonEmail,        Herkunft('person_email', 'person_id;email_id;mandant_id'));
+  FHerkunft.Add(tblPersonTelefonnummer,Herkunft('person_telefonnummer', 'person_id;telefonnummer_id;mandant_id'));
+  FHerkunft.Add(tblPersonMandant,      Herkunft('person_mandant', 'person_id;mandant_id'));
+  FHerkunft.Add(tblPersonBeziehung,    Herkunft('person_beziehung', 'mandant_id;beziehungs_id', 'beziehungs_id'));
+  FHerkunft.Add(tblPersonTyp,          Herkunft('person_typ', 'typ_id', 'typ_id'));
+  FHerkunft.Add(tblAdressentyp,        Herkunft('adressentyp', 'mandant_id;adressentyp_id', 'adressentyp_id'));
+  FHerkunft.Add(tblEmailtyp,           Herkunft('emailtyp', 'mandant_id;emailtyp_id', 'emailtyp_id'));
+  FHerkunft.Add(tblTelefonnummertyp,   Herkunft('telefonnummertyp', 'mandant_id;telefonnummertyp_id', 'telefonnummertyp_id'));
+  FHerkunft.Add(tblRolleTyp,           Herkunft('rolle_typ', 'mandant_id;rolle_id', 'rolle_id'));
+  FHerkunft.Add(tblMandant,            Herkunft('mandant', 'mandant_id'));
+  FHerkunft.Add(tblLand,               Herkunft('land', 'land_id'));
+  FHerkunft.Add(tblBezirk,             Herkunft('bezirk', 'bezirk_id'));
+end;
+
+procedure TdmPersonen.SetupConnection;
+begin
+  HerkunftSetzen;
+
+  // mandant_id bei Neuanlage explizit setzen (siehe TypOnNewRecord)
+  tblAdressentyp.OnNewRecord      := TypOnNewRecord;
+  tblEmailtyp.OnNewRecord         := TypOnNewRecord;
+  tblTelefonnummertyp.OnNewRecord := TypOnNewRecord;
+  tblRolleTyp.OnNewRecord         := TypOnNewRecord;
+
+  // Die drei Lookup-Abfragen bleiben Abfragen — sie liefern zusammengesetzte
+  // Anzeigetexte, die es so in keiner Tabelle gibt. Sie laufen einmal beim
+  // Oeffnen und danach nicht mehr.
+  qryPersonen.Connection := Conn;
+  SchnellLesen(qryPersonen);
+  // CAST auf varchar ist wichtig: ohne den Cast liefert PostgreSQL den
+  // verketteten Ausdruck als Typ "text" (unbegrenzt), und FireDAC mappt das
+  // auf ein Memo-Feld -> die Lookup-Combo zeigt dann nur "(WIDEMEMO)".
+  qryPersonen.SQL.Text :=
+    'SELECT p.person_id, ' +
+    '  CAST(COALESCE(p.nachname_firmenname, '''') || ' +
+    '    CASE WHEN COALESCE(p.vorname, '''') <> '''' ' +
+    '         THEN '', '' || p.vorname ELSE '''' END ' +
+    '    AS varchar(200)) AS anzeige ' +
+    'FROM person p ' +
+    'JOIN person_mandant pm ON pm.person_id = p.person_id ' +
+    'WHERE pm.mandant_id = :mandant_id ' +
+    'ORDER BY p.nachname_firmenname, p.vorname';
+  dsPersonen.DataSet := qryPersonen;
+
+  qryEmails.Connection := Conn;
+  SchnellLesen(qryEmails);
+  qryEmails.SQL.Text :=
+    'SELECT email_id, email_adresse FROM emailadresse ORDER BY email_adresse';
+  dsEmails.DataSet := qryEmails;
+
+  qryAdressen.Connection := Conn;
+  SchnellLesen(qryAdressen);
+  qryAdressen.SQL.Text :=
+    'SELECT adresse_id, ' +
+    '  CAST(COALESCE(strasse, '''') || '' '' || COALESCE(hausnummer, '''') || ' +
+    '    '', '' || COALESCE(plz, '''') || '' '' || COALESCE(ort, '''') ' +
+    '    AS varchar(300)) AS anzeige ' +
+    'FROM adresse ORDER BY strasse, hausnummer';
+  dsAdressen.DataSet := qryAdressen;
+end;
+
+// Holt alle Speichertabellen einmal vom Server. Das darf dauern — danach
+// laeuft die Bedienung ohne einen einzigen Netzzugriff.
+procedure TdmPersonen.AllesLaden;
+var
+  LMem: TFDMemTable;
+  LMerker: TDictionary<TFDMemTable, TDataSource>;
+begin
+  // Master-Detail waehrend des Fuellens loesen. Sonst filtert die Kette bei
+  // jeder einzelnen Tabelle nach, und ein Detail, dessen Master noch leer
+  // ist, kaeme leer zurueck — je nach Reihenfolge im Verzeichnis.
+  LMerker := TDictionary<TFDMemTable, TDataSource>.Create;
+  try
+    for LMem in FHerkunft.Keys do
+      if Assigned(LMem.MasterSource) then
+      begin
+        LMerker.Add(LMem, LMem.MasterSource);
+        LMem.MasterSource := nil;
+      end;
+
+    for LMem in FHerkunft.Keys do
+      Laden(LMem, Conn, FHerkunft[LMem].SQL);
+
+    // Erst wenn alles im Speicher liegt, die Kette wieder einhaengen.
+    for LMem in LMerker.Keys do
+      LMem.MasterSource := LMerker[LMem];
+  finally
+    LMerker.Free;
+  end;
+end;
+
+// Schreibt alles Gesammelte zurueck. Reihenfolge zaehlt: erst die
+// Stammtabellen, dann die Bruecken — sonst zeigt eine Bruecke auf eine ID,
+// die es auf dem Server noch nicht gibt.
+function TdmPersonen.AllesSpeichern: Integer;
+
+  function Schreibe(AMem: TFDMemTable): Integer;
+  begin
+    Result := Zurueckschreiben(AMem, Conn, FHerkunft[AMem]);
+  end;
+
+begin
+  Result := 0;
+  // 1. Stammdaten und Typen
+  Inc(Result, Schreibe(tblLand));
+  Inc(Result, Schreibe(tblBezirk));
+  Inc(Result, Schreibe(tblPersonTyp));
+  Inc(Result, Schreibe(tblAdressentyp));
+  Inc(Result, Schreibe(tblEmailtyp));
+  Inc(Result, Schreibe(tblTelefonnummertyp));
+  Inc(Result, Schreibe(tblRolleTyp));
+  Inc(Result, Schreibe(tblMandant));
+  Inc(Result, Schreibe(tblPerson));
+  Inc(Result, Schreibe(tblAdresse));
+  Inc(Result, Schreibe(tblEmailadresse));
+  Inc(Result, Schreibe(tblTelefonnummer));
+  // 2. Bruecken zuletzt
+  Inc(Result, Schreibe(tblPersonMandant));
+  Inc(Result, Schreibe(tblPersonAdresse));
+  Inc(Result, Schreibe(tblPersonEmail));
+  Inc(Result, Schreibe(tblPersonTelefonnummer));
+  Inc(Result, Schreibe(tblPersonBeziehung));
+end;
+
+function TdmPersonen.OffeneAenderungen: Integer;
+var
+  LMem: TFDMemTable;
+begin
+  Result := 0;
+  for LMem in FHerkunft.Keys do
+    if HatAenderungen(LMem) then
+      Inc(Result, LMem.ChangeCount);
+end;
+
+// ── Neuanlage-Logik fuer Stammtabellen an Brueckentabellen ──────────────────
+
+procedure TdmPersonen.StammNeu(AStammDs, ABrueckeDs: TDataSource);
+var
+  LTbl, LBruecke: TFDMemTable;
+begin
+  LTbl := AStammDs.DataSet as TFDMemTable;
+  LBruecke := ABrueckeDs.DataSet as TFDMemTable;
+  if FNeuTbl <> nil then
+  begin
+    ShowMessage('Bitte zuerst die offene Neuanlage speichern oder abbrechen.', '');
+    Exit;
+  end;
+  FNeuTbl := LTbl;
+  FNeuBruecke := LBruecke;
+  FNeuMaster := LTbl.MasterSource;
+  LTbl.MasterSource := nil;   // sonst wuerde die ID vom Master vorbelegt
+  LTbl.Append;
+  // Bruecke gleich mit oeffnen: mandant_id/person_id werden ueber ihre
+  // MasterSource (person_mandant) vorbelegt, adressentyp_id o.ae. kann der
+  // Anwender jetzt schon in der Lookup-Combo waehlen. Die Stamm-ID fehlt noch
+  // und wird im AfterPost (StammVerknuepfen) nachgetragen.
+  LBruecke.Append;
+end;
+
+procedure TdmPersonen.StammAbbrechen(AStammDs: TDataSource);
+var
+  LTbl: TFDMemTable;
+begin
+  LTbl := AStammDs.DataSet as TFDMemTable;
+  if (FNeuBruecke <> nil) and (FNeuBruecke.State in dsEditModes) then
+    FNeuBruecke.Cancel;
+  if LTbl.State in dsEditModes then
+    LTbl.Cancel;
+  if FNeuTbl = LTbl then
+  begin
+    LTbl.MasterSource := FNeuMaster;
+    FNeuTbl := nil;
+    FNeuBruecke := nil;
+    FNeuMaster := nil;
+  end;
+end;
+
+// Nach dem Speichern der Stammtabelle: die neue Stamm-ID in den bereits
+// offenen Brueckensatz nachtragen und ihn posten (mandant_id/person_id sind
+// ueber die Master-Kopplung der Bruecke schon gefuellt, ebenso vom Anwender
+// gewaehlte Zusatzfelder wie adressentyp_id). Danach Stammtabelle wieder als
+// Detail ankoppeln und die Bruecke auf den neuen Satz stellen.
+// Die neue ID holt FireDAC bei PostgreSQL-Serials via RETURNING (AutoIncFields).
+procedure TdmPersonen.StammVerknuepfen(ATbl, ABruecke: TFDMemTable; const AIdFeld: string);
+var
+  LId: Integer;
+begin
+  if FNeuTbl <> ATbl then
+    Exit;  // normales Aendern-Speichern, keine Verknuepfung noetig
+  LId := ATbl.FieldByName(AIdFeld).AsInteger;
+  if not (ABruecke.State in dsEditModes) then
+    ABruecke.Append;  // Fallback, falls die Bruecke nicht mehr offen ist
+  ABruecke.FieldByName(AIdFeld).AsInteger := LId;
+  ABruecke.Post;
+  ATbl.MasterSource := FNeuMaster;
+  FNeuTbl := nil;
+  FNeuBruecke := nil;
+  FNeuMaster := nil;
+  ABruecke.Locate(AIdFeld, LId, []);
+end;
+
+// Sucht eine vorhandene E-Mail-Adresse im Pool (Gross-/Kleinschreibung egal).
+// Rueckgabe: email_id oder -1, wenn die Adresse noch nicht existiert.
+function TdmPersonen.EmailIdFuerAdresse(const AAdresse: string): Integer;
+var
+  LQry: TFDQuery;
+begin
+  Result := -1;
+  LQry := TFDQuery.Create(nil);
+  try
+    LQry.Connection := Conn;
+    LQry.SQL.Text :=
+      'SELECT email_id FROM emailadresse WHERE lower(email_adresse) = lower(:adr)';
+    LQry.ParamByName('adr').AsString := AAdresse;
+    LQry.Open;
+    if not LQry.IsEmpty then
+      Result := LQry.FieldByName('email_id').AsInteger;
+  finally
+    LQry.Free;
+  end;
+end;
+
+// Sucht eine vorhandene Telefonnummer im Pool.
+// Rueckgabe: telefonnummer_id oder -1, wenn die Nummer noch nicht existiert.
+function TdmPersonen.TelefonIdFuerNummer(const ANummer: string): Integer;
+var
+  LQry: TFDQuery;
+begin
+  Result := -1;
+  LQry := TFDQuery.Create(nil);
+  try
+    LQry.Connection := Conn;
+    LQry.SQL.Text :=
+      'SELECT telefonnummer_id FROM telefonnummer WHERE nummer = :nr';
+    LQry.ParamByName('nr').AsString := ANummer;
+    LQry.Open;
+    if not LQry.IsEmpty then
+      Result := LQry.FieldByName('telefonnummer_id').AsInteger;
+  finally
+    LQry.Free;
+  end;
+end;
+
+// Verwirft den offenen Stamm-Insert (FNeuTbl) und verknuepft stattdessen den
+// bereits vorhandenen Pool-Satz (AId) ueber die schon offene Bruecke.
+procedure TdmPersonen.VerknuepfeVorhandene(const AIdFeld: string; AId: Integer);
+begin
+  FNeuTbl.Cancel;                        // neuen Stammsatz verwerfen
+  if not (FNeuBruecke.State in dsEditModes) then
+    FNeuBruecke.Append;
+  FNeuBruecke.FieldByName(AIdFeld).AsInteger := AId;
+  FNeuBruecke.Post;                      // Bruecke mit bestehendem Pool-Satz
+  FNeuTbl.MasterSource := FNeuMaster;    // erst jetzt ankoppeln (Detail steht auf AId)
+  FNeuTbl := nil;
+  FNeuBruecke := nil;
+  FNeuMaster := nil;
+end;
+
+// Speichert eine offene Stamm-Neuanlage. Poolfaehige Stammdaten (emailadresse,
+// telefonnummer, adresse) sind m:n zur Person — teilen sich also Saetze. Ist
+// der eingegebene/gewaehlte Satz schon vorhanden, wird NICHT neu angelegt,
+// sondern nur verknuepft (kein UNIQUE-Konflikt, keine Dublette):
+//   Email/Telefon: Match ueber den eingetippten Wert (Adresse bzw. Nummer).
+//   Adresse: die Auswahl-Combo hat adresse_id bereits in die Bruecke gesetzt.
+procedure TdmPersonen.StammSpeichern(AStammDs: TDataSource);
+var
+  LTbl: TFDMemTable;
+  LId: Integer;
+begin
+  LTbl := AStammDs.DataSet as TFDMemTable;
+  if not (LTbl.State in dsEditModes) then
+  begin
+    // Inkonsistenter Zustand: eine Stamm+Bruecke-Neuanlage laeuft noch
+    // (FNeuTbl gesetzt), aber der Stamm selbst ist nicht mehr im Edit-Modus
+    // -> ohne diese Meldung wuerde hier still nichts gespeichert und
+    // anschliessend im Aufrufer (BtnNavClick) versucht, die noch offene
+    // Bruecke OHNE die zugehoerige Stamm-ID zu posten (fuehrte 2x zu einem
+    // NOT-NULL-Fehler in person_mandant/person_adresse, siehe Memory
+    // feedback_personendm_stamm_bruecke_bug). Hier auffaellig machen statt
+    // stillschweigend zu ignorieren, bis die eigentliche Ursache klar ist.
+    if FNeuTbl = LTbl then
+      ShowMessage('Stammdatensatz war nicht mehr im Bearbeitungsmodus -- ' +
+        'nicht gespeichert. Bitte pruefen und erneut versuchen.', '');
+    Exit;
+  end;
+
+  if (LTbl = tblEmailadresse) and (FNeuTbl = tblEmailadresse) then
+  begin
+    LId := EmailIdFuerAdresse(Trim(LTbl.FieldByName('email_adresse').AsString));
+    if LId > 0 then
+    begin
+      VerknuepfeVorhandene('email_id', LId);
+      Exit;
+    end;
+  end
+  else if (LTbl = tblTelefonnummer) and (FNeuTbl = tblTelefonnummer) then
+  begin
+    LId := TelefonIdFuerNummer(Trim(LTbl.FieldByName('nummer').AsString));
+    if LId > 0 then
+    begin
+      VerknuepfeVorhandene('telefonnummer_id', LId);
+      Exit;
+    end;
+  end
+  else if (LTbl = tblAdresse) and (FNeuTbl = tblAdresse) then
+  begin
+    // Die Auswahl-Combo schreibt bei einer bestehenden Adresse deren adresse_id
+    // direkt in die person_adresse-Bruecke; dann keine neue Adresse anlegen.
+    LId := FNeuBruecke.FieldByName('adresse_id').AsInteger;
+    if LId > 0 then
+    begin
+      VerknuepfeVorhandene('adresse_id', LId);
+      Exit;
+    end;
+  end;
+
+  LTbl.Post;  // Normalfall: neue Stammdaten -> AfterPost verknuepft die Bruecke
+end;
+
+// Fuellt AItems mit allen vorhandenen E-Mail-Adressen fuer die Dropdown-Liste
+// der editierbaren Adress-Combo.
+procedure TdmPersonen.FuelleEmailAdressen(AItems: TStrings);
+begin
+  AItems.BeginUpdate;
+  try
+    AItems.Clear;
+    if not qryEmails.Active then
+      Exit;
+    qryEmails.First;
+    while not qryEmails.Eof do
+    begin
+      AItems.Add(qryEmails.FieldByName('email_adresse').AsString);
+      qryEmails.Next;
+    end;
+  finally
+    AItems.EndUpdate;
+  end;
+end;
+
+// Fuellt AItems mit allen vorhandenen Telefonnummern fuer die Dropdown-Liste
+// der editierbaren Nummern-Combo. Eigene Query, da tblTelefonnummer als
+// Detail nur die Nummern der aktuellen Person zeigt.
+procedure TdmPersonen.FuelleTelefonNummern(AItems: TStrings);
+var
+  LQry: TFDQuery;
+begin
+  AItems.BeginUpdate;
+  try
+    AItems.Clear;
+    LQry := TFDQuery.Create(nil);
+    try
+      LQry.Connection := Conn;
+      LQry.SQL.Text := 'SELECT nummer FROM telefonnummer ORDER BY nummer';
+      LQry.Open;
+      while not LQry.Eof do
+      begin
+        AItems.Add(LQry.FieldByName('nummer').AsString);
+        LQry.Next;
+      end;
+    finally
+      LQry.Free;
+    end;
+  finally
+    AItems.EndUpdate;
+  end;
+end;
+
+procedure TdmPersonen.tblPersonAfterPost(DataSet: TDataSet);
+begin
+  StammVerknuepfen(tblPerson, tblPersonMandant, 'person_id');
+end;
+
+procedure TdmPersonen.tblAdresseAfterPost(DataSet: TDataSet);
+begin
+  StammVerknuepfen(tblAdresse, tblPersonAdresse, 'adresse_id');
+end;
+
+procedure TdmPersonen.tblEmailadresseAfterPost(DataSet: TDataSet);
+begin
+  StammVerknuepfen(tblEmailadresse, tblPersonEmail, 'email_id');
+end;
+
+procedure TdmPersonen.tblTelefonnummerAfterPost(DataSet: TDataSet);
+begin
+  StammVerknuepfen(tblTelefonnummer, tblPersonTelefonnummer, 'telefonnummer_id');
+end;
+
+procedure TdmPersonen.OpenPersonen;
+var
+  LMandantId: Integer;
+begin
+  LMandantId := TdmMandant(TdmMandant.GetInstance).CurrentMandantId;
+  if LMandantId <= 0 then
+  begin
+    ShowMessage('Bitte zuerst oben im Hauptfenster einen Mandanten waehlen.', '');
+    Exit;
+  end;
+  FMandantId := LMandantId;  // fuer TypOnNewRecord (mandant_id-Vorbelegung)
+
+  try
+    if not Conn.Connected then
+      Conn.Open;
+
+    // EINMAL alles holen. Das darf dauern — danach laeuft die Bedienung
+    // ohne einen einzigen Netzzugriff. Die Master-Detail-Kette filtert
+    // anschliessend im Speicher:
+    // tblMandant -> person_mandant -> person / Adress-, Email-, Telefonbruecken.
+    AllesLaden;
+    tblMandant.Locate('mandant_id', LMandantId, []);
+
+    // Personenliste fuer Zielperson-Lookup (alle Personen des Mandanten)
+    qryPersonen.Close;
+    qryPersonen.ParamByName('mandant_id').AsInteger := LMandantId;
+    qryPersonen.Open;
+
+    // Liste aller E-Mail-Adressen fuer die editierbare Adress-Combo
+    qryEmails.Close;
+    qryEmails.Open;
+
+    // Liste aller Adressen fuer die Adress-Auswahl-Combo
+    qryAdressen.Close;
+    qryAdressen.Open;
+
+    // tblPersonMandant ist bereits im Speicher (AllesLaden)
+    // tblPerson ist bereits im Speicher (AllesLaden)
+    // tblPersonAdresse ist bereits im Speicher (AllesLaden)
+    // tblAdresse ist bereits im Speicher (AllesLaden)
+    // tblBezirk ist bereits im Speicher (AllesLaden)
+    // tblPersonEmail ist bereits im Speicher (AllesLaden)
+    // tblEmailadresse ist bereits im Speicher (AllesLaden)
+    // tblPersonTelefonnummer ist bereits im Speicher (AllesLaden)
+    // tblTelefonnummer ist bereits im Speicher (AllesLaden)
+    try
+      // tblPersonBeziehung ist bereits im Speicher (AllesLaden)
+    except
+    end;
+  except
+    on E: Exception do
+    begin
+      Vcl.Dialogs.ShowMessage('DB-Verbindung fehlgeschlagen:' + sLineBreak + E.Message);
+      Exit;
+    end;
+  end;
+
+  if not Assigned(frmPersonen) then
+    frmPersonen := TfrmPersonen.Create(Application);
+  frmPersonen.Show;
+end;
+
+end.

@@ -1,78 +1,242 @@
-object dmArtikelStamm: TdmArtikelStamm
-  Left = 0
-  Top = 0
-  OnCreate = DataModuleCreate
-  object tblArtikel: TFDTable
-    OnNewRecord = tblArtikelNewRecord
-    TableName = 'artikel'
-    Left = 40
+inherited dmArtikelStamm: TdmArtikelStamm
+  Caption = 'dmArtikelStamm'
+  StyleElements = [seFont, seClient, seBorder]
+  ExplicitWidth = 638
+  object tblArtikel: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 48
     Top = 32
-  end
-  object tblArtikelFach: TFDTable
-    OnNewRecord = tblArtikelFachNewRecord
-    TableName = 'artikel_fach'
-    Left = 40
-    Top = 96
-  end
-  object tblArtikelFoto: TFDTable
-    OnNewRecord = tblArtikelFotoNewRecord
-    TableName = 'artikel_foto'
-    Left = 40
-    Top = 160
   end
   object dstblArtikel: TDataSource
     DataSet = tblArtikel
-    Left = 128
+    Left = 152
     Top = 32
   end
-  object dstblArtikelFach: TDataSource
-    DataSet = tblArtikelFach
-    Left = 128
-    Top = 96
+  object tblKategorie: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 48
+    Top = 104
+  end
+  object dstblKategorie: TDataSource
+    DataSet = tblKategorie
+    Left = 152
+    Top = 104
+  end
+  object tblArtikelKategorie: TFDMemTable
+    IndexFieldNames = 'artikel_id'
+    MasterSource = dstblArtikel
+    MasterFields = 'artikel_id'
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 48
+    Top = 176
+    object tblArtikelKategorieartikel_id: TIntegerField
+      FieldName = 'artikel_id'
+    end
+    object tblArtikelKategoriekategorie_id: TIntegerField
+      FieldName = 'kategorie_id'
+    end
+    object tblArtikelKategoriebezeichnung: TWideStringField
+      FieldKind = fkLookup
+      FieldName = 'bezeichnung'
+      LookupDataSet = tblKategorie
+      LookupKeyFields = 'kategorie_id'
+      LookupResultField = 'bezeichnung'
+      KeyFields = 'kategorie_id'
+      Size = 100
+      Lookup = True
+    end
+  end
+  object dstblArtikelKategorie: TDataSource
+    DataSet = tblArtikelKategorie
+    Left = 152
+    Top = 176
+  end
+  object tblArtikelFoto: TFDMemTable
+    IndexFieldNames = 'artikel_id'
+    MasterSource = dstblArtikel
+    MasterFields = 'artikel_id'
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 48
+    Top = 248
   end
   object dstblArtikelFoto: TDataSource
     DataSet = tblArtikelFoto
-    Left = 128
+    Left = 152
+    Top = 248
+  end
+  object memArtikelArtikel: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 320
+    Top = 32
+  end
+  object memVariante: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 320
+    Top = 96
+  end
+  object memVarianteKante: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 320
     Top = 160
   end
-  object qryBestandBaum: TFDQuery
-    Left = 40
+  object memLagerort: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 320
     Top = 224
   end
-  object qryStueckliste: TFDQuery
-    Left = 40
+  object memEinheit: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 320
     Top = 288
   end
-  object dstblStueckliste: TDataSource
-    DataSet = qryStueckliste
-    Left = 128
+  object tblArtikelFach: TFDMemTable
+    IndexFieldNames = 'artikel_id'
+    MasterSource = dstblArtikel
+    MasterFields = 'artikel_id'
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 320
+    Top = 352
+  end
+  object memArtikelNachschlag: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 320
+    Top = 416
+  end
+  object dstblArtikelAuswahl: TDataSource
+    DataSet = memArtikelNachschlag
+    Left = 424
+    Top = 416
+  end
+  object memPersonMandant: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 536
+    Top = 32
+  end
+  object memPersonAdresse: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 536
+    Top = 96
+  end
+  object memAdresse: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 536
+    Top = 160
+  end
+  object memRaum: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 536
+    Top = 224
+  end
+  object memRegal: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 536
     Top = 288
   end
-  object qryStuecklisteBaum: TFDQuery
-    Left = 400
-    Top = 400
-  end
-  object dsStuecklisteBaum: TDataSource
-    DataSet = qryStuecklisteBaum
-    Left = 488
-    Top = 400
-  end
-  object qryArtikelAuswahl: TFDQuery
-    Left = 400
-    Top = 464
-  end
-  object dsArtikelAuswahl: TDataSource
-    DataSet = qryArtikelAuswahl
-    Left = 488
-    Top = 464
-  end
-  object qryVariantenBaum: TFDQuery
-    Left = 400
-    Top = 528
-  end
-  object dsVariantenBaum: TDataSource
-    DataSet = qryVariantenBaum
-    Left = 488
-    Top = 528
+  object memBestandZeilen: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    Left = 536
+    Top = 352
   end
 end

@@ -245,6 +245,8 @@ end;
 
 { TRibbonPanel }
 
+// RibbonPanel.pas – angepasst
+
 constructor TRibbonPanel.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -254,7 +256,7 @@ begin
   Width := 400;
   Height := 200;
 
-  // 0. Themes: aktiver Reiter blau, uebrige silbern
+  // ─── Themes (bleiben exakt wie gehabt) ───
   FActiveTheme := nptXPBlue;
   FInactiveTheme := nptXPSilver;
   FStyleActive := TJvNavPaneStyleManager.Create(Self);
@@ -262,19 +264,7 @@ begin
   FStyleInactive := TJvNavPaneStyleManager.Create(Self);
   FStyleInactive.Theme := FInactiveTheme;
 
-  // 1. RibbonPageControl
-  FPageControl := TRibbonPageControl.Create(Self);
-  FPageControl.Name := 'PageControl';
-  FPageControl.SetSubComponent(True);
-  FPageControl.Parent := Self;
-  FPageControl.Align := alNone;
-  FPageControl.Left := -1;
-  FPageControl.Top := 29;
-  FPageControl.Width := Self.Width + 2;
-  FPageControl.Height := Self.Height - 28;
-  FPageControl.Anchors := [akLeft, akTop, akRight, akBottom];
-
-  // 2. Oberes Panel für die Header-Buttons
+  // ─── TopPanel (bleibt exakt wie gehabt) ───
   FTopPanel := TPanel.Create(Self);
   FTopPanel.Name := 'TopPanel';
   FTopPanel.SetSubComponent(True);
@@ -284,14 +274,23 @@ begin
   FTopPanel.BevelOuter := bvNone;
   FTopPanel.ShowCaption := False;
 
-  // 3. Farbverlauf im TopPanel
+  // ─── Farbverlauf (bleibt exakt wie gehabt) ───
   FHeaderGradient := TJvGradient.Create(Self);
   FHeaderGradient.Parent := FTopPanel;
-  FHeaderGradient.Align  := alClient;
-  FHeaderGradient.Style  := grVertical;
-  ApplyHeaderGradientColors;
+  FHeaderGradient.Align := alClient;
+  FHeaderGradient.Style := grVertical;
+  ApplyHeaderGradientColors;  // ← Hier werden die Farben gesetzt!
 
-  // 4. Header-Buttons Collection
+  // ─── PageControl (NUR HIER ÄNDERN!) ───
+  FPageControl := TRibbonPageControl.Create(Self);
+  FPageControl.Parent := self;  // ← Parent ist jetzt das Container-Panel!
+  FPageControl.Align := alClient;     // ← Füllt das Container-Panel aus
+  FPageControl.Left := -1;            // ← Überlappt den Container-Rand
+  FPageControl.Top := -1;             // ← Überlappt den Container-Rand
+  FPageControl.Width := self.Width + 2;
+  FPageControl.Height := self.Height + 2;
+  FPageControl.Anchors := [akLeft, akTop, akRight, akBottom];
+  // ─── Collection ───
   FHeaderButtons := TRibbonHeaderButtonCollection.Create(Self, TRibbonHeaderButton);
 
   FTopPanel.BringToFront;

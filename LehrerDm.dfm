@@ -2,7 +2,7 @@ object dmLehrer: TdmLehrer
   Left = 0
   Top = 0
   OnCreate = DataModuleCreate
-  object qryLehrer: TFDQuery
+  object qryLehrer: TFDMemTable
     Left = 40
     Top = 32
   end
@@ -11,8 +11,7 @@ object dmLehrer: TdmLehrer
     Left = 128
     Top = 32
   end
-  object tblPerson: TFDTable
-    TableName = 'person'
+  object tblPerson: TFDMemTable
     Left = 40
     Top = 96
   end
@@ -21,8 +20,7 @@ object dmLehrer: TdmLehrer
     Left = 128
     Top = 96
   end
-  object tblPersonBeziehung: TFDTable
-    TableName = 'person_beziehung'
+  object tblPersonBeziehung: TFDMemTable
     Left = 40
     Top = 160
   end
@@ -31,7 +29,10 @@ object dmLehrer: TdmLehrer
     Left = 128
     Top = 160
   end
-  object qryKompetenzen: TFDQuery
+  object qryKompetenzen: TFDMemTable
+    IndexFieldNames = 'person_id;mandant_id'
+    MasterSource = dstblLehrer
+    MasterFields = 'person_id;mandant_id'
     Left = 40
     Top = 224
   end
@@ -40,7 +41,7 @@ object dmLehrer: TdmLehrer
     Left = 128
     Top = 224
   end
-  object qryKompetenzAuswahl: TFDQuery
+  object qryKompetenzAuswahl: TFDMemTable
     Left = 296
     Top = 32
   end
@@ -49,7 +50,10 @@ object dmLehrer: TdmLehrer
     Left = 384
     Top = 32
   end
-  object qryKurse: TFDQuery
+  object qryKurse: TFDMemTable
+    IndexFieldNames = 'person_id;mandant_id'
+    MasterSource = dstblLehrer
+    MasterFields = 'person_id;mandant_id'
     Left = 40
     Top = 288
   end

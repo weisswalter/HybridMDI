@@ -2,15 +2,13 @@ object dmKundenBestellung: TdmKundenBestellung
   Left = 0
   Top = 0
   OnCreate = DataModuleCreate
-  object tblBeleg: TFDTable
+  object tblBeleg: TFDMemTable
     OnNewRecord = tblBelegNewRecord
-    TableName = 'beleg'
     Left = 40
     Top = 32
   end
-  object tblBelegPosition: TFDTable
+  object tblBelegPosition: TFDMemTable
     OnNewRecord = tblBelegPositionNewRecord
-    TableName = 'beleg_position'
     Left = 40
     Top = 96
   end
@@ -24,7 +22,7 @@ object dmKundenBestellung: TdmKundenBestellung
     Left = 128
     Top = 96
   end
-  object qryPersonAuswahl: TFDQuery
+  object qryPersonAuswahl: TFDMemTable
     Left = 40
     Top = 160
   end
@@ -33,7 +31,7 @@ object dmKundenBestellung: TdmKundenBestellung
     Left = 128
     Top = 160
   end
-  object qryRechnungstypAuswahl: TFDQuery
+  object qryRechnungstypAuswahl: TFDMemTable
     Left = 40
     Top = 224
   end

@@ -2,38 +2,31 @@ object dmEinstellungen: TdmEinstellungen
   Left = 0
   Top = 0
   OnCreate = DataModuleCreate
-  object tblPersonentyp: TFDTable
-    TableName = 'person_typ'
+  object tblPersonentyp: TFDMemTable
     Left = 40
     Top = 32
   end
-  object tblRollentyp: TFDTable
-    TableName = 'rolle_typ'
+  object tblRollentyp: TFDMemTable
     Left = 40
     Top = 96
   end
-  object tblAdressentyp: TFDTable
-    TableName = 'adressentyp'
+  object tblAdressentyp: TFDMemTable
     Left = 40
     Top = 160
   end
-  object tblEmailtyp: TFDTable
-    TableName = 'emailtyp'
+  object tblEmailtyp: TFDMemTable
     Left = 40
     Top = 224
   end
-  object tblTelefonnummertyp: TFDTable
-    TableName = 'telefonnummertyp'
+  object tblTelefonnummertyp: TFDMemTable
     Left = 40
     Top = 288
   end
-  object tblRechnungstyp: TFDTable
-    TableName = 'rechnungstyp'
+  object tblRechnungstyp: TFDMemTable
     Left = 40
     Top = 352
   end
-  object tblLeadquellentyp: TFDTable
-    TableName = 'leadquelle_typ'
+  object tblLeadquellentyp: TFDMemTable
     Left = 40
     Top = 416
   end
@@ -71,5 +64,39 @@ object dmEinstellungen: TdmEinstellungen
     DataSet = tblLeadquellentyp
     Left = 128
     Top = 416
+  end
+  object tblKompetenztyp: TFDMemTable
+    Left = 40
+    Top = 472
+  end
+  object dstblKompetenztyp: TDataSource
+    DataSet = tblKompetenztyp
+    Left = 128
+    Top = 472
+  end
+  object tblKategorie: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired]
+    UpdateOptions.CheckRequired = False
+    Left = 400
+    Top = 300
+  end
+  object dstblKategorie: TDataSource
+    DataSet = tblKategorie
+    Left = 496
+    Top = 300
+  end
+  object memWebEinstellung: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired]
+    UpdateOptions.CheckRequired = False
+    Left = 400
+    Top = 400
   end
 end

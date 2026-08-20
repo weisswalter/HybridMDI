@@ -1,0 +1,24 @@
+start
+a
+b
+c
+d
+e
+Modul geoeffnet, Fenster da                  True
+Vorgangstypen geladen (5)                    True
+Anlegen                                      True
+  ... Nummer vergeben                        True   S-2026-0001
+  ... Lookup Typ/Zustand gefuellt            True   Neu
+  ... Verlauf hat einen Eintrag              True
+Speichern                                    True
+Moegliche Schritte ab Neu (2)                True   Abgebrochen,"In Arbeit"
+Weiter nach In Arbeit                        True
+Weiter nach Abgeschlossen                    True
+  ... gilt als abgeschlossen                 True
+  ... Verlauf hat drei Eintraege             True
+  ... kein Schritt mehr moeglich             True
+Aendern am geschlossenen Vorgang abgelehnt   True
+Nachfolger angelegt                          True
+  ... Verknuepfung sichtbar                  True   S-2026-0001
+
+Alles in Ordnung.

@@ -1,0 +1,41 @@
+Kopfschalter:
+  Tag=0 Datei          Text= 39  Breite= 94  True
+  Tag=1 Stammdaten     Text= 96  Breite=134  True
+  Tag=2 Werkzeuge      Text= 86  Breite=142  True
+  Tag=3 Belege         Text= 53  Breite=130  True
+  Tag=4 Vorgänge       Text= 75  Breite=170  True
+
+0 tsDatei
+   ok      Neuer Mandant        Text= 87  Breite=140
+   ok      Mandant auswählen    Text=110  Breite=151
+   ok      Anwesenheit          Text= 73  Breite=150
+   ok      Kurs-Anwesenheit     Text=103  Breite=170
+1 tsStammdaten
+   ok      Personen             Text= 52  Breite=102
+   ok      Kunde                Text= 36  Breite= 90
+   ok      Klienten             Text= 47  Breite= 90
+   ok      Mitarbeiter          Text= 64  Breite= 90
+   ok      Lehrer               Text= 37  Breite= 90
+   ok      Löhne                Text= 34  Breite= 90
+   ok      Artikel              Text= 38  Breite= 83
+   ok      Lager                Text= 31  Breite= 90
+   ok      Anlagen              Text= 45  Breite= 90
+   ok      Dokumente            Text= 67  Breite=102
+   ok      Webinhalte           Text= 64  Breite=102
+   ok      Kurse                Text= 32  Breite= 90
+   ok      Feedback             Text= 53  Breite= 90
+2 tsWerkzeuge
+   ok      Scanner              Text= 45  Breite=100
+   ok      DB-Manager           Text= 71  Breite=112
+   ok      Einstellungen        Text= 74  Breite=100
+   ok      Benutzer             Text= 52  Breite=130
+3 tsBelege
+   ok      Kd.-Bestellung       Text= 82  Breite=135
+   ok      Lief.-Bestellung     Text= 88  Breite=145
+   ok      Lager-Entnahme       Text= 92  Breite=145
+4 tsVorgaenge
+   ok      E-Mail               Text= 34  Breite= 90
+   ok      Kalkulation          Text= 62  Breite=115
+   ok      Vorgänge             Text= 54  Breite=100
+
+Alle Beschriftungen passen.

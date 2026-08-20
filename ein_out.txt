@@ -1,0 +1,39 @@
+Fenster offen                            True
+Personentyp anlegen                      True
+   ... aendern                           True
+   ... leere Bezeichnung abgelehnt       True
+   ... loeschen                          True
+Rollentyp anlegen                        True
+   ... aendern                           True
+   ... leere Bezeichnung abgelehnt       True
+   ... loeschen                          True
+Adressentyp anlegen                      True
+   ... aendern                           True
+   ... leere Bezeichnung abgelehnt       True
+   ... loeschen                          True
+Emailtyp anlegen                         True
+   ... aendern                           True
+   ... leere Bezeichnung abgelehnt       True
+   ... loeschen                          True
+Telefonnummertyp anlegen                 True
+   ... aendern                           True
+   ... leere Bezeichnung abgelehnt       True
+   ... loeschen                          True
+Rechnungstyp anlegen                     True
+   ... aendern                           True
+   ... leere Bezeichnung abgelehnt       True
+   ... loeschen                          True
+Leadquelle anlegen                       True
+   ... aendern                           True
+   ... leere Bezeichnung abgelehnt       True
+   ... loeschen                          True
+Kompetenztyp anlegen                     True
+   ... aendern                           True
+   ... leere Bezeichnung abgelehnt       True
+   ... loeschen                          True
+Artikelkategorie anlegen                 True
+   ... aendern                           True
+   ... leere Bezeichnung abgelehnt       True
+   ... loeschen                          True
+
+Alles in Ordnung.

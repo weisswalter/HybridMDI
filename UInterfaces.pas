@@ -4,7 +4,12 @@ interface
 uses
    System.Rtti;
 type
-  EMessageType =(mtMessage, mtModulCall, mtException, mtPython, mtCSharp, mtCPlus, mtJava);
+  // mtBroadcast geht an ALLE erzeugten Module statt an eines: GetMessage
+  // traegt den Namen der Methode, die bei jedem gerufen wird.
+  // Neue Werte gehoeren ans Ende - sonst verschieben sich die
+  // Ordinalwerte der bestehenden.
+  EMessageType =(mtMessage, mtModulCall, mtException, mtPython, mtCSharp,
+                 mtCPlus, mtJava, mtBroadcast);
   IMyEvent = interface(IInterface)
     ['{3522E1C5-547F-4AB6-A799-5B3D3574D2FA}']
     // Routing — bei mtModulCall: GetMessage=Klassenname, GetSender=Methodenname

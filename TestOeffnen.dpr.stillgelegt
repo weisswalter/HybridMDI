@@ -1,0 +1,105 @@
+program TestOeffnen;
+{$APPTYPE CONSOLE}
+// Zaehlt, wie viele Anweisungen beim Oeffnen des Artikelstamms wirklich zur
+// Datenbank gehen, und wie lange es dauert. Gezaehlt wird ueber
+// pg_stat_database (eine Anweisung = eine Transaktion im Autocommit); die
+// Messabfrage selbst wird abgezogen.
+// Der MDI-Rahmen startet minimiert und ausserhalb des Bildschirms.
+uses
+  System.SysUtils, System.Classes, System.Diagnostics, Data.DB, Vcl.Forms,
+  FireDAC.Comp.Client,
+  ZentraleDatenDm, MandantDm, ArtikelStammDm, ArtikelStammFrm;
+
+type
+  TMdiRahmen = class(TForm)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TMdiRahmen.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+  FormStyle := fsMDIForm;
+  Position := poDesigned;
+  Left := -32000;
+  Top := -32000;
+  WindowState := wsMinimized;
+end;
+
+var
+  LRahmen: TMdiRahmen;
+  LDm: TdmArtikelStamm;
+  LZaehler: TFDQuery;
+  LUhr: TStopwatch;
+  LVorher: Int64;
+
+function Anweisungen: Int64;
+begin
+  LZaehler.Close;
+  LZaehler.Open;
+  Result := LZaehler.Fields[0].AsLargeInt;
+end;
+
+procedure Start;
+begin
+  LVorher := Anweisungen;
+  LUhr := TStopwatch.StartNew;
+end;
+
+procedure Takt(const AWas: string);
+var
+  LMs: Int64;
+  LN: Int64;
+begin
+  LMs := LUhr.ElapsedMilliseconds;
+  LN := Anweisungen - LVorher - 1;   // die Messabfrage selbst zaehlt nicht mit
+  Writeln(Format('%-30s %6d ms   %3d Anweisungen', [AWas, LMs, LN]));
+  Start;
+end;
+
+begin
+  try
+    RegisterClasses([TIntegerField, TWideStringField, TFMTBCDField,
+                     TWideMemoField]);
+    Application.ShowMainForm := False;
+    Application.Initialize;
+    Application.CreateForm(TMdiRahmen, LRahmen);
+
+    LUhr := TStopwatch.StartNew;
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).AlleTabellenLaden;
+    Writeln(Format('%-30s %6d ms', ['AlleTabellenLaden (Start)', LUhr.ElapsedMilliseconds]));
+
+    LZaehler := TFDQuery.Create(nil);
+    LZaehler.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+    LZaehler.SQL.Text :=
+      'SELECT xact_commit + xact_rollback FROM pg_stat_database ' +
+      'WHERE datname = current_database()';
+
+    TdmMandant(TdmMandant.GetInstance).CurrentMandantId := 3;
+
+    Start;
+    LDm := TdmArtikelStamm(TdmArtikelStamm.GetInstance);
+    Takt('Datenmodul erzeugen');
+
+    LDm.OpenArtikelStamm;
+    Takt('OpenArtikelStamm (1. Mal)');
+
+    frmArtikelStamm.Close;
+    Application.ProcessMessages;
+    Takt('Schliessen');
+
+    LDm.OpenArtikelStamm;
+    Takt('OpenArtikelStamm (2. Mal)');
+
+    frmArtikelStamm.Close;
+    Application.ProcessMessages;
+    LDm.OpenArtikelStamm;
+    Takt('OpenArtikelStamm (3. Mal)');
+
+    LZaehler.Free;
+  except
+    on E: Exception do
+      Writeln('FEHLER ', E.ClassName, ': ', E.Message);
+  end;
+  Halt(0);
+end.

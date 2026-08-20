@@ -1,0 +1,88 @@
+program TestOeffnenTrace;
+{$APPTYPE CONSOLE}
+// Schreibt jede abgesetzte Anweisung mit und markiert den Abschnitt, der das
+// zweite Oeffnen des Artikelstamms umfasst. FireDAC schaltet die Mitschrift
+// ueber einen Verbindungsparameter, der VOR dem Verbinden stehen muss -
+// deshalb hier einmal trennen und neu verbinden.
+// Der MDI-Rahmen startet minimiert und ausserhalb des Bildschirms.
+uses
+  System.SysUtils, System.Classes, Data.DB, Vcl.Forms,
+  FireDAC.Comp.Client, FireDAC.Moni.Base, FireDAC.Moni.FlatFile,
+  ZentraleDatenDm, MandantDm, ArtikelStammDm, ArtikelStammFrm;
+
+type
+  TMdiRahmen = class(TForm)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TMdiRahmen.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+  FormStyle := fsMDIForm;
+  Position := poDesigned;
+  Left := -32000;
+  Top := -32000;
+  WindowState := wsMinimized;
+end;
+
+var
+  LRahmen: TMdiRahmen;
+  LDm: TdmArtikelStamm;
+  LMoni: TFDMoniFlatFileClientLink;
+  LV: TFDConnection;
+  LMarke: TFDQuery;
+  LDatei: string;
+
+procedure Marke(const AText: string);
+begin
+  LMarke.Close;
+  LMarke.SQL.Text := 'SELECT ' + QuotedStr(AText) + ' AS marke';
+  LMarke.Open;
+  LMarke.Close;
+end;
+
+begin
+  LDatei := ExtractFilePath(ParamStr(0)) + 'oeffnen_trace.txt';
+  if FileExists(LDatei) then
+    DeleteFile(LDatei);
+  try
+    RegisterClasses([TIntegerField, TWideStringField, TFMTBCDField,
+                     TWideMemoField]);
+    Application.ShowMainForm := False;
+    Application.Initialize;
+    Application.CreateForm(TMdiRahmen, LRahmen);
+
+    LV := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+
+    LMoni := TFDMoniFlatFileClientLink.Create(nil);
+    LMoni.FileName := LDatei;
+    LMoni.FileAppend := True;
+    LMoni.ShowTraces := True;
+    LMoni.Tracing := True;
+
+    LV.Connected := False;
+    LV.Params.Values['MonitorBy'] := 'FlatFile';
+    LV.Connected := True;
+
+    LMarke := TFDQuery.Create(nil);
+    LMarke.Connection := LV;
+
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).AlleTabellenLaden;
+    TdmMandant(TdmMandant.GetInstance).CurrentMandantId := 3;
+    LDm := TdmArtikelStamm(TdmArtikelStamm.GetInstance);
+    LDm.OpenArtikelStamm;
+    frmArtikelStamm.Close;
+    Application.ProcessMessages;
+
+    Marke('MARKE_ANFANG');
+    LDm.OpenArtikelStamm;
+    Marke('MARKE_ENDE');
+
+    Writeln('Mitschrift: ', LDatei);
+  except
+    on E: Exception do
+      Writeln('FEHLER ', E.ClassName, ': ', E.Message);
+  end;
+  Halt(0);
+end.

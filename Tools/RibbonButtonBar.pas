@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.ExtCtrls, Vcl.Graphics,
-  Vcl.ImgList, JvGradient, JvTypes, JvNavPanelButtonTop, JvNavigationPane;
+  Vcl.ImgList, Data.DB, JvGradient, JvTypes, JvNavPanelButtonTop, JvNavigationPane;
 
 const
   cDefaultButtonWidth = 64;
@@ -84,6 +84,7 @@ type
     FTheme: TJvNavPanelTheme;
     FGradientStartColor: TColor;
     FGradientEndColor: TColor;
+    FDataSource: TDataSource;
 
     procedure SetButtons(const Value: TRibbonBarButtonCollection);
     procedure SetImages(const Value: TCustomImageList);
@@ -92,6 +93,7 @@ type
     procedure SetTheme(const Value: TJvNavPanelTheme);
     procedure SetGradientStartColor(const Value: TColor);
     procedure SetGradientEndColor(const Value: TColor);
+    procedure SetDataSource(const Value: TDataSource);
     procedure ApplyGradientColors;
     procedure ClearGeneratedButtons;
     procedure RebuildButtons;
@@ -116,6 +118,15 @@ type
       write SetGradientStartColor default cDefGradientStart;
     property GradientEndColor: TColor read FGradientEndColor
       write SetGradientEndColor default cDefGradientEnd;
+    // Sagt, welche DataSource diese Leiste bedient (Walter, 06.08.2026).
+    // Die Buttons feuern weiterhin ausschliesslich ueber ihre Action - die
+    // Leiste selbst fuehrt nichts aus. Der Zweck von DataSource ist, dass
+    // ein gemeinsamer Action-Handler (z.B. TfrmGuiTemplate.ActionRechtsExecute)
+    // ueber TAction.ActionList.Tag die richtige Gruppe findet und dann auf
+    // der Ribbon-Seite nach der Leiste mit passendem Tag sucht, um an deren
+    // DataSource zu kommen - ohne dass jedes Modul GetDetailDataSource
+    // ueberschreiben muss.
+    property DataSource: TDataSource read FDataSource write SetDataSource;
   end;
 
 procedure Register;
@@ -318,10 +329,22 @@ begin
   begin
     if AComponent = FImages then
       SetImages(nil);
+    if AComponent = FDataSource then
+      FDataSource := nil;
     if Assigned(FButtons) and (AComponent is TBasicAction) then
       for I := 0 to FButtons.Count - 1 do
         if FButtons[I].Action = AComponent then
           FButtons[I].Action := nil;
+  end;
+end;
+
+procedure TRibbonButtonBar.SetDataSource(const Value: TDataSource);
+begin
+  if FDataSource <> Value then
+  begin
+    if Assigned(Value) then
+      Value.FreeNotification(Self);
+    FDataSource := Value;
   end;
 end;
 

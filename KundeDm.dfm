@@ -11,13 +11,11 @@ object dmKunde: TdmKunde
     Left = 128
     Top = 32
   end
-  object tblPerson: TFDTable
-    TableName = 'person'
+  object tblPerson: TFDMemTable
     Left = 40
     Top = 96
   end
-  object tblKunde: TFDTable
-    TableName = 'kunde'
+  object tblKunde: TFDMemTable
     Left = 40
     Top = 160
   end

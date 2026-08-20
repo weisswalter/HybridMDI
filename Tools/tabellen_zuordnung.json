@@ -1,0 +1,84 @@
+{
+  "AnlagenDm": {
+    "tblAnlage": "anlage"
+  },
+  "ArtikelStammDm": {
+    "tblArtikel": "artikel",
+    "tblArtikelFach": "artikel_fach",
+    "tblArtikelFoto": "artikel_foto"
+  },
+  "BenutzerDm": {
+    "tblBenutzerMandant": "benutzer_mandant"
+  },
+  "EinstellungenDm": {
+    "tblPersonentyp": "person_typ",
+    "tblRollentyp": "rolle_typ",
+    "tblAdressentyp": "adressentyp",
+    "tblEmailtyp": "emailtyp",
+    "tblTelefonnummertyp": "telefonnummertyp",
+    "tblRechnungstyp": "rechnungstyp",
+    "tblLeadquellentyp": "leadquelle_typ",
+    "tblKompetenztyp": "kompetenz_typ"
+  },
+  "KalkulationDm": {
+    "tblKalkulation": "kalkulation",
+    "tblPosition": "kalkulation_position",
+    "tblZuschlag": "zuschlagssatz",
+    "tblKostenart": "kostenart",
+    "tblKostenstelle": "kostenstelle",
+    "tblKonto": "konto"
+  },
+  "KlientDm": {
+    "tblPerson": "person",
+    "tblKlient": "klient"
+  },
+  "KundeDm": {
+    "tblPerson": "person",
+    "tblKunde": "kunde"
+  },
+  "KundenBestellungDm": {
+    "tblBeleg": "beleg",
+    "tblBelegPosition": "beleg_position"
+  },
+  "KursAnwesenheitDm": {
+    "tblAnwesenheit": "kurs_anwesenheit"
+  },
+  "KursDm": {
+    "tblKurs": "kurs"
+  },
+  "LagerDm": {
+    "tblMandant": "mandant",
+    "tblLager": "lager",
+    "tblAdressinfo": "adressinfo",
+    "tblRaum": "raum",
+    "tblAusstattung": "ausstattung",
+    "tblRaumAusstattung": "raum_ausstattung",
+    "tblRegal": "regal",
+    "tblRegalFach": "regal_fach"
+  },
+  "LagerEntnahmeDm": {
+    "tblBeleg": "beleg",
+    "tblBelegPosition": "beleg_position"
+  },
+  "LehrerDm": {
+    "tblPerson": "person",
+    "tblPersonBeziehung": "person_beziehung"
+  },
+  "LieferantenBestellungDm": {
+    "tblBeleg": "beleg",
+    "tblBelegPosition": "beleg_position"
+  },
+  "LohnDm": {
+    "tblLohn": "person_lohn",
+    "tblZulage": "lohn_zulage",
+    "tblAbzug": "lohn_abzugsart"
+  },
+  "MailDm": {
+    "tblKonto": "email_konto",
+    "tblDokument": "dokument"
+  },
+  "MitarbeiterDm": {
+    "tblPerson": "person",
+    "tblPersonBeziehung": "person_beziehung"
+  }
+}

@@ -1,0 +1,15 @@
+Fenster offen                                  True
+Anmeldepflicht anfangs aus                     True
+Einschalten ohne Konto abgelehnt               True
+Konto fuer Person angelegt                     True
+Anmeldung mit Namen                            True
+Konto im Gitter gefunden                       True
+Adressen der Person (3)                        True   walter.weiss.arcor@gmail.com,Hallo@yahoo.de,zzpruef.anmeldung@example.org
+E-Mail ohne Markierung geht nicht              True
+Adresse als Anmeldung markiert                 True
+Anmeldung mit markierter E-Mail                True
+Anmeldepflicht ein                             True
+Anmeldepflicht aus trotz Konto                 True
+aufgeraeumt                                    True
+
+Alles in Ordnung.

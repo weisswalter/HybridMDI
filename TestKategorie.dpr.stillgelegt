@@ -1,0 +1,157 @@
+program TestKategorie;
+{$APPTYPE CONSOLE}
+// Prueft die Artikelkategorien: Liste im Artikelstamm, Haken setzen und
+// wegnehmen, Mehrfachzuordnung, Mandantengrenze, und den Reiter im
+// Einstellungsfenster. Raeumt am Ende auf.
+// Der MDI-Rahmen startet minimiert und ausserhalb des Bildschirms.
+uses
+  System.SysUtils, System.Classes, Data.DB, Vcl.Forms, Vcl.Controls,
+  FireDAC.Comp.Client,
+  ZentraleDatenDm, MandantDm, ArtikelStammDm, ArtikelStammFrm,
+  EinstellungenDm, EinstellungenFrm;
+
+type
+  TMdiRahmen = class(TForm)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TMdiRahmen.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+  FormStyle := fsMDIForm;
+  Position := poDesigned;
+  Left := -32000;
+  Top := -32000;
+  WindowState := wsMinimized;
+end;
+
+var
+  LRahmen: TMdiRahmen;
+  LDm: TdmArtikelStamm;
+  LEin: TdmEinstellungen;
+  LListe: TStringList;
+  LPruef: TFDQuery;
+  LFehler: Integer = 0;
+  LKat1, LKat2, LNeu: Integer;
+  LMeldung: string;
+
+procedure Sag(const ATitel: string; AGut: Boolean; const AText: string = '');
+var
+  LZusatz: string;
+begin
+  if AText = '' then LZusatz := '' else LZusatz := '   ' + AText;
+  Writeln(Format('%-46s %s%s', [ATitel, BoolToStr(AGut, True), LZusatz]));
+  if not AGut then Inc(LFehler);
+end;
+
+function Zaehle(const ASql: string): Integer;
+begin
+  LPruef.Close;
+  LPruef.SQL.Text := ASql;
+  LPruef.Open;
+  Result := LPruef.Fields[0].AsInteger;
+end;
+
+begin
+  try
+    Application.ShowMainForm := False;
+    Application.Initialize;
+    Application.CreateForm(TMdiRahmen, LRahmen);
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).AlleTabellenLaden;
+    TdmMandant(TdmMandant.GetInstance).CurrentMandantId := 3;
+
+    LPruef := TFDQuery.Create(nil);
+    LListe := TStringList.Create;
+    try
+      LPruef.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+
+      LDm := TdmArtikelStamm(TdmArtikelStamm.GetInstance);
+      LDm.OpenArtikelStamm;
+      Sag('Artikelstamm geoeffnet', Assigned(frmArtikelStamm));
+
+      LDm.KategorienFuellen(LListe);
+      Sag(Format('Kategorien in der Auswahl (%d)', [LListe.Count]),
+          LListe.Count = 6, LListe.CommaText);
+
+      LKat1 := Integer(NativeInt(LListe.Objects[0]));
+      LKat2 := Integer(NativeInt(LListe.Objects[1]));
+
+      Sag('Vorher nicht zugeordnet',
+          not LDm.IstZugeordnet(LKat1) and not LDm.IstZugeordnet(LKat2));
+
+      LMeldung := LDm.KategorieSetzen(LKat1, True);
+      Sag('Haken setzen', (LMeldung = '') and LDm.IstZugeordnet(LKat1), LMeldung);
+
+      LMeldung := LDm.KategorieSetzen(LKat2, True);
+      Sag('Zweite Kategorie dazu',
+          (LMeldung = '') and LDm.IstZugeordnet(LKat1) and
+          LDm.IstZugeordnet(LKat2), LMeldung);
+
+      // Zweimal setzen darf nichts kaputtmachen
+      LMeldung := LDm.KategorieSetzen(LKat1, True);
+      Sag('Nochmal setzen bleibt eine Zeile',
+          (LMeldung = '') and
+          (Zaehle(Format('SELECT count(*) FROM artikel_kategorie ' +
+                         'WHERE artikel_id=%d AND kategorie_id=%d',
+             [LDm.tblArtikel.FieldByName('artikel_id').AsInteger, LKat1])) = 1),
+          LMeldung);
+
+      LMeldung := LDm.KategorieSetzen(LKat1, False);
+      Sag('Haken wegnehmen',
+          (LMeldung = '') and not LDm.IstZugeordnet(LKat1) and
+          LDm.IstZugeordnet(LKat2), LMeldung);
+
+      LMeldung := LDm.KategorieSetzen(LKat2, False);
+      Sag('Wieder leer', (LMeldung = '') and not LDm.IstZugeordnet(LKat2));
+
+      // Mandantengrenze: Kategorie eines anderen Mandanten
+      LPruef.Close;
+      LPruef.SQL.Text := 'SELECT kategorie_id FROM kategorie WHERE mandant_id=1 LIMIT 1';
+      LPruef.Open;
+      LMeldung := LDm.KategorieSetzen(LPruef.Fields[0].AsInteger, True);
+      Sag('Fremder Mandant wird abgelehnt', LMeldung <> '');
+
+      // Einstellungsfenster: anlegen und aendern ueber die Funktion
+      LEin := TdmEinstellungen(TdmEinstellungen.GetInstance);
+      LEin.OpenEinstellungen;
+      Sag('Einstellungsfenster offen', Assigned(frmEinstellungen));
+      Sag('  ... Kategorie-Reiter ist Nummer 8', LEin.IstKategorieTab(8));
+
+      LEin.tblKategorie.Append;
+      LEin.tblKategorie.FieldByName('bezeichnung').AsString := 'ZZPruef Kategorie';
+      LEin.tblKategorie.FieldByName('sortierung').AsInteger := 99;
+      LMeldung := LEin.KategorieSpeichern;
+      LNeu := Zaehle('SELECT count(*) FROM kategorie WHERE bezeichnung=''ZZPruef Kategorie''');
+      Sag('Neue Kategorie gespeichert', (LMeldung = '') and (LNeu = 1), LMeldung);
+
+      LEin.tblKategorie.Edit;
+      LEin.tblKategorie.FieldByName('bezeichnung').AsString := 'ZZPruef geaendert';
+      LMeldung := LEin.KategorieSpeichern;
+      Sag('Kategorie geaendert',
+          (LMeldung = '') and
+          (Zaehle('SELECT count(*) FROM kategorie WHERE bezeichnung=''ZZPruef geaendert''') = 1),
+          LMeldung);
+
+      Sag('  ... leere Bezeichnung wird abgelehnt',
+          (function: Boolean
+           var LM: string;
+           begin
+             LEin.tblKategorie.Edit;
+             LEin.tblKategorie.FieldByName('bezeichnung').AsString := '   ';
+             LM := LEin.KategorieSpeichern;
+             Result := LM <> '';
+           end)());
+    finally
+      LPruef.Free; LListe.Free;
+    end;
+
+    Writeln;
+    if LFehler = 0 then Writeln('Alles in Ordnung.')
+                   else Writeln(LFehler, ' Pruefung(en) fehlgeschlagen.');
+  except
+    on E: Exception do
+      Writeln('FEHLER ', E.ClassName, ': ', E.Message);
+  end;
+  Halt(0);
+end.

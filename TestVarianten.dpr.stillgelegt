@@ -1,0 +1,119 @@
+program TestVarianten;
+{$APPTYPE CONSOLE}
+// Vergleicht den im Speicher aufgebauten Variantenbaum mit fn_variante_baum.
+// Der MDI-Rahmen startet minimiert und ausserhalb des Bildschirms - sonst
+// reisst der Pruefstand dem Anwender den Fokus weg.
+uses
+  System.SysUtils, System.Classes, System.Math, Data.DB, Vcl.Forms, Vcl.Controls,
+  Winapi.Windows, FireDAC.Comp.Client,
+  ZentraleDatenDm, MandantDm, ArtikelStammDm, ArtikelStammFrm;
+
+type
+  TMdiRahmen = class(TForm)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TMdiRahmen.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+  FormStyle := fsMDIForm;
+  Position := poDesigned;
+  Left := -32000;
+  Top := -32000;
+  WindowState := wsMinimized;
+end;
+
+// Alle Spalten, die beide Seiten liefern -- nicht nur eine Auswahl,
+// sonst faellt ein Unterschied in kurzzeichen oder aktiv nicht auf.
+function ZeileVon(ADs: TDataSet): string;
+begin
+  Result := Format('%d|%d|%d|%s|%s|%s|%s|%s|%d',
+    [ADs.FieldByName('ebene').AsInteger,
+     ADs.FieldByName('variante_id').AsInteger,
+     ADs.FieldByName('eltern_id').AsInteger,   // NULL liefert 0 auf beiden Seiten
+     ADs.FieldByName('name').AsString,
+     ADs.FieldByName('kurzzeichen').AsString,
+     ADs.FieldByName('pfad').AsString,
+     BoolToStr(ADs.FieldByName('hat_kinder').AsBoolean, True),
+     ADs.FieldByName('aequivalenzen').AsString,
+     ADs.FieldByName('sortierung').AsInteger]);
+  Result := Result + '|' + BoolToStr(ADs.FieldByName('aktiv').AsBoolean, True);
+end;
+
+procedure Einlesen(ADs: TDataSet; AZiel: TStringList);
+begin
+  AZiel.Clear;
+  ADs.First;
+  while not ADs.Eof do
+  begin
+    AZiel.Add(ZeileVon(ADs));
+    ADs.Next;
+  end;
+end;
+
+var
+  LRahmen: TMdiRahmen;
+  LDm: TdmArtikelStamm;
+  LBaum: TDataSet;
+  LFunk: TFDQuery;
+  LNeu, LAlt: TStringList;
+  LMandant, I: Integer;
+begin
+  try
+    Application.ShowMainForm := False;
+    Application.Initialize;
+    Application.CreateForm(TMdiRahmen, LRahmen);
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).AlleTabellenLaden;
+
+    LFunk := TFDQuery.Create(nil);
+    LNeu := TStringList.Create;
+    LAlt := TStringList.Create;
+    try
+      LFunk.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+
+      for LMandant in [1, 3] do
+      begin
+        TdmMandant(TdmMandant.GetInstance).CurrentMandantId := LMandant;
+        LDm := TdmArtikelStamm(TdmArtikelStamm.GetInstance);
+        LDm.OpenArtikelStamm;
+        LDm.LadeVariantenBaum;
+
+        LBaum := LDm.FindComponent('tblVariantenBaum') as TDataSet;
+        Einlesen(LBaum, LNeu);
+
+        LFunk.Close;
+        LFunk.SQL.Text := 'SELECT * FROM fn_variante_baum(' + IntToStr(LMandant) + ')';
+        LFunk.Open;
+        Einlesen(LFunk, LAlt);
+
+        // Reihenfolge zaehlt beim Baum -- nicht sortieren
+        Writeln(Format('Mandant %d: neu=%d alt=%d  gleich=%s',
+          [LMandant, LNeu.Count, LAlt.Count,
+           BoolToStr(LNeu.Text = LAlt.Text, True)]));
+        if LNeu.Text <> LAlt.Text then
+          for I := 0 to Max(LNeu.Count, LAlt.Count) - 1 do
+          begin
+            if (I < LNeu.Count) and (I < LAlt.Count) and (LNeu[I] = LAlt[I]) then
+              Continue;
+            if I < LNeu.Count then Writeln('  NEU ', I, ': ', LNeu[I])
+                               else Writeln('  NEU ', I, ': <fehlt>');
+            if I < LAlt.Count then Writeln('  ALT ', I, ': ', LAlt[I])
+                              else Writeln('  ALT ', I, ': <fehlt>');
+          end;
+
+        if Assigned(frmArtikelStamm) then
+        begin
+          frmArtikelStamm.Close;
+          Application.ProcessMessages;
+        end;
+      end;
+    finally
+      LFunk.Free; LNeu.Free; LAlt.Free;
+    end;
+  except
+    on E: Exception do
+      Writeln('FEHLER ', E.ClassName, ': ', E.Message);
+  end;
+  Halt(0);
+end.

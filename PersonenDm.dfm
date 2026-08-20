@@ -3,181 +3,130 @@ object dmPersonen: TdmPersonen
   Top = 0
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
-  object FDConnection: TFDConnection
-    LoginPrompt = False
-    Left = 32
-    Top = 32
-  end
-  object qryPersonen: TFDQuery
-    Left = 104
-    Top = 32
-  end
   object dsPersonen: TDataSource
     Left = 176
     Top = 32
-  end
-  object qryAdressen: TFDQuery
-    Left = 104
-    Top = 96
   end
   object dsAdressen: TDataSource
     Left = 176
     Top = 96
   end
-  object qryEmails: TFDQuery
-    Left = 88
-    Top = 168
-  end
   object dsEmails: TDataSource
     Left = 152
     Top = 168
   end
-  object tblPerson: TFDTable
+  object tblPerson: TFDMemTable
     AfterPost = tblPersonAfterPost
     IndexFieldNames = 'person_id'
     MasterSource = dstblPersonMandant
     MasterFields = 'person_id'
-    Connection = FDConnection
-    TableName = 'person'
     Left = 416
     Top = 88
   end
-  object tblAdresse: TFDTable
+  object tblAdresse: TFDMemTable
     AfterPost = tblAdresseAfterPost
     IndexFieldNames = 'adresse_id'
     MasterSource = dstblPersonAdresse
     MasterFields = 'adresse_id'
-    Connection = FDConnection
-    TableName = 'adresse'
     Left = 496
     Top = 88
   end
-  object tblEmailadresse: TFDTable
+  object tblEmailadresse: TFDMemTable
     AfterPost = tblEmailadresseAfterPost
     IndexFieldNames = 'email_id'
     MasterSource = dstblPersonEmail
     MasterFields = 'email_id'
-    Connection = FDConnection
-    TableName = 'emailadresse'
     Left = 408
     Top = 200
   end
-  object tblPersonAdresse: TFDTable
+  object tblPersonAdresse: TFDMemTable
     IndexFieldNames = 'mandant_id;person_id'
     MasterSource = dstblPersonMandant
     MasterFields = 'mandant_id;person_id'
-    Connection = FDConnection
-    TableName = 'person_adresse'
     Left = 488
     Top = 200
   end
-  object tblPersonEmail: TFDTable
+  object tblPersonEmail: TFDMemTable
     IndexFieldNames = 'mandant_id;person_id'
     MasterSource = dstblPersonMandant
     MasterFields = 'mandant_id;person_id'
-    Connection = FDConnection
-    TableName = 'person_email'
     Left = 568
     Top = 88
   end
-  object tblPersonMandant: TFDTable
+  object tblPersonMandant: TFDMemTable
     IndexFieldNames = 'mandant_id'
     MasterSource = dstblMandant
     MasterFields = 'mandant_id'
-    Connection = FDConnection
-    TableName = 'person_mandant'
     Left = 568
     Top = 200
   end
-  object tblPersonTyp: TFDTable
-    Connection = FDConnection
-    TableName = 'person_typ'
+  object tblPersonTyp: TFDMemTable
     Left = 648
     Top = 88
   end
-  object tblAdressentyp: TFDTable
+  object tblAdressentyp: TFDMemTable
     IndexFieldNames = 'mandant_id'
     MasterSource = dstblMandant
     MasterFields = 'mandant_id'
-    Connection = FDConnection
-    TableName = 'adressentyp'
     Left = 648
     Top = 200
   end
-  object tblEmailtyp: TFDTable
+  object tblEmailtyp: TFDMemTable
     IndexFieldNames = 'mandant_id'
     MasterSource = dstblMandant
     MasterFields = 'mandant_id'
-    Connection = FDConnection
-    TableName = 'emailtyp'
     Left = 728
     Top = 88
   end
-  object tblTelefonnummertyp: TFDTable
+  object tblTelefonnummertyp: TFDMemTable
     IndexFieldNames = 'mandant_id'
     MasterSource = dstblMandant
     MasterFields = 'mandant_id'
-    Connection = FDConnection
-    TableName = 'telefonnummertyp'
     Left = 728
     Top = 200
   end
-  object tblTelefonnummer: TFDTable
+  object tblTelefonnummer: TFDMemTable
     AfterPost = tblTelefonnummerAfterPost
     IndexFieldNames = 'telefonnummer_id'
     MasterSource = dstblPersonTelefonnummer
     MasterFields = 'telefonnummer_id'
-    Connection = FDConnection
-    TableName = 'telefonnummer'
     Left = 808
     Top = 88
   end
-  object tblPersonTelefonnummer: TFDTable
+  object tblPersonTelefonnummer: TFDMemTable
     IndexFieldNames = 'mandant_id;person_id'
     MasterSource = dstblPersonMandant
     MasterFields = 'mandant_id;person_id'
-    Connection = FDConnection
-    TableName = 'person_telefonnummer'
     Left = 808
     Top = 200
   end
-  object tblRolleTyp: TFDTable
+  object tblRolleTyp: TFDMemTable
     IndexFieldNames = 'mandant_id'
     MasterSource = dstblMandant
     MasterFields = 'mandant_id'
-    Connection = FDConnection
-    TableName = 'rolle_typ'
     Left = 888
     Top = 88
   end
-  object tblPersonBeziehung: TFDTable
+  object tblPersonBeziehung: TFDMemTable
     IndexFieldNames = 'mandant_id;quell_person_id'
     MasterSource = dstblPersonMandant
     MasterFields = 'mandant_id;person_id'
-    Connection = FDConnection
-    TableName = 'person_beziehung'
     Left = 888
     Top = 200
   end
-  object tblMandant: TFDTable
-    Connection = FDConnection
-    TableName = 'mandant'
+  object tblMandant: TFDMemTable
     Left = 968
     Top = 88
   end
-  object tblLand: TFDTable
+  object tblLand: TFDMemTable
     IndexFieldNames = 'land_id'
-    Connection = FDConnection
-    TableName = 'land'
     Left = 1048
     Top = 88
   end
-  object tblBezirk: TFDTable
+  object tblBezirk: TFDMemTable
     IndexFieldNames = 'land_id'
     MasterSource = dstblAdresse
     MasterFields = 'land_id'
-    Connection = FDConnection
-    TableName = 'bezirk'
     Left = 1048
     Top = 200
   end

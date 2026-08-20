@@ -30,7 +30,7 @@ public static class MailBridge
     // Konfigurationsdatei: die Verbindungsdaten stehen im selben Postgres,
     // aus dem auch Heisenberg liest.
     private static string _connString =
-        "Host=localhost;Port=5432;Database=TRTHeisenberg;Username=postgres;Password=postgres";
+        "Host=localhost;Port=5455;Database=TRTHeisenberg;Username=wwe123;Password=a4cX7pAp29WRK7XHkGHBzs4DIhjAM14Z";
 
     /// <summary>Erlaubt Delphi, die Verbindungszeichenfolge zu setzen
     /// (z.B. wenn die Datenbank spaeter auf dem VPS liegt).</summary>

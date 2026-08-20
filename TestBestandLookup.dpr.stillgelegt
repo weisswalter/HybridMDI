@@ -1,0 +1,119 @@
+program TestBestandLookup;
+{$APPTYPE CONSOLE}
+// Vergleicht memLagerort (Sicht + Lookup-Felder auf artikel_fach) Satz fuer
+// Satz mit dem, was fn_lagerort_bestand fuer denselben Artikel liefert.
+// Der MDI-Rahmen startet minimiert und ausserhalb des Bildschirms, damit der
+// Pruefstand niemandem den Fokus wegreisst.
+uses
+  System.SysUtils, System.Classes, System.Variants, Data.DB, Vcl.Forms,
+  FireDAC.Comp.Client,
+  ZentraleDatenDm, MandantDm, ArtikelStammDm, ArtikelStammFrm;
+
+type
+  TMdiRahmen = class(TForm)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TMdiRahmen.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+  FormStyle := fsMDIForm;
+  Position := poDesigned;
+  Left := -32000;
+  Top := -32000;
+  WindowState := wsMinimized;
+end;
+
+function Schluessel(ADs: TDataSet): string;
+  function F(const AName: string): string;
+  var LFeld: TField;
+  begin
+    LFeld := ADs.FindField(AName);
+    if not Assigned(LFeld) then Exit('?');
+    if LFeld.IsNull then Exit('-');
+    if LFeld.DataType in [ftBCD, ftFMTBcd, ftFloat] then
+      Exit(FormatFloat('0.###', LFeld.AsFloat));
+    Result := LFeld.AsString;
+  end;
+begin
+  // Ortskette, Bestand und beide Einheitsangaben - die einheit_name geht
+  // ueber zwei Stufen (artikel_fach -> einheit) und ist deshalb die
+  // eigentliche Probe aufs Exempel.
+  Result := Format('%s|%s|%s|%s|%s|%s|%s|%s|%s', [F('fach_id'), F('regal_id'),
+    F('raum_id'), F('adresse_id'), F('fach_bezeichnung'), F('ort'),
+    F('artikel_fach_id'), F('bestand'), F('einheit_name')]);
+end;
+
+var
+  LRahmen: TMdiRahmen;
+  LDm: TdmArtikelStamm;
+  LBaum: TDataSet;
+  LFunk: TFDQuery;
+  LNeu, LAlt: TStringList;
+  I, LArtikel, LFehler: Integer;
+begin
+  LFehler := 0;
+  try
+    // Persistente Felder im DFM brauchen ihre Klassen im Klassenregister.
+    // Zur Laufzeit meldet sie niemand an - das macht sonst die IDE.
+    RegisterClasses([TIntegerField, TWideStringField, TFMTBCDField, TWideMemoField]);
+    Application.ShowMainForm := False;
+    Application.Initialize;
+    Application.CreateForm(TMdiRahmen, LRahmen);
+    TdmZentraleDaten(TdmZentraleDaten.GetInstance).AlleTabellenLaden;
+    TdmMandant(TdmMandant.GetInstance).CurrentMandantId := 3;
+    LDm := TdmArtikelStamm(TdmArtikelStamm.GetInstance);
+    LDm.OpenArtikelStamm;
+
+    LBaum := LDm.FindComponent('memLagerort') as TDataSet;
+    LFunk := TFDQuery.Create(nil);
+    LNeu := TStringList.Create;
+    LAlt := TStringList.Create;
+    try
+      LFunk.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+
+      LDm.tblArtikel.First;
+      for I := 1 to 8 do
+      begin
+        if LDm.tblArtikel.Eof then Break;
+        LArtikel := LDm.tblArtikel.FieldByName('artikel_id').AsInteger;
+        LDm.LadeBestandBaum(LArtikel);
+
+        LNeu.Clear;
+        LBaum.First;
+        while not LBaum.Eof do begin LNeu.Add(Schluessel(LBaum)); LBaum.Next; end;
+
+        LFunk.Close;
+        LFunk.SQL.Text := 'SELECT * FROM fn_lagerort_bestand(' + IntToStr(LArtikel) + ')';
+        LFunk.Open;
+        LAlt.Clear;
+        while not LFunk.Eof do begin LAlt.Add(Schluessel(LFunk)); LFunk.Next; end;
+
+        LNeu.Sort; LAlt.Sort;
+        Writeln(Format('Artikel %-4d neu=%d alt=%d  %s', [LArtikel, LNeu.Count,
+          LAlt.Count, BoolToStr(LNeu.Text = LAlt.Text, True)]));
+        if LNeu.Text <> LAlt.Text then
+        begin
+          Inc(LFehler);
+          Writeln('   NEU: ', StringReplace(LNeu.Text, sLineBreak, '  ', [rfReplaceAll]));
+          Writeln('   ALT: ', StringReplace(LAlt.Text, sLineBreak, '  ', [rfReplaceAll]));
+        end;
+
+        LDm.tblArtikel.Next;
+      end;
+
+      Writeln;
+      if LFehler = 0 then
+        Writeln('Bestand-Baum: alles gleich.')
+      else
+        Writeln(LFehler, ' Artikel weichen ab.');
+    finally
+      LFunk.Free; LNeu.Free; LAlt.Free;
+    end;
+  except
+    on E: Exception do
+      Writeln('FEHLER ', E.ClassName, ': ', E.Message);
+  end;
+  Halt(0);
+end.

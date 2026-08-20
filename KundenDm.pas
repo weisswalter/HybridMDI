@@ -9,12 +9,11 @@ uses
   System.SysUtils, System.Classes,
   EventBus,
   uAppEvents,
+  Vcl.Forms,
   udmModuleTemplate;
 
 type
   TdmKunden = class(TdmModuleTemplate)
-    procedure DataModuleCreate(Sender: TObject);
-    procedure DataModuleDestroy(Sender: TObject);
   private
     procedure LoadData;
   public
@@ -33,18 +32,9 @@ implementation
 {$R *.dfm}
 
 uses
-  Vcl.Forms,
-  KundenFrm;
+  KundenFrm, System.SyncObjs, ZentraleDatenDm;
 
-procedure TdmKunden.DataModuleCreate(Sender: TObject);
-begin
-  // Registrierung übernimmt TdmModuleTemplate.Create (SilentRegisterSubscriberForEvents)
-end;
 
-procedure TdmKunden.DataModuleDestroy(Sender: TObject);
-begin
-  // Deregistrierung übernimmt TdmModuleTemplate.Destroy
-end;
 
 procedure TdmKunden.LoadData;
 begin
@@ -52,8 +42,23 @@ begin
   // frmKunden.SetData(...)
 end;
 
+var
+  GSperreKunden: TCriticalSection;
+
 class function TdmKunden.GetInstance: TObject;
 begin
+  // Doppelte Pruefung: der Assigned-Test allein ist nicht threadsicher -
+  // zwei Threads koennen beide false sehen und beide eine Instanz anlegen.
+  if not Assigned(dmKunden) then
+  begin
+    GSperreKunden.Enter;
+    try
+      if not Assigned(dmKunden) then
+        Application.CreateForm(TdmKunden, dmKunden);
+    finally
+      GSperreKunden.Leave;
+    end;
+  end;
   Result := dmKunden;
 end;
 
@@ -71,5 +76,12 @@ begin
   // Rückmeldung vom Fenster verarbeiten (z.B. in DB speichern)
   // AEvent.ResultText enthält die Daten
 end;
+
+
+initialization
+  GSperreKunden := TCriticalSection.Create;
+
+finalization
+  GSperreKunden.Free;
 
 end.

@@ -1,0 +1,338 @@
+program TestMasterDetail;
+{$APPTYPE CONSOLE}
+// Prueft Master-Detail im Artikelstamm auf INHALT, nicht auf Anzahl.
+//
+// Der vorige Stand dieses Pruefstands hat nur RecordCount verglichen. Das
+// reicht nicht: zeigt die Detailtabelle immer dieselben n Saetze der ganzen
+// Tabelle, stimmt die Anzahl trotzdem — und der Anwender sieht bei jedem
+// Artikel dasselbe Foto. Verglichen wird deshalb, WELCHE Saetze sichtbar
+// sind (Beschreibung und Bildgroesse).
+//
+// Artikel A bekommt zwei Fotos (1x1 PNG, 70 Bytes), Artikel B eines
+// (4x4 PNG, 72 Bytes). Zeigt B das Bild von A, faellt das an der Groesse auf.
+//
+// Mitgeprueft wird die Kategorie-Ankreuzliste: die laeuft nicht ueber
+// MasterSource, sondern ueber Locate auf memArtikelKategorie — und braucht
+// dafuer die vollstaendige Kopie der Bruecke.
+uses
+  System.SysUtils, System.Classes, System.StrUtils, System.Variants,
+  Data.DB, Vcl.Forms, Vcl.Controls,
+  FireDAC.Comp.Client, FireDAC.Comp.DataSet,
+  ZentraleDatenDm, MandantDm, ArtikelStammDm, ArtikelStammFrm;
+
+type
+  TMdiRahmen = class(TForm)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TMdiRahmen.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+  FormStyle := fsMDIForm;
+  Position := poDesigned;
+  Left := -32000;
+  Top := -32000;
+  WindowState := wsMinimized;
+end;
+
+const
+  CPngA = '89504e470d0a1a0a0000000d49484452000000010000000108060000' +
+          '001f15c4890000000d49444154789c63606060f80f00010401005fe5' +
+          'c34b0000000049454e44ae426082';          // 1x1, 70 Bytes
+  CPngB = '89504e470d0a1a0a0000000d49484452000000040000000408060000' +
+          '00a9f19e7e0000000f49444154789c63f88f061848170000783c3fc1' +
+          '58ee29a80000000049454e44ae426082';      // 4x4, 72 Bytes
+
+var
+  LRahmen: TMdiRahmen;
+  LDm: TdmArtikelStamm;
+  LFunk: TFDQuery;
+  LFehler: Integer = 0;
+  LArtA, LArtB, LFach, LKatA, LKatB: Integer;
+
+procedure Sag(const ATitel: string; AGut: Boolean; const AText: string = '');
+begin
+  Writeln(Format('%-44s %-5s %s', [ATitel, BoolToStr(AGut, True), AText]));
+  if not AGut then
+    Inc(LFehler);
+end;
+
+function Zaehle(const ASql: string): Integer;
+begin
+  LFunk.Close;
+  LFunk.SQL.Text := ASql;
+  LFunk.Open;
+  Result := LFunk.Fields[0].AsInteger;
+end;
+
+// Fuer Funktionen ohne brauchbaren Rueckgabewert (RETURNS void liefert eine
+// leere Spalte -- AsInteger wirft darauf).
+procedure RufeAuf(const ASql: string);
+begin
+  LFunk.Close;
+  LFunk.SQL.Text := ASql;
+  LFunk.Open;
+  LFunk.Close;
+end;
+
+// Was die Detailtabelle gerade WIRKLICH zeigt.
+function SichtbareFotos: string;
+var
+  LMerker: TBookmark;
+begin
+  Result := '';
+  if LDm.tblArtikelFoto.IsEmpty then
+    Exit;
+  LDm.tblArtikelFoto.DisableControls;
+  LMerker := LDm.tblArtikelFoto.GetBookmark;
+  try
+    LDm.tblArtikelFoto.First;
+    while not LDm.tblArtikelFoto.Eof do
+    begin
+      if Result <> '' then
+        Result := Result + ',';
+      Result := Result +
+        LDm.tblArtikelFoto.FieldByName('beschreibung').AsString + '/' +
+        IntToStr(Length(LDm.tblArtikelFoto.FieldByName('foto').AsBytes));
+      LDm.tblArtikelFoto.Next;
+    end;
+  finally
+    if Assigned(LMerker) then
+    begin
+      LDm.tblArtikelFoto.GotoBookmark(LMerker);
+      LDm.tblArtikelFoto.FreeBookmark(LMerker);
+    end;
+    LDm.tblArtikelFoto.EnableControls;
+  end;
+end;
+
+function SichtbarerBestand: string;
+var
+  LMerker: TBookmark;
+begin
+  Result := '';
+  if LDm.tblArtikelFach.IsEmpty then
+    Exit;
+  LDm.tblArtikelFach.DisableControls;
+  LMerker := LDm.tblArtikelFach.GetBookmark;
+  try
+    LDm.tblArtikelFach.First;
+    while not LDm.tblArtikelFach.Eof do
+    begin
+      if Result <> '' then
+        Result := Result + ',';
+      Result := Result + LDm.tblArtikelFach.FieldByName('artikel_id').AsString +
+        ':' + FormatFloat('0.###', LDm.tblArtikelFach.FieldByName('bestand').AsFloat);
+      LDm.tblArtikelFach.Next;
+    end;
+  finally
+    if Assigned(LMerker) then
+    begin
+      LDm.tblArtikelFach.GotoBookmark(LMerker);
+      LDm.tblArtikelFach.FreeBookmark(LMerker);
+    end;
+    LDm.tblArtikelFach.EnableControls;
+  end;
+end;
+
+// Was zeigt das TDBImage im Formular WIRKLICH an? Nicht was im Feld steht --
+// ein Bildcontrol kann auf dem alten Bild stehenbleiben, wenn die MemTable
+// die Daten unter ihm austauscht. Genau das sieht der Anwender als
+// "alle Artikel haben dasselbe Foto".
+function AngezeigtesBild: string;
+begin
+  if not Assigned(frmArtikelStamm) then
+    Exit('kein Formular');
+  if not Assigned(frmArtikelStamm.dbimgFoto.Picture.Graphic) or
+     frmArtikelStamm.dbimgFoto.Picture.Graphic.Empty then
+    Exit('leer');
+  Result := Format('%dx%d', [frmArtikelStamm.dbimgFoto.Picture.Width,
+                             frmArtikelStamm.dbimgFoto.Picture.Height]);
+end;
+
+// Und was steht in der Ankreuzliste der Kategorien?
+function AngekreuzteKategorien: string;
+var
+  I: Integer;
+begin
+  Result := '';
+  if not Assigned(frmArtikelStamm) then
+    Exit('kein Formular');
+  for I := 0 to frmArtikelStamm.clbKategorie.Items.Count - 1 do
+    if frmArtikelStamm.clbKategorie.Checked[I] then
+    begin
+      if Result <> '' then
+        Result := Result + ',';
+      Result := Result +
+        IntToStr(Integer(NativeInt(frmArtikelStamm.clbKategorie.Items.Objects[I])));
+    end;
+end;
+
+procedure ArtikelPruefen(AArtikel: Integer; const AName, ASollFotos,
+  ASollBestand, ASollBild: string; ASollKat1, ASollKat2: Boolean);
+var
+  LIst, LSollKreuze: string;
+begin
+  // Bewusst ueber Locate auf dem Master: das ist derselbe Weg wie ein Klick
+  // auf Weiter/Zurueck (Satzzeiger bewegen, AfterScroll feuert).
+  LDm.tblArtikel.Locate('artikel_id', AArtikel, []);
+  Application.ProcessMessages;   // damit die Controls nachziehen koennen
+
+  LIst := SichtbareFotos;
+  Sag(AName + ': Fotos', LIst = ASollFotos,
+      Format('ist "%s" soll "%s"', [LIst, ASollFotos]));
+
+  LIst := SichtbarerBestand;
+  Sag(AName + ': Bestand', LIst = ASollBestand,
+      Format('ist "%s" soll "%s"', [LIst, ASollBestand]));
+
+  Sag(AName + ': Kategorie 1', LDm.IstZugeordnet(LKatA) = ASollKat1,
+      'soll ' + BoolToStr(ASollKat1, True));
+  Sag(AName + ': Kategorie 2', LDm.IstZugeordnet(LKatB) = ASollKat2,
+      'soll ' + BoolToStr(ASollKat2, True));
+
+  // ── und jetzt das, was der Anwender sieht ──
+  // Der Sollwert kommt aus der Datenbank: die Testartikel koennen schon
+  // vorher Kategorien gehabt haben (Artikel 31 etwa Rohmaterial UND
+  // Fertigprodukt). Ein hartkodierter Sollwert macht den Pruefstand
+  // faelschlich rot.
+  LSollKreuze := '';
+  LFunk.Close;
+  LFunk.SQL.Text := Format(
+    'SELECT ak.kategorie_id FROM artikel_kategorie ak ' +
+    'JOIN kategorie k USING (kategorie_id) ' +
+    'WHERE ak.artikel_id=%d AND k.mandant_id=1 AND k.bereich=''ARTIKEL'' ' +
+    '  AND k.aktiv ORDER BY k.sortierung, k.bezeichnung', [AArtikel]);
+  LFunk.Open;
+  while not LFunk.Eof do
+  begin
+    if LSollKreuze <> '' then
+      LSollKreuze := LSollKreuze + ',';
+    LSollKreuze := LSollKreuze + LFunk.Fields[0].AsString;
+    LFunk.Next;
+  end;
+  LIst := AngekreuzteKategorien;
+  Sag(AName + ': Haken in der Liste', LIst = LSollKreuze,
+      Format('ist "%s" soll "%s"', [LIst, LSollKreuze]));
+
+  // A hat 1x1-Bilder, B ein 4x4-Bild -- steht das Control auf dem alten
+  // Bild, zeigt es hier die falsche Groesse.
+  LIst := AngezeigtesBild;
+  Sag(AName + ': angezeigtes Bild', LIst = ASollBild,
+      Format('ist "%s" soll "%s"', [LIst, ASollBild]));
+end;
+
+procedure TestdatenAnlegen;
+begin
+  LFunk.ExecSQL('DELETE FROM artikel_foto WHERE beschreibung LIKE ''ZZPruef%''');
+  LFunk.ExecSQL(Format(
+    'INSERT INTO artikel_foto (mandant_id, artikel_id, foto, beschreibung, reihenfolge) ' +
+    'VALUES (1, %d, decode(''%s'',''hex''), ''ZZPruefA1'', 1), ' +
+    '       (1, %d, decode(''%s'',''hex''), ''ZZPruefA2'', 2), ' +
+    '       (1, %d, decode(''%s'',''hex''), ''ZZPruefB1'', 1)',
+    [LArtA, CPngA, LArtA, CPngA, LArtB, CPngB]));
+  RufeAuf(Format('SELECT fn_artikel_fach_speichern(1, %d, %d, 5)', [LArtA, LFach]));
+  RufeAuf(Format('SELECT fn_artikel_fach_speichern(1, %d, %d, 9)', [LArtB, LFach]));
+  // A bekommt Kategorie 1, B Kategorie 2 -- vertauschte Haken fallen auf.
+  RufeAuf(Format('SELECT fn_artikel_kategorie_setzen(%d, %d, true)', [LArtA, LKatA]));
+  RufeAuf(Format('SELECT fn_artikel_kategorie_setzen(%d, %d, true)', [LArtB, LKatB]));
+end;
+
+procedure Aufraeumen;
+begin
+  LFunk.ExecSQL('DELETE FROM artikel_foto WHERE beschreibung LIKE ''ZZPruef%''');
+  LFunk.ExecSQL(Format('DELETE FROM artikel_fach WHERE fach_id=%d ' +
+                       'AND artikel_id IN (%d, %d)', [LFach, LArtA, LArtB]));
+  LFunk.ExecSQL(Format('DELETE FROM artikel_kategorie ' +
+    'WHERE (artikel_id=%d AND kategorie_id=%d) OR (artikel_id=%d AND kategorie_id=%d)',
+    [LArtA, LKatA, LArtB, LKatB]));
+end;
+
+procedure BeidePruefen(const AWann: string);
+begin
+  Writeln;
+  Writeln('--- ' + AWann + ' ' + StringOfChar('-', 46 - Length(AWann)));
+  ArtikelPruefen(LArtA, 'A', 'ZZPruefA1/70,ZZPruefA2/70',
+                 IntToStr(LArtA) + ':5', '1x1', True, False);
+  ArtikelPruefen(LArtB, 'B', 'ZZPruefB1/72',
+                 IntToStr(LArtB) + ':9', '4x4', False, True);
+end;
+
+begin
+  try
+    Application.ShowMainForm := False;
+    Application.Initialize;
+    Application.CreateForm(TMdiRahmen, LRahmen);
+
+    LFunk := TFDQuery.Create(nil);
+    try
+      LFunk.Connection := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung;
+
+      LFunk.Close;
+      LFunk.SQL.Text := 'SELECT artikel_id FROM artikel WHERE mandant_id=1 ' +
+                        'ORDER BY artikel_id LIMIT 2';
+      LFunk.Open;
+      LArtA := LFunk.Fields[0].AsInteger;
+      LFunk.Next;
+      LArtB := LFunk.Fields[0].AsInteger;
+      LFach := Zaehle('SELECT fach_id FROM regal_fach ORDER BY fach_id LIMIT 1');
+
+      LFunk.Close;
+      LFunk.SQL.Text := 'SELECT kategorie_id FROM kategorie WHERE mandant_id=1 ' +
+                        'AND bereich=''ARTIKEL'' AND aktiv ORDER BY kategorie_id LIMIT 2';
+      LFunk.Open;
+      if LFunk.RecordCount < 2 then
+      begin
+        Writeln('Zu wenige Artikel-Kategorien fuer diesen Test.');
+        Halt(0);
+      end;
+      LKatA := LFunk.Fields[0].AsInteger;
+      LFunk.Next;
+      LKatB := LFunk.Fields[0].AsInteger;
+
+      Writeln(Format('Artikel A=%d B=%d, Fach=%d, Kategorien %d und %d',
+                     [LArtA, LArtB, LFach, LKatA, LKatB]));
+
+      TestdatenAnlegen;
+
+      TdmZentraleDaten(TdmZentraleDaten.GetInstance).AlleTabellenLaden;
+      TdmMandant(TdmMandant.GetInstance).CurrentMandantId := 1;
+      LDm := TdmArtikelStamm(TdmArtikelStamm.GetInstance);
+      LDm.OpenArtikelStamm;
+
+      BeidePruefen('nach dem Oeffnen');
+
+      LDm.tblArtikel.Locate('artikel_id', LArtA, []);
+      LDm.FotosNachladen;
+      BeidePruefen('nach FotosNachladen (A war aktiv)');
+
+      LDm.tblArtikel.Locate('artikel_id', LArtA, []);
+      LDm.SetBestand(LFach, 5);
+      BeidePruefen('nach SetBestand (A war aktiv)');
+
+      LDm.ArtikelNachladen(LArtA);
+      BeidePruefen('nach ArtikelNachladen');
+
+      Aufraeumen;
+
+      Writeln;
+      if LFehler = 0 then
+        Writeln('Alles in Ordnung.')
+      else
+        Writeln(LFehler, ' Pruefung(en) fehlgeschlagen.');
+
+      if Assigned(frmArtikelStamm) then
+      begin
+        frmArtikelStamm.Close;
+        Application.ProcessMessages;
+      end;
+    finally
+      LFunk.Free;
+    end;
+  except
+    on E: Exception do
+      Writeln('FEHLER ', E.ClassName, ': ', E.Message);
+  end;
+  Halt(0);
+end.

@@ -1,4 +1,4 @@
-unit PersonenFrm;
+﻿unit PersonenFrm;
 
 // MDI-Child: Personenverwaltung.
 //  Links: Personen-Stammdaten mit eigener Buttonleiste im Ribbon-Stil
@@ -33,7 +33,8 @@ uses
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
   RibbonPanel, RibbonPageControl, RibbonButtonBar,
   JvDBControls, JvDBLookup,
-  uFrmModuleTemplate, JvComponentBase, JvExMask, JvToolEdit, JvMaskEdit;
+  uFrmModuleTemplate, JvComponentBase, JvExMask, JvToolEdit, JvMaskEdit,
+  System.ImageList, Vcl.ImgList;
 
 type
   // Reihenfolge = Tag bzw. ActionTag der Buttons in jeder Leiste
@@ -122,7 +123,7 @@ type
     pnlEmails: TPanel;
     pnlFldEmails: TPanel;
     lblEmail: TLabel;
-    cboEmailAdr: TDBComboBox;
+    cboEmailAdr: TJvDBLookupCombo;
     lblEmailTyp: TLabel;
     cboEmailTyp: TJvDBLookupCombo;
     grdEmails: TDBGrid;
@@ -130,7 +131,7 @@ type
     pnlTelefon: TPanel;
     pnlFldTelefon: TPanel;
     lblNummer: TLabel;
-    cboTelefonNr: TDBComboBox;
+    cboTelefonNr: TJvDBLookupCombo;
     lblTelefonTyp: TLabel;
     cboTelefonTyp: TJvDBLookupCombo;
     grdTelefon: TDBGrid;
@@ -147,6 +148,7 @@ type
     cbxLehrer: TDBCheckBox;
     cbxKlient: TDBCheckBox;
     grdBeziehungen: TDBGrid;
+	ImageList1: TImageList;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BtnNavClick(Sender: TObject);
@@ -250,8 +252,6 @@ begin
   // Dropdown der Email-/Telefon-Combos mit den vorhandenen (poolweiten) Werten
   // fuellen, damit man einen bestehenden (geteilten) Satz waehlen oder neu
   // tippen kann. Bei Adressen uebernimmt cboBestAdresse denselben Zweck.
-  dmPersonen.FuelleEmailAdressen(cboEmailAdr.Items);
-  dmPersonen.FuelleTelefonNummern(cboTelefonNr.Items);
   KeyPreview := True;
   OnKeyDown := FormKeyDown;   // WICHTIG!
 end;
@@ -268,6 +268,11 @@ end;
 
 procedure TfrmPersonen.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  // ZURUECK auf caFree am 09.08.2026: MDI-Kinder lassen sich
+  // nicht verstecken - weder per caHide (VCL wirft) noch per
+  // ShowWindow (der MDI-Client zeigt sie wieder an). Mit caNone
+  // gingen die Fenster gar nicht mehr zu. Das Wiederoeffnen
+  // bleibt damit langsam; ein anderer Weg muss her.
   Action := caFree;
   frmPersonen := nil;
 end;

@@ -12,6 +12,6 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TForm1, Form1);
-  Application.CreateForm(TfrmGanttTest, frmGanttTest);
+ // Application.CreateForm(TfrmGanttTest, frmGanttTest);
   Application.Run;
 end.
