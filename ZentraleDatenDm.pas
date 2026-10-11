@@ -42,6 +42,7 @@ type
     FDTableanlage: TFDTable;
     FDTableanlage_abschreibung: TFDTable;
     FDTableanlage_dokument: TFDTable;
+    FDTableanlage_foto: TFDTable;
     FDTableanonymisierung_protokoll: TFDTable;
     FDTableanwesenheit_check: TFDTable;
     FDTableanwesenheit_tag: TFDTable;
@@ -222,6 +223,7 @@ type
     FDTablev_navbar_editor: TFDTable;
     FDTablev_content_editor: TFDTable;
     FDTablev_anlage_jahr: TFDTable;
+    FDTablev_anlage: TFDTable;
     FDTablev_konto_auswahl: TFDTable;
     FDTablev_raum_auswahl_einfach: TFDTable;
     FDTablev_beleg_person_auswahl: TFDTable;

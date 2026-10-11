@@ -142,7 +142,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
+  ZentraleDatenDm, uGridMemo,
   Vcl.Dialogs,
   MandantDm,
   KursFrm, System.SyncObjs;
@@ -698,6 +698,9 @@ procedure TdmKurs.TabellenLaden;
 begin
   TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
     Zuordnung(tblKurs, 'kurs')]);
+  // kurs.beschreibung und kurs.lernziele sind Postgres 'text' - ohne das
+  // haette das Gitter dort nur "(WIDEMEMO)" gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(tblKurs);
 end;
 
 

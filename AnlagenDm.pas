@@ -38,6 +38,10 @@ type
     dsKonto: TDataSource;
     qryRaum: TFDMemTable;
     dsRaum: TDataSource;
+    qryArtikel: TFDMemTable;
+    dsArtikel: TDataSource;
+    tblAnlageFoto: TFDMemTable;
+    dstblAnlageFoto: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure tblAnlageNewRecord(DataSet: TDataSet);
   private
@@ -64,6 +68,12 @@ type
     function SatzSpeichern: string;
     procedure SatzAbbrechen;
     function SatzLoeschen: string;
+
+    // ── Fotos (siehe ArtikelStammDm - gleiches Muster, eigene
+    // Verknuepfungstabelle anlage_foto statt artikel_foto) ──────────────
+    function FotoAnhaengen(const ADatei, ABeschreibung: string): Integer;
+    procedure FotoLoeschen(AFotoId: Integer);
+    procedure FotosNachladen(AFotoId: Integer = 0);
   end;
 
 var
@@ -74,8 +84,8 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
-  System.DateUtils, System.Variants,
+  ZentraleDatenDm, uGridMemo,
+  System.DateUtils, System.Variants, System.IOUtils,
   Vcl.Dialogs,
   MandantDm,
   AnlagenFrm, System.SyncObjs;
@@ -262,7 +272,11 @@ begin
        FeldOderNull(tblAnlage, 'raum_id'),
        FeldOderNull(tblAnlage, 'ausser_betrieb_am'),
        FeldOderNull(tblAnlage, 'aktiv'),
-       FeldOderNull(tblAnlage, 'bemerkung')]);
+       FeldOderNull(tblAnlage, 'bemerkung'),
+       // Ans Ende angehaengt: fn_anlage_speichern ruft Delphi positional
+       // auf, ein neuer Parameter in der Mitte haette jede bestehende
+       // Position verschoben.
+       FeldOderNull(tblAnlage, 'artikel_id')]);
     TdmZentraleDaten(TdmZentraleDaten.GetInstance).TabelleAuffrischen('anlage');
     TabellenLaden;
   except
@@ -313,6 +327,57 @@ begin
   end;
 end;
 
+// ── Fotos ───────────────────────────────────────────────────────────────────
+//
+// Gleiches Muster wie ArtikelStammDm.FotoAnhaengen/FotoLoeschen/
+// FotosNachladen - eigene Verknuepfungstabelle anlage_foto, weil das Foto
+// einer Anlage auch den Aufstellort statt nur das Stueck zeigen kann.
+
+function TdmAnlagen.FotoAnhaengen(const ADatei,
+  ABeschreibung: string): Integer;
+var
+  LBytes: TBytes;
+  LBeschreibung: Variant;
+begin
+  Result := 0;
+  if tblAnlage.IsEmpty or (ADatei = '') then
+    Exit;
+
+  LBytes := TFile.ReadAllBytes(ADatei);
+  if Trim(ABeschreibung) = '' then
+    LBeschreibung := Null
+  else
+    LBeschreibung := ABeschreibung;
+
+  // foto_id 0 heisst anlegen. Mit Datei wird nie geaendert - ein vorhandenes
+  // Bild ueberschreibt man nicht versehentlich.
+  Result := AlsZahl(TdmZentraleDaten(TdmZentraleDaten.GetInstance)
+    .SpAufrufenBlob('fn_anlage_foto_speichern',
+      [FMandantId, tblAnlage.FieldByName('anlage_id').AsInteger, 0,
+       Null, LBeschreibung, Null], 3, LBytes));
+
+  FotosNachladen(Result);
+end;
+
+procedure TdmAnlagen.FotoLoeschen(AFotoId: Integer);
+begin
+  if AFotoId <= 0 then
+    Exit;
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance)
+    .SpAufrufen('fn_anlage_foto_loeschen', [AFotoId, FMandantId]);
+  FotosNachladen(0);
+end;
+
+procedure TdmAnlagen.FotosNachladen(AFotoId: Integer);
+begin
+  TdmZentraleDaten(TdmZentraleDaten.GetInstance).TabelleAuffrischen('anlage_foto');
+  // Kopiere ist geerbt von TdmModuleTemplate, nicht vom zentralen Modul.
+  Kopiere(tblAnlageFoto, 'anlage_foto', Format('mandant_id = %d', [FMandantId]));
+  MemosLesbarMachen(tblAnlageFoto);
+  if (AFotoId > 0) and tblAnlageFoto.Active then
+    tblAnlageFoto.Locate('foto_id', AFotoId, []);
+end;
+
 procedure TdmAnlagen.OpenAnlagen;
 begin
   if not Conn.Connected then
@@ -346,10 +411,25 @@ end;
 procedure TdmAnlagen.TabellenLaden;
 begin
   TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen([
-    Zuordnung(tblAnlage, 'anlage'),
+    // v_anlage statt der Tabelle 'anlage': liefert dieselben Spalten plus
+    // artikel_modul_nr/artikel_serien_nr/artikel_bezeichnung aus einem
+    // LEFT JOIN auf artikel. Vermeidet FireDAC-Lookup-Felder, die ALLE
+    // Spalten persistent verlangen wuerden (siehe uGridMemo-Kommentar an
+    // anderer Stelle zur "alles oder nichts"-Regel). Geschrieben wird
+    // weiterhin ueber fn_anlage_speichern auf die echte Tabelle.
+    Zuordnung(tblAnlage, 'v_anlage'),
     Zuordnung(qryPlan, 'v_anlage_jahr'),
     Zuordnung(qryKonto, 'v_konto_auswahl'),
-    Zuordnung(qryRaum, 'v_raum_auswahl_einfach')]);
+    Zuordnung(qryRaum, 'v_raum_auswahl_einfach'),
+    // Lookup-Liste fuers Zuordnen: nur die Spalten, die die Combo braucht.
+    Zuordnung(qryArtikel, 'artikel')]);
+  // anlage.bemerkung kommt als Postgres 'text' - ohne das haette das Gitter
+  // dort nur "(WIDEMEMO)" gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(tblAnlage);
+  // tblAnlageFoto laeuft NICHT hier mit, sondern ueber FotosNachladen
+  // (Kopiere + Master-Detail auf die aktuelle Anlage) - gleiches Muster wie
+  // ArtikelStammDm.FotosNachladen.
+  FotosNachladen;
 
   // Konten sind mandantenbezogen, Raeume nicht (physische Gebaeudefakten).
   qryKonto.Filtered := False;
@@ -357,6 +437,11 @@ begin
   qryKonto.Filtered := True;
   qryKonto.IndexFieldNames := 'nummer';
   qryRaum.IndexFieldNames := 'anzeige';
+
+  qryArtikel.Filtered := False;
+  qryArtikel.Filter := Format('mandant_id = %d', [FMandantId]);
+  qryArtikel.Filtered := True;
+  qryArtikel.IndexFieldNames := 'artikelname';
 end;
 
 

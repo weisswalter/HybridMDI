@@ -99,4 +99,19 @@ object dmEinstellungen: TdmEinstellungen
     Left = 400
     Top = 400
   end
+  object tblWebFarbe: TFDMemTable
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired]
+    UpdateOptions.CheckRequired = False
+    Left = 400
+    Top = 468
+  end
+  object dstblWebFarbe: TDataSource
+    DataSet = tblWebFarbe
+    Left = 496
+    Top = 468
+  end
 end

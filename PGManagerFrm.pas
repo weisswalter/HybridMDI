@@ -115,15 +115,20 @@ type
     procedure btnLoadTablesClick(Sender: TObject);
     procedure dgTablesDblClick(Sender: TObject);
   private
+    // Fuellt die Verbindungsfelder aus dem zentralen Datenmodul.
+    procedure VorgabenSetzen;
     procedure Log(const AMsg: string);
     procedure UpdateStatus;
-    function  CurrentDb: string;   // edtDatabase oder 'postgres'
+    function  CurrentDb: string;   // edtDatabase oder die Wartungsdatenbank
   end;
 
 var
   frmPGManager: TfrmPGManager;
 
 implementation
+
+uses
+  ZentraleDatenDm;   // fuer die Vorgabewerte der Verbindung, siehe FormCreate
 
 {$R *.dfm}
 
@@ -153,7 +158,9 @@ function TfrmPGManager.CurrentDb: string;
 begin
   Result := Trim(edtDatabase.Text);
   if Result = '' then
-    Result := 'postgres';
+    // Nicht 'postgres': dort laesst die pg_hba.conf des Servers wwe123 gar
+    // nicht hinein. Siehe TdmPGManager.Wartungsdatenbank.
+    Result := dmPGManager.Wartungsdatenbank;
 end;
 
 procedure TfrmPGManager.FormCreate(Sender: TObject);
@@ -171,12 +178,45 @@ begin
   // Logging der BL entfernt — spaeter Log-Thread/-Server (siehe PGManagerDm).
   // dmPGManager.OnLog := Log;
 
-  edtHost.Text     := 'localhost';
-  edtPort.Text     := '5455';
-  edtUser.Text     := 'wwe123';
-  edtPassword.Text := 'a4cX7pAp29WRK7XHkGHBzs4DIhjAM14Z';
-  edtDatabase.Text := 'postgres';
+  VorgabenSetzen;
   UpdateStatus;
+end;
+
+// Die Vorgaben kommen aus der Verbindung, die das Programm ohnehin benutzt -
+// es gibt nur eine, und die steht im zentralen Datenmodul.
+//
+// Vorher standen hier 'localhost' und '5455' fest im Code. Das waren die
+// Werte aus der Zeit des SSH-Tunnels (uTunnel sucht ab 5455 einen freien
+// Port). Der Tunnel ist stillgelegt, die Verbindung geht direkt ueber
+// Tailscale auf 5432 - der Manager schlug damit jeden Verbindungsversuch
+// mit "connection refused" fehl, obwohl das Programm selbst laengst
+// verbunden war.
+procedure TfrmPGManager.VorgabenSetzen;
+var
+  LParams: TStrings;
+
+  function Wert(const AName, AErsatz: string): string;
+  begin
+    Result := '';
+    if Assigned(LParams) then
+      Result := Trim(LParams.Values[AName]);
+    if Result = '' then
+      Result := AErsatz;
+  end;
+
+begin
+  LParams := nil;
+  try
+    LParams := TdmZentraleDaten(TdmZentraleDaten.GetInstance).Verbindung.Params;
+  except
+    // Ohne zentrales Datenmodul (z.B. im Pruefstand) bleiben die Ersatzwerte.
+  end;
+
+  edtHost.Text     := Wert('Server',    'localhost');
+  edtPort.Text     := Wert('Port',      '5432');
+  edtUser.Text     := Wert('User_Name', 'wwe123');
+  edtPassword.Text := Wert('Password',  '');
+  edtDatabase.Text := Wert('Database',  'TRTHeisenberg');
 end;
 
 procedure TfrmPGManager.FormClose(Sender: TObject; var Action: TCloseAction);

@@ -83,18 +83,31 @@ type
     edtVersand: TEdit;
     lblVersandFrei: TLabel;
     edtVersandFrei: TEdit;
+    tsFarben: TTabSheet;
+    barFarben: TRibbonButtonBar;
+    pnlFarben: TPanel;
+    pnlFarbenHinweis: TPanel;
+    lblFarbenHinweis: TLabel;
+    dbgrdFarben: TDBGrid;
+    ColorDialogFarben: TColorDialog;
+    actFarbauswahl: TAction;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure btnNeuClick(Sender: TObject);
     procedure btnSpeichernClick(Sender: TObject);
     procedure btnAbbrechenClick(Sender: TObject);
     procedure btnLoeschenClick(Sender: TObject);
+    procedure actFarbauswahlExecute(Sender: TObject);
   private
     procedure WebseiteAnzeigen;
     // Gibt '' zurueck, wenn der Text eine brauchbare Zahl ist, sonst die
     // Meldung. Leere Zahlenfelder haben schon einmal '' in die Datenbank
     // geschrieben und die Sicht beim Programmstart zerlegt.
     function ZahlPruefen(const AFeld, AText: string): string;
+    // #rrggbb <-> TColor. TColor liegt intern als 0x00BBGGRR - anders als
+    // ein CSS-Hex-Code (RRGGBB) - deshalb kein einfaches StrToInt.
+    function HexZuFarbe(const AHex: string): TColor;
+    function FarbeZuHex(AFarbe: TColor): string;
   public
   end;
 
@@ -130,6 +143,45 @@ begin
     Result := AFeld + ': "' + AText + '" ist keine Zahl.'
   else
     Result := '';
+end;
+
+function TfrmEinstellungen.HexZuFarbe(const AHex: string): TColor;
+var
+  LWert: Integer;
+begin
+  LWert := StrToIntDef('$' + StringReplace(AHex, '#', '', [rfReplaceAll]),
+    $000000);
+  Result := RGB((LWert shr 16) and $FF, (LWert shr 8) and $FF, LWert and $FF);
+end;
+
+function TfrmEinstellungen.FarbeZuHex(AFarbe: TColor): string;
+begin
+  Result := Format('#%.2x%.2x%.2x',
+    [GetRValue(AFarbe), GetGValue(AFarbe), GetBValue(AFarbe)]);
+end;
+
+// Farbauswahl fuer die im Gitter fokussierte Zeile. Schreibt den gewaehlten
+// Wert nur in die Kopie (tblWebFarbe) - sichtbar sofort im Gitter, aber
+// erst der Speichern-Button traegt ihn in die Datenbank ein.
+procedure TfrmEinstellungen.actFarbauswahlExecute(Sender: TObject);
+var
+  LDs: TDataSet;
+begin
+  LDs := dmEinstellungen.dstblWebFarbe.DataSet;
+  if (LDs = nil) or not LDs.Active or LDs.IsEmpty then
+  begin
+    MessageDlg('Bitte zuerst eine Zeile im Gitter ausw' + #228 + 'hlen.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
+  ColorDialogFarben.Color := HexZuFarbe(LDs.FieldByName('wert').AsString);
+  if not ColorDialogFarben.Execute then
+    Exit;
+
+  LDs.Edit;
+  LDs.FieldByName('wert').AsString := FarbeZuHex(ColorDialogFarben.Color);
+  LDs.Post;
 end;
 
 // Holt die gespeicherten Werte in die Eingabefelder. Wird beim Oeffnen und
@@ -201,6 +253,21 @@ begin
     if LMeldung <> '' then
       MessageDlg(LMeldung, mtWarning, [mbOK], 0);
     WebseiteAnzeigen;
+    Exit;
+  end;
+
+  // Der Farben-Reiter hat wie Website keinen Autoinc-Schluessel (Primaer-
+  // schluessel mandant_id+schluessel) - eigener Weg statt TypSpeichern.
+  if dmEinstellungen.IstFarbenTab(JvRibbonPanel1.ActivePageIndex) then
+  begin
+    if dmEinstellungen.dstblWebFarbe.DataSet.IsEmpty then
+      Exit;
+    LMeldung := dmEinstellungen.FarbeSpeichern(
+      dmEinstellungen.dstblWebFarbe.DataSet.FieldByName('schluessel').AsString,
+      dmEinstellungen.dstblWebFarbe.DataSet.FieldByName('wert').AsString,
+      dmEinstellungen.dstblWebFarbe.DataSet.FieldByName('bemerkung').AsString);
+    if LMeldung <> '' then
+      MessageDlg(LMeldung, mtWarning, [mbOK], 0);
     Exit;
   end;
 

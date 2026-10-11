@@ -83,7 +83,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
+  ZentraleDatenDm, uGridMemo,
   System.Variants,
   Vcl.Dialogs,
   MandantDm,
@@ -278,6 +278,9 @@ begin
     Zuordnung(qryKompetenzen, 'v_person_kompetenz_status'),
     Zuordnung(qryKompetenzAuswahl, 'kompetenz_typ'),
     Zuordnung(qryKurse, 'v_lehrer_kurs_eignung')]);
+  // v_person_kompetenz_status.bemerkung ist Postgres 'text' - ohne das
+  // haette das Gitter dort nur "(WIDEMEMO)" gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(qryKompetenzen);
 
   qryLehrer.Filtered := False;
   qryLehrer.Filter := Format('mandant_id = %d', [FMandantId]);

@@ -83,7 +83,7 @@ implementation
 {$R *.dfm}
 
 uses
-  WebEditorFrm, System.SyncObjs, ZentraleDatenDm;
+  WebEditorFrm, System.SyncObjs, ZentraleDatenDm, uGridMemo;
 
 var
   GSperreWebEditor: TCriticalSection;
@@ -157,6 +157,9 @@ begin
     Zuordnung(tblContent, 'v_content_editor'),
     Zuordnung(tblContentText, 'contentweb_text'),
     Zuordnung(tblDokument, 'dokument')]);
+  // v_content_editor.text ist Postgres 'text' - ohne das haette das Gitter
+  // dort nur "(WIDEMEMO)" gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(tblContent);
 
   SpracheSetzen;
 end;

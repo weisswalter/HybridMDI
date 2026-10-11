@@ -121,7 +121,7 @@ implementation
 uses
   Vcl.Dialogs,
   MandantDm,
-  AnwesenheitFrm, System.SyncObjs, ZentraleDatenDm;
+  AnwesenheitFrm, System.SyncObjs, ZentraleDatenDm, uGridMemo;
 
 var
   GSperreAnwesenheit: TCriticalSection;
@@ -168,6 +168,13 @@ begin
   qryFerien.SQL.Text :=
     'SELECT jahr, tage_anspruch, tage_uebertrag, tage_bezogen, tage_rest ' +
     'FROM v_ferien_saldo WHERE person_id = :p ORDER BY jahr DESC';
+
+  // fn_checkliste.bemerkung, fn_abwesenheitsliste.bemerkung und
+  // v_zeit_stempel_tag.bemerkung sind Postgres 'text' - ohne das haetten die
+  // Gitter dort nur "(WIDEMEMO)" gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(qryCheck);
+  MemosLesbarMachen(qryAbwesenheit);
+  MemosLesbarMachen(qryStempel);
 
   // ── Auswahllisten ──────────────────────────────────────────────────────
   qryPersonAuswahl.SQL.Text :=

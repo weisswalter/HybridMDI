@@ -93,7 +93,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
+  ZentraleDatenDm, uGridMemo,
   Vcl.Dialogs,
   MandantDm,
   LagerFrm, System.SyncObjs;
@@ -224,6 +224,15 @@ begin
     Zuordnung(memRaumLookup, 'v_raum_anzeige'),
     Zuordnung(memRegalLookup, 'v_regal_anzeige'),
     Zuordnung(memEinheitLookup, 'einheit')]);
+  // adressinfo/lager/raum/regal/regal_fach tragen ein 'beschreibung'-Feld
+  // vom Typ Postgres 'text' - ohne das haetten die Gitter dort nur
+  // "(WIDEMEMO)" gezeigt. ausstattung/raum_ausstattung haben keine
+  // Text-Spalte und brauchen es nicht. Siehe uGridMemo.
+  MemosLesbarMachen(tblAdressinfo);
+  MemosLesbarMachen(tblLager);
+  MemosLesbarMachen(tblRaum);
+  MemosLesbarMachen(tblRegal);
+  MemosLesbarMachen(tblRegalFach);
 end;
 
 // Liefert Null statt eines Wertes, wenn das Feld leer ist - die Funktionen

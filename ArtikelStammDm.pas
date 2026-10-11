@@ -189,7 +189,7 @@ var
 implementation
 
 uses
-  MandantDm, ZentraleDatenDm, ArtikelStammFrm;
+  MandantDm, ZentraleDatenDm, ArtikelStammFrm, uGridMemo;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -239,6 +239,10 @@ begin
   // ueber Master-Detail eingegrenzt.
   Kopiere(tblArtikelKategorie, 'artikel_kategorie');
   Kopiere(tblArtikelFoto, 'artikel_foto', LMandant);
+  // artikel_foto.beschreibung ist Postgres 'text' - ohne das haette das
+  // Gitter dort nur "(WIDEMEMO)" gezeigt. Ueberlebt jedes erneute Kopiere()
+  // (gemessen), darum genuegt der Aufruf einmal hier.
+  MemosLesbarMachen(tblArtikelFoto);
 
   // Fuer die Baeume.
   Kopiere(memArtikelNachschlag, 'artikel', LMandant);

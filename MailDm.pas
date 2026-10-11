@@ -155,7 +155,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
+  ZentraleDatenDm, uGridMemo,
   Winapi.ShellAPI, Winapi.Windows,
   Vcl.Dialogs,
   MandantDm,
@@ -228,6 +228,11 @@ begin
     'FROM email_anhang a ' +
     'JOIN dokument d ON d.dokument_id = a.dokument_id ' +
     'WHERE a.nachricht_id = :n ORDER BY a.dateiname';
+
+  // email_nachricht.an_adressen/body_text/body_html sind Postgres 'text' -
+  // ohne das haette das Gitter dort nur "(WIDEMEMO)" gezeigt. Siehe
+  // uGridMemo.
+  MemosLesbarMachen(qryNachrichten);
 end;
 
 procedure TdmMail.LadeOrdner(AKontoId: Integer);

@@ -4,8 +4,8 @@ inherited frmWebEditor: TfrmWebEditor
   ClientWidth = 1100
   StyleElements = [seFont, seClient, seBorder]
   OnCreate = FormCreate
-  ExplicitLeft = 2
-  ExplicitTop = 2
+  ExplicitLeft = 3
+  ExplicitTop = 3
   ExplicitWidth = 1116
   ExplicitHeight = 739
   TextHeight = 15
@@ -16,12 +16,11 @@ inherited frmWebEditor: TfrmWebEditor
   inherited pnlStamm: TPanel
     Height = 700
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitHeight = 700
+    ExplicitHeight = 692
     inherited pnlStammFelder: TPanel
       Height = 700
       StyleElements = [seFont, seClient, seBorder]
-      ExplicitTop = 0
-      ExplicitHeight = 700
+      ExplicitHeight = 692
       object lblBezeichnung: TLabel [0]
         Left = 8
         Top = 528
@@ -42,9 +41,6 @@ inherited frmWebEditor: TfrmWebEditor
         Style = csDropDownList
         TabOrder = 0
         OnChange = cboSpracheChange
-        ExplicitLeft = 8
-        ExplicitTop = 8
-        ExplicitWidth = 297
       end
       object dbgrdNavbar: TDBGrid
         Left = 0
@@ -75,11 +71,7 @@ inherited frmWebEditor: TfrmWebEditor
     StyleElements = [seFont, seClient, seBorder]
     TopPanel.Width = 782
     TopPanel.StyleElements = [seFont, seClient, seBorder]
-    TopPanel.ExplicitWidth = 782
-    PageControl.Width = 784
-    PageControl.Height = 672
-    PageControl.ExplicitWidth = 784
-    PageControl.ExplicitHeight = 672
+    TopPanel.ExplicitWidth = 780
     HeaderButtons = <
       item
         Caption = 'Karten'
@@ -90,15 +82,16 @@ inherited frmWebEditor: TfrmWebEditor
       item
         Caption = 'HTML'
       end>
+    ActivePageIndex = 1
     OnButtonClick = rbnpnl1ButtonClick
-    ExplicitWidth = 782
-    ExplicitHeight = 700
+    ExplicitWidth = 780
+    ExplicitHeight = 692
     object tsKarten: TTabSheet
       Caption = 'Karten'
       object dbgrdKarten: TDBGrid
         Left = 0
         Top = 0
-        Width = 784
+        Width = 782
         Height = 220
         Align = alTop
         TabOrder = 0
@@ -111,11 +104,13 @@ inherited frmWebEditor: TfrmWebEditor
       object pnlKartenEdit: TPanel
         Left = 0
         Top = 220
-        Width = 784
-        Height = 452
+        Width = 782
+        Height = 449
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitWidth = 780
+        ExplicitHeight = 441
         object lblTitel: TLabel
           Left = 16
           Top = 12
@@ -228,7 +223,7 @@ inherited frmWebEditor: TfrmWebEditor
       object pnlVorschauTop: TPanel
         Left = 0
         Top = 0
-        Width = 784
+        Width = 782
         Height = 33
         Align = alTop
         BevelOuter = bvNone
@@ -246,8 +241,8 @@ inherited frmWebEditor: TfrmWebEditor
       object BrowserVorschau: TEdgeBrowser
         Left = 0
         Top = 33
-        Width = 784
-        Height = 639
+        Width = 782
+        Height = 636
         Align = alClient
         TabOrder = 1
         AllowSingleSignOnUsingOSPrimaryAccount = False

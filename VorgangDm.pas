@@ -91,7 +91,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
+  ZentraleDatenDm, uGridMemo,
   Vcl.Dialogs,
   MandantDm,
   VorgangFrm, System.SyncObjs;
@@ -133,6 +133,11 @@ begin
     Zuordnung(tblVorgang, 'vorgang'),
     Zuordnung(tblVerlauf, 'vorgang_verlauf'),
     Zuordnung(memVorgangVorgang, 'vorgang_vorgang')]);
+  // vorgang.beschreibung und vorgang_verlauf.bemerkung sind Postgres 'text'
+  // - ohne das haetten die Gitter dort nur "(WIDEMEMO)" gezeigt. Siehe
+  // uGridMemo.
+  MemosLesbarMachen(tblVorgang);
+  MemosLesbarMachen(tblVerlauf);
 end;
 
 procedure TdmVorgang.StrukturVerknuepft;

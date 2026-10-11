@@ -19,7 +19,7 @@ object Form1: TForm1
     Height = 25
     Caption = '32x32'
     TabOrder = 0
-    OnClick = btn1Click
+    OnClick = btnFromImage32Click
   end
   object btn16: TButton
     Left = 280
@@ -37,7 +37,7 @@ object Form1: TForm1
     Height = 25
     Caption = '32FromImage'
     TabOrder = 2
-    OnClick = btnFromImage32Click
+    OnClick = btn1Click
   end
   object pnl1: TPanel
     Left = 96
@@ -63,7 +63,7 @@ object Form1: TForm1
     Width = 129
     Height = 25
     TabOrder = 4
-    OnClick = btnFromImage16Click
+    OnClick = btn2Click
   end
   object dlgOpen1: TOpenDialog
     Left = 240

@@ -12,6 +12,22 @@ unit DataModuleForDelphi;
 // Zeiger zu tauschen - sonst haengt die Eigenschaft danach an einem fremden
 // Objekt, das jemand anders wieder freigibt.
 
+// HIER DARF NUR STEHEN, WAS TDataModule NICHT SCHON HAT.
+//
+// Am 20.08.2026 stand hier zusaetzlich
+//     property OnCreate: TNotifyEvent read FOnCreate write FOnCreate;
+// samt eigenem Feld. TDataModule veroeffentlicht OnCreate aber selbst. Die
+// zweite Deklaration hat die erste nur VERDECKT: der Streamer schrieb den
+// Verweis auf DataModuleCreate in das neue Feld, TDataModule.DoCreate las
+// weiter sein eigenes - und das blieb leer.
+// Folge: bei JEDEM Datenmodul mit OnCreate lief DataModuleCreate im
+// Debug-Build nicht mehr. Im Personenmodul blieb damit SetupConnection aus,
+// FHerkunft war nil, und das Oeffnen endete in einer Zugriffsverletzung
+// ("Lesen von Adresse 0000000000000048"). Der Compiler warnt nicht, weil
+// eine published-Eigenschaft neu zu deklarieren erlaubt ist.
+// Pruefstand dazu: TestOnCreate.dpr - er baut dasselbe Modul einmal mit und
+// einmal ohne DEBUG und vergleicht, ob DataModuleCreate gelaufen ist.
+
 interface
 
 uses
@@ -37,7 +53,6 @@ type
     FExplicitHeight: Integer;
     FClientWidth: Integer;
     FStyleElements: TStyleElements;
-    FOnCreate: TNotifyEvent;
     FExplicitWidth: Integer;
     FCaption: TCaption;
     FTextHeight: Integer;
@@ -58,7 +73,6 @@ type
     property ExplicitWidth: Integer read FExplicitWidth write FExplicitWidth;
     property ExplicitTop: Integer read FExplicitTop write FExplicitTop;
     property ExplicitLeft: Integer read FExplicitLeft write FExplicitLeft;
-    property OnCreate: TNotifyEvent read FOnCreate write FOnCreate;
     property StyleElements: TStyleElements read FStyleElements write FStyleElements;
     property ClientWidth: Integer read FClientWidth write FClientWidth;
     property ClientHeight: Integer read FClientHeight write FClientHeight;

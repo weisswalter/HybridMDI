@@ -17,7 +17,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.Variants, System.Actions, Vcl.ActnList,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB,
+  Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids,
+  Vcl.ExtDlgs, Data.DB,
   JvExControls, JvButton, JvGradient, JvNavigationPane, JvNavPanelButtonTop,
   RibbonPanel, RibbonPageControl, RibbonButtonBar,
   uFrmModuleTemplate, JvComponentBase;
@@ -61,7 +62,18 @@ type
     cboAufwandKonto: TDBLookupComboBox;
     lblRaum: TLabel;
     cboRaum: TDBLookupComboBox;
+    lblArtikel: TLabel;
+    cboArtikel: TDBLookupComboBox;
     lblZuordnungHinweis: TLabel;
+    tsFotos: TTabSheet;
+    pnlFotos: TPanel;
+    lblFotoBeschr: TLabel;
+    dbimgFoto: TDBImage;
+    dbgrdFotos: TDBGrid;
+    dbmmoBeschreibung: TDBMemo;
+    btnFotoLaden: TButton;
+    btnFotoLoeschen: TButton;
+    dlgFoto: TOpenPictureDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure actPlanExecute(Sender: TObject);
@@ -69,6 +81,8 @@ type
     procedure actNeuLadenExecute(Sender: TObject);
     procedure ActionRechtsExecute(Sender: TObject);
     procedure dbgrdAnlagenCellClick(Column: TColumn);
+    procedure btnFotoLadenClick(Sender: TObject);
+    procedure btnFotoLoeschenClick(Sender: TObject);
   private
     function Jahr: Integer;
     procedure KennzahlZeigen;
@@ -128,6 +142,51 @@ end;
 procedure TfrmAnlagen.dbgrdAnlagenCellClick(Column: TColumn);
 begin
   KennzahlZeigen;
+  // Fotoliste folgt der Auswahl - Master-Detail filtert im Speicher, nur
+  // der Satzzeiger von tblAnlage muss auf der neuen Zeile stehen (steht er
+  // schon, CellClick kommt nach dem Zeilenwechsel).
+  dmAnlagen.FotosNachladen;
+end;
+
+// ── Fotos ───────────────────────────────────────────────────────────────────
+
+procedure TfrmAnlagen.btnFotoLadenClick(Sender: TObject);
+var
+  I: Integer;
+begin
+  if dmAnlagen.tblAnlage.IsEmpty then
+  begin
+    ShowMessage('Bitte zuerst eine Anlage w' + #228 + 'hlen.');
+    Exit;
+  end;
+  if not dlgFoto.Execute then
+    Exit;
+
+  for I := 0 to dlgFoto.Files.Count - 1 do
+    if dmAnlagen.FotoAnhaengen(dlgFoto.Files[I],
+         ChangeFileExt(ExtractFileName(dlgFoto.Files[I]), '')) = 0 then
+      ShowMessage('Das Foto wurde nicht gespeichert: ' + dlgFoto.Files[I]);
+end;
+
+procedure TfrmAnlagen.btnFotoLoeschenClick(Sender: TObject);
+var
+  LFotoId: Integer;
+begin
+  if not dmAnlagen.tblAnlageFoto.Active or dmAnlagen.tblAnlageFoto.IsEmpty then
+    Exit;
+  LFotoId := dmAnlagen.tblAnlageFoto.FieldByName('foto_id').AsInteger;
+  if LFotoId <= 0 then
+    Exit;
+  if MessageDlg('Dieses Foto endg' + #252 + 'ltig entfernen?', mtConfirmation,
+       [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+  try
+    dmAnlagen.FotoLoeschen(LFotoId);
+  except
+    on E: Exception do
+      ShowMessage('Das Foto konnte nicht entfernt werden:' + sLineBreak +
+                  E.Message);
+  end;
 end;
 
 procedure TfrmAnlagen.actPlanExecute(Sender: TObject);

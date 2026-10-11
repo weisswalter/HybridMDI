@@ -84,7 +84,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
+  ZentraleDatenDm, uGridMemo,
   System.DateUtils, System.Variants,
   Vcl.Dialogs,
   MandantDm,
@@ -326,6 +326,9 @@ begin
     Zuordnung(tblAnwesenheit, 'kurs_anwesenheit'),
     Zuordnung(qryTermine, 'v_kurs_termin_liste'),
     Zuordnung(qryCoach, 'v_kurs_coach')]);
+  // kurs_anwesenheit.bemerkung ist Postgres 'text' - ohne das haette das
+  // Gitter dort nur "(WIDEMEMO)" gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(tblAnwesenheit);
 end;
 
 

@@ -381,236 +381,85 @@ object frmPersonen: TfrmPersonen
       end
     end
   end
-  object pnlRibbon: TPanel
+  object JvRibbonPanel1: TRibbonPanel
     Left = 330
     Top = 0
     Width = 1096
     Height = 640
     Align = alClient
     BevelOuter = bvNone
-    Color = 12232890
-    ParentBackground = False
     ShowCaption = False
     TabOrder = 1
-    object pctrModule: TPageControl
-      Left = 0
-      Top = 0
-      Width = 1096
-      Height = 640
-      ActivePage = tsAdressen
-      Align = alClient
-      Style = tsFlatButtons
-      TabOrder = 0
-      object tsAdressen: TTabSheet
-        AlignWithMargins = True
-        Margins.Left = 0
-        Margins.Top = 25
-        Margins.Right = 0
-        Margins.Bottom = 0
+    ActiveTheme = nptXPBlue
+    InactiveTheme = nptXPSilver
+    ActivePageIndex = 0
+    HeaderButtons = <
+      item
         Caption = 'Adressen'
-        TabVisible = False
-        object pnlBtnAdr: TPanel
-          Left = 0
-          Top = 0
-          Width = 1088
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 0
-          object btnErsterAdr: TJvNavPanelButtonTop
-            Left = 0
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Erster'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+        Width = 120
+      end
+      item
+        Caption = 'Emails'
+        Width = 110
+      end
+      item
+        Caption = 'Telefon'
+        Width = 110
+      end
+      item
+        Caption = 'Beziehungen'
+        Width = 130
+      end>
+    object tsAdressen: TTabSheet
+      Caption = 'Adressen'
+      object barAdressen: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 1096
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        ButtonWidth = 70
+        Buttons = <
+          item
+            Action = actPersErster
           end
-          object btnZurueckAdr: TJvNavPanelButtonTop
-            Tag = 1
-            Left = 58
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Zur'#252'ck'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersZurueck
           end
-          object btnWeiterAdr: TJvNavPanelButtonTop
-            Tag = 2
-            Left = 116
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Weiter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersWeiter
           end
-          object btnLetzterAdr: TJvNavPanelButtonTop
-            Tag = 3
-            Left = 174
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Letzter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersLetzter
           end
-          object btnNeuAdr: TJvNavPanelButtonTop
-            Tag = 4
-            Left = 232
-            Top = 0
-            Width = 44
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersNeu
           end
-          object btnAendernAdr: TJvNavPanelButtonTop
-            Tag = 5
-            Left = 276
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = #196'ndern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersBearbeiten
           end
-          object btnSpeichernAdr: TJvNavPanelButtonTop
-            Tag = 6
-            Left = 334
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Speichern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersSpeichern
           end
-          object btnAbbrechenAdr: TJvNavPanelButtonTop
-            Tag = 7
-            Left = 398
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Abbrechen'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersAbbrechen
           end
-          object btnNeuLadenAdr: TJvNavPanelButtonTop
-            Tag = 8
-            Left = 462
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu laden'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object grdtAdr: TJvGradient
-            Left = 526
-            Top = 0
-            Width = 562
-            Height = 38
-            Style = grVertical
-            StartColor = 16245453
-            EndColor = 15966336
-            ExplicitWidth = 200
-          end
-        end
+          item
+            Action = actPersAktualisieren
+          end>
+      end
+      object pnlAdressen: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlAdressen'
+        ShowCaption = False
+        TabOrder = 2
         object pnlFldAdressen: TPanel
           Left = 0
-          Top = 38
+          Top = 0
           Width = 1088
           Height = 84
           Align = alTop
@@ -778,216 +627,57 @@ object frmPersonen: TfrmPersonen
           TitleFont.Style = []
         end
       end
-      object tsEmails: TTabSheet
-        AlignWithMargins = True
-        Margins.Left = 0
-        Margins.Top = 25
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Caption = 'Emails'
-        TabVisible = False
-        object pnlBtnEml: TPanel
-          Left = 0
-          Top = 0
-          Width = 1088
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 0
-          object btnErsterEml: TJvNavPanelButtonTop
-            Left = 0
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Erster'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+    end
+    object tsEmails: TTabSheet
+      Caption = 'Emails'
+      object barEmails: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 1096
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        ButtonWidth = 70
+        Buttons = <
+          item
+            Action = actPersErster
           end
-          object btnZurueckEml: TJvNavPanelButtonTop
-            Tag = 1
-            Left = 58
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Zur'#252'ck'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersZurueck
           end
-          object btnWeiterEml: TJvNavPanelButtonTop
-            Tag = 2
-            Left = 116
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Weiter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersWeiter
           end
-          object btnLetzterEml: TJvNavPanelButtonTop
-            Tag = 3
-            Left = 174
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Letzter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersLetzter
           end
-          object btnNeuEml: TJvNavPanelButtonTop
-            Tag = 4
-            Left = 232
-            Top = 0
-            Width = 44
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersNeu
           end
-          object btnAendernEml: TJvNavPanelButtonTop
-            Tag = 5
-            Left = 276
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = #196'ndern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersBearbeiten
           end
-          object btnSpeichernEml: TJvNavPanelButtonTop
-            Tag = 6
-            Left = 334
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Speichern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersSpeichern
           end
-          object btnAbbrechenEml: TJvNavPanelButtonTop
-            Tag = 7
-            Left = 398
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Abbrechen'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersAbbrechen
           end
-          object btnNeuLadenEml: TJvNavPanelButtonTop
-            Tag = 8
-            Left = 462
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu laden'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object grdtEml: TJvGradient
-            Left = 526
-            Top = 0
-            Width = 562
-            Height = 38
-            Style = grVertical
-            StartColor = 16245453
-            EndColor = 15966336
-            ExplicitWidth = 200
-          end
-        end
+          item
+            Action = actPersAktualisieren
+          end>
+      end
+      object pnlEmails: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlEmails'
+        ShowCaption = False
+        TabOrder = 3
         object pnlFldEmails: TPanel
           Left = 0
-          Top = 38
+          Top = 0
           Width = 1088
           Height = 52
           Align = alTop
@@ -1046,216 +736,57 @@ object frmPersonen: TfrmPersonen
           TitleFont.Style = []
         end
       end
-      object tsTelefon: TTabSheet
-        AlignWithMargins = True
-        Margins.Left = 0
-        Margins.Top = 25
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Caption = 'Telefon'
-        TabVisible = False
-        object pnlBtnTel: TPanel
-          Left = 0
-          Top = 0
-          Width = 1088
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 0
-          object btnErsterTel: TJvNavPanelButtonTop
-            Left = 0
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Erster'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+    end
+    object tsTelefon: TTabSheet
+      Caption = 'Telefon'
+      object barTelefon: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 1096
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        ButtonWidth = 70
+        Buttons = <
+          item
+            Action = actPersErster
           end
-          object btnZurueckTel: TJvNavPanelButtonTop
-            Tag = 1
-            Left = 58
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Zur'#252'ck'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersZurueck
           end
-          object btnWeiterTel: TJvNavPanelButtonTop
-            Tag = 2
-            Left = 116
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Weiter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersWeiter
           end
-          object btnLetzterTel: TJvNavPanelButtonTop
-            Tag = 3
-            Left = 174
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Letzter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersLetzter
           end
-          object btnNeuTel: TJvNavPanelButtonTop
-            Tag = 4
-            Left = 232
-            Top = 0
-            Width = 44
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersNeu
           end
-          object btnAendernTel: TJvNavPanelButtonTop
-            Tag = 5
-            Left = 276
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = #196'ndern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersBearbeiten
           end
-          object btnSpeichernTel: TJvNavPanelButtonTop
-            Tag = 6
-            Left = 334
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Speichern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersSpeichern
           end
-          object btnAbbrechenTel: TJvNavPanelButtonTop
-            Tag = 7
-            Left = 398
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Abbrechen'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersAbbrechen
           end
-          object btnNeuLadenTel: TJvNavPanelButtonTop
-            Tag = 8
-            Left = 462
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu laden'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object grdtTel: TJvGradient
-            Left = 526
-            Top = 0
-            Width = 562
-            Height = 38
-            Style = grVertical
-            StartColor = 16245453
-            EndColor = 15966336
-            ExplicitWidth = 200
-          end
-        end
+          item
+            Action = actPersAktualisieren
+          end>
+      end
+      object pnlTelefon: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlTelefon'
+        ShowCaption = False
+        TabOrder = 4
         object pnlFldTelefon: TPanel
           Left = 0
-          Top = 38
+          Top = 0
           Width = 1088
           Height = 52
           Align = alTop
@@ -1314,216 +845,57 @@ object frmPersonen: TfrmPersonen
           TitleFont.Style = []
         end
       end
-      object tsBeziehungen: TTabSheet
-        AlignWithMargins = True
-        Margins.Left = 0
-        Margins.Top = 25
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Caption = 'Beziehungen'
-        TabVisible = False
-        object pnlBtnBez: TPanel
-          Left = 0
-          Top = 0
-          Width = 1088
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 0
-          object btnErsterBez: TJvNavPanelButtonTop
-            Left = 0
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Erster'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+    end
+    object tsBeziehungen: TTabSheet
+      Caption = 'Beziehungen'
+      object barBeziehungen: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 1096
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        ButtonWidth = 70
+        Buttons = <
+          item
+            Action = actPersErster
           end
-          object btnZurueckBez: TJvNavPanelButtonTop
-            Tag = 1
-            Left = 58
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Zur'#252'ck'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersZurueck
           end
-          object btnWeiterBez: TJvNavPanelButtonTop
-            Tag = 2
-            Left = 116
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Weiter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersWeiter
           end
-          object btnLetzterBez: TJvNavPanelButtonTop
-            Tag = 3
-            Left = 174
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Letzter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersLetzter
           end
-          object btnNeuBez: TJvNavPanelButtonTop
-            Tag = 4
-            Left = 232
-            Top = 0
-            Width = 44
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersNeu
           end
-          object btnAendernBez: TJvNavPanelButtonTop
-            Tag = 5
-            Left = 276
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = #196'ndern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersBearbeiten
           end
-          object btnSpeichernBez: TJvNavPanelButtonTop
-            Tag = 6
-            Left = 334
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Speichern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersSpeichern
           end
-          object btnAbbrechenBez: TJvNavPanelButtonTop
-            Tag = 7
-            Left = 398
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Abbrechen'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
+          item
+            Action = actPersAbbrechen
           end
-          object btnNeuLadenBez: TJvNavPanelButtonTop
-            Tag = 8
-            Left = 462
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu laden'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object grdtBez: TJvGradient
-            Left = 526
-            Top = 0
-            Width = 562
-            Height = 38
-            Style = grVertical
-            StartColor = 16245453
-            EndColor = 15966336
-            ExplicitWidth = 200
-          end
-        end
+          item
+            Action = actPersAktualisieren
+          end>
+      end
+      object pnlBeziehungen: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'pnlBeziehungen'
+        ShowCaption = False
+        TabOrder = 5
         object pnlFldBeziehungen: TPanel
           Left = 0
-          Top = 38
+          Top = 0
           Width = 1088
           Height = 52
           Align = alTop
@@ -1604,6 +976,30 @@ object frmPersonen: TfrmPersonen
             ValueChecked = 'True'
             ValueUnchecked = 'False'
           end
+          object cbxLehrer: TDBCheckBox
+            Left = 856
+            Top = 24
+            Width = 80
+            Height = 17
+            Caption = 'Lehrer'
+            DataField = 'ist_lehrer'
+            DataSource = dmPersonen.dstblPersonBeziehung
+            TabOrder = 5
+            ValueChecked = 'True'
+            ValueUnchecked = 'False'
+          end
+          object cbxKlient: TDBCheckBox
+            Left = 944
+            Top = 24
+            Width = 80
+            Height = 17
+            Caption = 'Klient'
+            DataField = 'ist_klient'
+            DataSource = dmPersonen.dstblPersonBeziehung
+            TabOrder = 6
+            ValueChecked = 'True'
+            ValueUnchecked = 'False'
+          end
         end
         object grdBeziehungen: TDBGrid
           Left = 0
@@ -1621,1319 +1017,11 @@ object frmPersonen: TfrmPersonen
           TitleFont.Style = []
         end
       end
-      object tsPersonTypen: TTabSheet
-        AlignWithMargins = True
-        Margins.Left = 0
-        Margins.Top = 25
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Caption = 'Personentypen'
-        TabVisible = False
-        object pnlBtnPTyp: TPanel
-          Left = 0
-          Top = 0
-          Width = 1088
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 0
-          object btnErsterPTyp: TJvNavPanelButtonTop
-            Left = 0
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Erster'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnZurueckPTyp: TJvNavPanelButtonTop
-            Tag = 1
-            Left = 58
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Zur'#252'ck'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnWeiterPTyp: TJvNavPanelButtonTop
-            Tag = 2
-            Left = 116
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Weiter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnLetzterPTyp: TJvNavPanelButtonTop
-            Tag = 3
-            Left = 174
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Letzter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuPTyp: TJvNavPanelButtonTop
-            Tag = 4
-            Left = 232
-            Top = 0
-            Width = 44
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAendernPTyp: TJvNavPanelButtonTop
-            Tag = 5
-            Left = 276
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = #196'ndern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnSpeichernPTyp: TJvNavPanelButtonTop
-            Tag = 6
-            Left = 334
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Speichern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAbbrechenPTyp: TJvNavPanelButtonTop
-            Tag = 7
-            Left = 398
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Abbrechen'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuLadenPTyp: TJvNavPanelButtonTop
-            Tag = 8
-            Left = 462
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu laden'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object grdtPTyp: TJvGradient
-            Left = 526
-            Top = 0
-            Width = 562
-            Height = 38
-            Style = grVertical
-            StartColor = 16245453
-            EndColor = 15966336
-            ExplicitWidth = 200
-          end
-        end
-        object grdPersonTypen: TDBGrid
-          Left = 0
-          Top = 38
-          Width = 1088
-          Height = 567
-          Align = alClient
-          DataSource = dmPersonen.dstblPersonTyp
-          Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-          TabOrder = 1
-          TitleFont.Charset = DEFAULT_CHARSET
-          TitleFont.Color = clWindowText
-          TitleFont.Height = -12
-          TitleFont.Name = 'Segoe UI'
-          TitleFont.Style = []
-        end
-      end
-      object tsRollen: TTabSheet
-        AlignWithMargins = True
-        Margins.Left = 0
-        Margins.Top = 25
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Caption = 'Rollen'
-        TabVisible = False
-        object pnlBtnRol: TPanel
-          Left = 0
-          Top = 0
-          Width = 1088
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 0
-          object btnErsterRol: TJvNavPanelButtonTop
-            Left = 0
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Erster'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnZurueckRol: TJvNavPanelButtonTop
-            Tag = 1
-            Left = 58
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Zur'#252'ck'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnWeiterRol: TJvNavPanelButtonTop
-            Tag = 2
-            Left = 116
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Weiter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnLetzterRol: TJvNavPanelButtonTop
-            Tag = 3
-            Left = 174
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Letzter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuRol: TJvNavPanelButtonTop
-            Tag = 4
-            Left = 232
-            Top = 0
-            Width = 44
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAendernRol: TJvNavPanelButtonTop
-            Tag = 5
-            Left = 276
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = #196'ndern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnSpeichernRol: TJvNavPanelButtonTop
-            Tag = 6
-            Left = 334
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Speichern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAbbrechenRol: TJvNavPanelButtonTop
-            Tag = 7
-            Left = 398
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Abbrechen'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuLadenRol: TJvNavPanelButtonTop
-            Tag = 8
-            Left = 462
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu laden'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object grdtRol: TJvGradient
-            Left = 526
-            Top = 0
-            Width = 562
-            Height = 38
-            Style = grVertical
-            StartColor = 16245453
-            EndColor = 15966336
-            ExplicitWidth = 200
-          end
-        end
-        object grdRollen: TDBGrid
-          Left = 0
-          Top = 38
-          Width = 1088
-          Height = 567
-          Align = alClient
-          DataSource = dmPersonen.dstblRolleTyp
-          Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-          TabOrder = 1
-          TitleFont.Charset = DEFAULT_CHARSET
-          TitleFont.Color = clWindowText
-          TitleFont.Height = -12
-          TitleFont.Name = 'Segoe UI'
-          TitleFont.Style = []
-        end
-      end
-      object tsAdressTypen: TTabSheet
-        AlignWithMargins = True
-        Margins.Left = 0
-        Margins.Top = 25
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Caption = 'Adresstypen'
-        TabVisible = False
-        object pnlBtnATyp: TPanel
-          Left = 0
-          Top = 0
-          Width = 1088
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 0
-          object btnErsterATyp: TJvNavPanelButtonTop
-            Left = 0
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Erster'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnZurueckATyp: TJvNavPanelButtonTop
-            Tag = 1
-            Left = 58
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Zur'#252'ck'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnWeiterATyp: TJvNavPanelButtonTop
-            Tag = 2
-            Left = 116
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Weiter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnLetzterATyp: TJvNavPanelButtonTop
-            Tag = 3
-            Left = 174
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Letzter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuATyp: TJvNavPanelButtonTop
-            Tag = 4
-            Left = 232
-            Top = 0
-            Width = 44
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAendernATyp: TJvNavPanelButtonTop
-            Tag = 5
-            Left = 276
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = #196'ndern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnSpeichernATyp: TJvNavPanelButtonTop
-            Tag = 6
-            Left = 334
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Speichern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAbbrechenATyp: TJvNavPanelButtonTop
-            Tag = 7
-            Left = 398
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Abbrechen'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuLadenATyp: TJvNavPanelButtonTop
-            Tag = 8
-            Left = 462
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu laden'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object grdtATyp: TJvGradient
-            Left = 526
-            Top = 0
-            Width = 562
-            Height = 38
-            Style = grVertical
-            StartColor = 16245453
-            EndColor = 15966336
-            ExplicitWidth = 200
-          end
-        end
-        object grdAdressTypen: TDBGrid
-          Left = 0
-          Top = 38
-          Width = 1088
-          Height = 567
-          Align = alClient
-          DataSource = dmPersonen.dstblAdressentyp
-          Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-          TabOrder = 1
-          TitleFont.Charset = DEFAULT_CHARSET
-          TitleFont.Color = clWindowText
-          TitleFont.Height = -12
-          TitleFont.Name = 'Segoe UI'
-          TitleFont.Style = []
-        end
-      end
-      object tsEmailTypen: TTabSheet
-        AlignWithMargins = True
-        Margins.Left = 0
-        Margins.Top = 25
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Caption = 'Emailtypen'
-        TabVisible = False
-        object pnlBtnETyp: TPanel
-          Left = 0
-          Top = 0
-          Width = 1088
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 0
-          object btnErsterETyp: TJvNavPanelButtonTop
-            Left = 0
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Erster'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnZurueckETyp: TJvNavPanelButtonTop
-            Tag = 1
-            Left = 58
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Zur'#252'ck'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnWeiterETyp: TJvNavPanelButtonTop
-            Tag = 2
-            Left = 116
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Weiter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnLetzterETyp: TJvNavPanelButtonTop
-            Tag = 3
-            Left = 174
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Letzter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuETyp: TJvNavPanelButtonTop
-            Tag = 4
-            Left = 232
-            Top = 0
-            Width = 44
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAendernETyp: TJvNavPanelButtonTop
-            Tag = 5
-            Left = 276
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = #196'ndern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnSpeichernETyp: TJvNavPanelButtonTop
-            Tag = 6
-            Left = 334
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Speichern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAbbrechenETyp: TJvNavPanelButtonTop
-            Tag = 7
-            Left = 398
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Abbrechen'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuLadenETyp: TJvNavPanelButtonTop
-            Tag = 8
-            Left = 462
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu laden'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object grdtETyp: TJvGradient
-            Left = 526
-            Top = 0
-            Width = 562
-            Height = 38
-            Style = grVertical
-            StartColor = 16245453
-            EndColor = 15966336
-            ExplicitWidth = 200
-          end
-        end
-        object grdEmailTypen: TDBGrid
-          Left = 0
-          Top = 38
-          Width = 1088
-          Height = 567
-          Align = alClient
-          DataSource = dmPersonen.dstblEmailtyp
-          Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-          TabOrder = 1
-          TitleFont.Charset = DEFAULT_CHARSET
-          TitleFont.Color = clWindowText
-          TitleFont.Height = -12
-          TitleFont.Name = 'Segoe UI'
-          TitleFont.Style = []
-        end
-      end
-      object tsTelefonTypen: TTabSheet
-        AlignWithMargins = True
-        Margins.Left = 0
-        Margins.Top = 25
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Caption = 'Telefontypen'
-        TabVisible = False
-        object pnlBtnTTyp: TPanel
-          Left = 0
-          Top = 0
-          Width = 1088
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 0
-          object btnErsterTTyp: TJvNavPanelButtonTop
-            Left = 0
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Erster'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnZurueckTTyp: TJvNavPanelButtonTop
-            Tag = 1
-            Left = 58
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Zur'#252'ck'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnWeiterTTyp: TJvNavPanelButtonTop
-            Tag = 2
-            Left = 116
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Weiter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnLetzterTTyp: TJvNavPanelButtonTop
-            Tag = 3
-            Left = 174
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Letzter'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuTTyp: TJvNavPanelButtonTop
-            Tag = 4
-            Left = 232
-            Top = 0
-            Width = 44
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAendernTTyp: TJvNavPanelButtonTop
-            Tag = 5
-            Left = 276
-            Top = 0
-            Width = 58
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = #196'ndern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnSpeichernTTyp: TJvNavPanelButtonTop
-            Tag = 6
-            Left = 334
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Speichern'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnAbbrechenTTyp: TJvNavPanelButtonTop
-            Tag = 7
-            Left = 398
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Abbrechen'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object btnNeuLadenTTyp: TJvNavPanelButtonTop
-            Tag = 8
-            Left = 462
-            Top = 0
-            Width = 64
-            Height = 38
-            Align = alLeft
-            Alignment = taCenter
-            Caption = 'Neu laden'
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -12
-            Font.Name = 'Segoe UI'
-            Font.Style = [fsBold]
-            ParentFont = False
-            StyleManager = PaneStyle1
-            ParentStyleManager = False
-            ImageIndex = 0
-            OnClick = BtnNavClick
-          end
-          object grdtTTyp: TJvGradient
-            Left = 526
-            Top = 0
-            Width = 562
-            Height = 38
-            Style = grVertical
-            StartColor = 16245453
-            EndColor = 15966336
-            ExplicitWidth = 200
-          end
-        end
-        object grdTelefonTypen: TDBGrid
-          Left = 0
-          Top = 38
-          Width = 1088
-          Height = 567
-          Align = alClient
-          DataSource = dmPersonen.dstblTelefonnummertyp
-          Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-          TabOrder = 1
-          TitleFont.Charset = DEFAULT_CHARSET
-          TitleFont.Color = clWindowText
-          TitleFont.Height = -12
-          TitleFont.Name = 'Segoe UI'
-          TitleFont.Style = []
-        end
-      end
-    end
-    object hdrAdressen: TJvNavPanelHeader
-      Left = 4
-      Top = 0
-      Width = 76
-      Height = 31
-      Alignment = taCenter
-      Caption = 'Adressen'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindow
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ColorFrom = 12232890
-      ColorTo = 9532021
-      ImageIndex = 0
-      StyleManager = PaneStyle2
-      ParentStyleManager = False
-      OnClick = KopfClick
-    end
-    object hdrEmails: TJvNavPanelHeader
-      Tag = 1
-      Left = 80
-      Top = 0
-      Width = 60
-      Height = 31
-      Alignment = taCenter
-      Caption = 'Emails'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindow
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ColorFrom = 12232890
-      ColorTo = 9532021
-      ImageIndex = 0
-      StyleManager = PaneStyle2
-      ParentStyleManager = False
-      OnClick = KopfClick
-    end
-    object hdrTelefon: TJvNavPanelHeader
-      Tag = 2
-      Left = 140
-      Top = 0
-      Width = 64
-      Height = 31
-      Alignment = taCenter
-      Caption = 'Telefon'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindow
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ColorFrom = 12232890
-      ColorTo = 9532021
-      ImageIndex = 0
-      StyleManager = PaneStyle2
-      ParentStyleManager = False
-      OnClick = KopfClick
-    end
-    object hdrBeziehungen: TJvNavPanelHeader
-      Tag = 3
-      Left = 204
-      Top = 0
-      Width = 92
-      Height = 31
-      Alignment = taCenter
-      Caption = 'Beziehungen'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindow
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ColorFrom = 12232890
-      ColorTo = 9532021
-      ImageIndex = 0
-      StyleManager = PaneStyle2
-      ParentStyleManager = False
-      OnClick = KopfClick
-    end
-    object hdrPersonTypen: TJvNavPanelHeader
-      Tag = 4
-      Left = 296
-      Top = 0
-      Width = 106
-      Height = 31
-      Alignment = taCenter
-      Caption = 'Personentypen'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindow
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ColorFrom = 12232890
-      ColorTo = 9532021
-      ImageIndex = 0
-      StyleManager = PaneStyle2
-      ParentStyleManager = False
-      OnClick = KopfClick
-    end
-    object hdrRollen: TJvNavPanelHeader
-      Tag = 5
-      Left = 402
-      Top = 0
-      Width = 56
-      Height = 31
-      Alignment = taCenter
-      Caption = 'Rollen'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindow
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ColorFrom = 12232890
-      ColorTo = 9532021
-      ImageIndex = 0
-      StyleManager = PaneStyle2
-      ParentStyleManager = False
-      OnClick = KopfClick
-    end
-    object hdrAdressTypen: TJvNavPanelHeader
-      Tag = 6
-      Left = 458
-      Top = 0
-      Width = 92
-      Height = 31
-      Alignment = taCenter
-      Caption = 'Adresstypen'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindow
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ColorFrom = 12232890
-      ColorTo = 9532021
-      ImageIndex = 0
-      StyleManager = PaneStyle2
-      ParentStyleManager = False
-      OnClick = KopfClick
-    end
-    object hdrEmailTypen: TJvNavPanelHeader
-      Tag = 7
-      Left = 550
-      Top = 0
-      Width = 84
-      Height = 31
-      Alignment = taCenter
-      Caption = 'Emailtypen'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindow
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ColorFrom = 12232890
-      ColorTo = 9532021
-      ImageIndex = 0
-      StyleManager = PaneStyle2
-      ParentStyleManager = False
-      OnClick = KopfClick
-    end
-    object hdrTelefonTypen: TJvNavPanelHeader
-      Tag = 8
-      Left = 634
-      Top = 0
-      Width = 96
-      Height = 31
-      Alignment = taCenter
-      Caption = 'Telefontypen'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindow
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ColorFrom = 12232890
-      ColorTo = 9532021
-      ImageIndex = 0
-      StyleManager = PaneStyle2
-      ParentStyleManager = False
-      OnClick = KopfClick
     end
   end
   object PaneStyle1: TJvNavPaneStyleManager
     Theme = nptXPBlue
     Left = 48
-    Top = 592
-  end
-  object PaneStyle2: TJvNavPaneStyleManager
-    Theme = nptXPSilver
-    Left = 128
     Top = 592
   end
   object dlgPhoto: TOpenPictureDialog
@@ -2942,5 +1030,53 @@ object frmPersonen: TfrmPersonen
       'Dateien (*.*)|*.*'
     Left = 208
     Top = 592
+  end
+  object actlstPersonen: TActionList
+    Left = 640
+    Top = 560
+    object actPersErster: TAction
+      Caption = 'Erster'
+      OnExecute = PersNavExecute
+    end
+    object actPersZurueck: TAction
+      Tag = 1
+      Caption = 'Zurück'
+      OnExecute = PersNavExecute
+    end
+    object actPersWeiter: TAction
+      Tag = 2
+      Caption = 'Weiter'
+      OnExecute = PersNavExecute
+    end
+    object actPersLetzter: TAction
+      Tag = 3
+      Caption = 'Letzter'
+      OnExecute = PersNavExecute
+    end
+    object actPersNeu: TAction
+      Tag = 4
+      Caption = 'Neu'
+      OnExecute = PersNavExecute
+    end
+    object actPersBearbeiten: TAction
+      Tag = 5
+      Caption = 'Ändern'
+      OnExecute = PersNavExecute
+    end
+    object actPersSpeichern: TAction
+      Tag = 6
+      Caption = 'Speichern'
+      OnExecute = PersNavExecute
+    end
+    object actPersAbbrechen: TAction
+      Tag = 7
+      Caption = 'Abbrechen'
+      OnExecute = PersNavExecute
+    end
+    object actPersAktualisieren: TAction
+      Tag = 8
+      Caption = 'Neu laden'
+      OnExecute = PersNavExecute
+    end
   end
 end

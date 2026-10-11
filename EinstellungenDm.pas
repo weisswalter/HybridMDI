@@ -43,6 +43,9 @@ type
     tblKategorie: TFDMemTable;
     // Einstellungen der Website je Mandant (Shop an/aus, Waehrung, ...)
     memWebEinstellung: TFDMemTable;
+    // Farben der Website je Mandant - werden als CSS-Variablen ausgeliefert.
+    tblWebFarbe: TFDMemTable;
+    dstblWebFarbe: TDataSource;
     dstblPersonentyp: TDataSource;
     dstblRollentyp: TDataSource;
     dstblAdressentyp: TDataSource;
@@ -80,6 +83,12 @@ type
     function IstWebsiteTab(AHeaderIndex: Integer): Boolean;
     function WebWert(const ASchluessel: string): string;
     function WebWertSetzen(const ASchluessel, AWert: string): string;
+    // Der Farben-Reiter hat wie der Website-Reiter keinen Autoinc-Schluessel
+    // (Primaerschluessel ist mandant_id+schluessel) - deshalb ebenfalls ein
+    // eigener Weg statt TypSpeichern.
+    function IstFarbenTab(AHeaderIndex: Integer): Boolean;
+    function FarbeSpeichern(const ASchluessel, AWert,
+      ABemerkung: string): string;
   private
     procedure ReiterInfo(AHeaderIndex: Integer;
       out AFunktion, ATabelle, AIdFeld, AFelder: string;
@@ -95,7 +104,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
+  ZentraleDatenDm, uGridMemo,
   Vcl.Dialogs,
   MandantDm,
   EinstellungenFrm, System.SyncObjs;
@@ -161,6 +170,7 @@ begin
     6: Result := dstblLeadquellentyp;
     7: Result := dstblKompetenztyp;
     8: Result := dstblKategorie;
+    10: Result := dstblWebFarbe;
   else
     Result := nil;
   end;
@@ -222,6 +232,13 @@ begin
                                 [FMandantId]);
   tblKategorie.Filtered := True;
   tblKategorie.IndexFieldNames := 'sortierung;bezeichnung';
+
+  // Farben je Mandant, in derselben Reihenfolge wie die Website sie liest.
+  tblWebFarbe.Filtered := False;
+  tblWebFarbe.Filter := Format('mandant_id=%d', [FMandantId]);
+  tblWebFarbe.Filtered := True;
+  tblWebFarbe.IndexFieldNames := 'reihenfolge';
+  tblWebFarbe.First;
 
   if not Assigned(frmEinstellungen) then
     frmEinstellungen := TfrmEinstellungen.Create(Application);
@@ -390,6 +407,38 @@ begin
   end;
 end;
 
+function TdmEinstellungen.IstFarbenTab(AHeaderIndex: Integer): Boolean;
+begin
+  Result := AHeaderIndex = 10;
+end;
+
+// Schreibt EINE Farbe. Aufgerufen vom Speichern-Button, nachdem der
+// Farbauswahl-Dialog den Wert schon in die Kopie (tblWebFarbe) geschrieben
+// hat - hier geht er, wie ueberall sonst, ueber die Datenbankfunktion statt
+// direkt in die Speichertabelle.
+function TdmEinstellungen.FarbeSpeichern(const ASchluessel, AWert,
+  ABemerkung: string): string;
+var
+  LZentral: TdmZentraleDaten;
+begin
+  Result := EmptyStr;
+  LZentral := TdmZentraleDaten(TdmZentraleDaten.GetInstance);
+  try
+    LZentral.SpAufrufen('fn_web_farbe_speichern',
+      [FMandantId, ASchluessel, AWert, ABemerkung]);
+    LZentral.TabelleAuffrischen('web_farbe');
+    TabellenLaden;
+    tblWebFarbe.Filtered := False;
+    tblWebFarbe.Filter := Format('mandant_id=%d', [FMandantId]);
+    tblWebFarbe.Filtered := True;
+    tblWebFarbe.IndexFieldNames := 'reihenfolge';
+    tblWebFarbe.Locate('schluessel', ASchluessel, []);
+  except
+    on E: Exception do
+      Result := E.Message;
+  end;
+end;
+
 function TdmEinstellungen.TabelleFuerTab(AHeaderIndex: Integer): string;
 var
   LF, LId, LFelder: string;
@@ -475,7 +524,13 @@ begin
     Zuordnung(tblRollentyp, 'rolle_typ'),
     Zuordnung(tblTelefonnummertyp, 'telefonnummertyp'),
     Zuordnung(tblKategorie, 'kategorie'),
-    Zuordnung(memWebEinstellung, 'mandant_einstellung')]);
+    Zuordnung(memWebEinstellung, 'mandant_einstellung'),
+    Zuordnung(tblWebFarbe, 'web_farbe')]);
+  // kompetenz_typ.beschreibung und kategorie.beschreibung sind Postgres
+  // 'text' - ohne das haetten die Gitter dort nur "(WIDEMEMO)" gezeigt.
+  // Siehe uGridMemo.
+  MemosLesbarMachen(tblKompetenztyp);
+  MemosLesbarMachen(tblKategorie);
 end;
 
 

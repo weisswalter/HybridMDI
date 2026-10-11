@@ -62,7 +62,7 @@ implementation
 
 uses
   Vcl.Dialogs,
-  DokumenteFrm, System.SyncObjs, ZentraleDatenDm;
+  DokumenteFrm, System.SyncObjs, ZentraleDatenDm, uGridMemo;
 
 procedure TdmDokumente.btnScanClick(Sender: TObject);
 begin
@@ -166,6 +166,9 @@ procedure TdmDokumente.TabellenLaden;
 begin
   TdmZentraleDaten(TdmZentraleDaten.GetInstance).ModulFuellen(
     [Zuordnung(qryDokumente, 'dokument')]);
+  // dokument.css/html/inhalt_text/ocr_text sind Postgres 'text' - ohne das
+  // haette das Gitter dort nur "(WIDEMEMO)" gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(qryDokumente);
   qryDokumente.IndexFieldNames := 'dokument_id';
 end;
 

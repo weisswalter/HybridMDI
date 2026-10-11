@@ -459,11 +459,9 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="..\RibbonFramework\Lib\UIRibbon.pas"/>
         <DCCReference Include="uFrmGuiTemplate.pas">
             <Form>frmGuiTemplate</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="ArtikelStammDm.pas">
             <Form>dmArtikelStamm</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

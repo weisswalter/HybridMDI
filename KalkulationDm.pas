@@ -102,7 +102,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
+  ZentraleDatenDm, uGridMemo,
   System.DateUtils,
   Vcl.Dialogs,
   MandantDm,
@@ -149,6 +149,9 @@ begin
   // Das Blatt kommt fertig aufbereitet aus der Datenbank — hier wird nichts
   // nachgerechnet, damit Anzeige und Rechnung nicht auseinanderlaufen.
   qryBlatt.SQL.Text := 'SELECT * FROM fn_kalkulation_blatt(:k)';
+  // fn_kalkulation_blatt.bezeichnung ist Postgres 'text' - ohne das haette
+  // das Gitter dort nur "(WIDEMEMO)" gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(qryBlatt);
 
   qryKontoLookup.SQL.Text :=
     'SELECT konto_id, nummer || '' '' || bezeichnung AS anzeige ' +
@@ -628,6 +631,14 @@ begin
     Zuordnung(tblKostenstelle, 'kostenstelle'),
     Zuordnung(tblPosition, 'kalkulation_position'),
     Zuordnung(tblZuschlag, 'zuschlagssatz')]);
+  // Alle sechs Tabellen tragen ein 'bemerkung'-Feld vom Typ Postgres 'text' -
+  // ohne das haetten die Gitter dort nur "(WIDEMEMO)" gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(tblKalkulation);
+  MemosLesbarMachen(tblKonto);
+  MemosLesbarMachen(tblKostenart);
+  MemosLesbarMachen(tblKostenstelle);
+  MemosLesbarMachen(tblPosition);
+  MemosLesbarMachen(tblZuschlag);
 end;
 
 

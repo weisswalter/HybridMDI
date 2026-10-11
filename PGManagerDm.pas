@@ -69,6 +69,9 @@ type
     function  TestConnection(const AHost, APort, AUser, APassword, ADatabase: string): Boolean;
     procedure Disconnect;
     procedure ConnectToPostgres;
+    // Die Datenbank, ueber die Verwaltungsbefehle laufen (Tablespace/Datenbank
+    // anlegen, Kataloge lesen). Frueher immer 'postgres' - siehe Rumpf.
+    function Wartungsdatenbank: string;
     function  IsConnected: Boolean;
     function  ActiveDatabase: string;
 
@@ -108,7 +111,7 @@ implementation
 {$R *.dfm}
 
 uses
-  PGManagerFrm, System.SyncObjs, ZentraleDatenDm;
+  PGManagerFrm, System.SyncObjs, ZentraleDatenDm, uGridMemo;
 
 const
   OBF_KEY = 'Heisenberg-DBMgr-Key-2026';
@@ -152,6 +155,12 @@ begin
   DataSource4.DataSet := FDMemTable_TS;
   DataSource5.DataSet := FDMemTable_Tables;
   dsQuery.DataSet     := FDQuery1;   // SQL-Ergebnis-Grid (SELECT)
+
+  // text-Spalten kommen als WideMemo an, und ein DBGrid zeigt dafuer nur
+  // "(WIDEMEMO)". Einmal hier angemeldet, gilt es fuer jede kuenftige
+  // Abfrage - der Anzeiger haengt sich an AfterOpen (siehe uGridMemo).
+  MemosLesbarMachen(FDQuery1);
+  MemosLesbarMachen(FDTable1);
 
   if FileExists(GetJSONPath) then
     LoadProfilesFromJSON;
@@ -281,7 +290,27 @@ end;
 
 procedure TdmPGManager.Connect(const AHost, APort, AUser, APassword: string);
 begin
-  ConnectDB(AHost, APort, AUser, APassword, 'postgres');
+  ConnectDB(AHost, APort, AUser, APassword, Wartungsdatenbank);
+end;
+
+// Auf diesem Server hat wwe123 in der pg_hba.conf nur einen Eintrag fuer
+// TRTHeisenberg. Jeder Verbindungsversuch auf 'postgres' endet mit
+// "kein pg_hba.conf-Eintrag fuer ... Datenbank postgres" - auch wenn das
+// Programm selbst laengst verbunden ist. Deshalb kommt die Wartungsdatenbank
+// aus der einen Verbindung, die ohnehin steht.
+// Fuer CREATE DATABASE/TABLESPACE ist das kein Nachteil: die laufen aus jeder
+// Datenbank heraus, und pg_database/pg_tablespace sind clusterweit sichtbar.
+function TdmPGManager.Wartungsdatenbank: string;
+begin
+  Result := '';
+  try
+    Result := Trim(TdmZentraleDaten(TdmZentraleDaten.GetInstance)
+      .Verbindung.Params.Values['Database']);
+  except
+    // ohne zentrales Datenmodul (Pruefstand): Ersatzwert unten
+  end;
+  if Result = '' then
+    Result := 'postgres';
 end;
 
 function TdmPGManager.TestConnection(const AHost, APort, AUser, APassword, ADatabase: string): Boolean;
@@ -320,12 +349,17 @@ begin
 end;
 
 procedure TdmPGManager.ConnectToPostgres;
+var
+  LDb: string;
 begin
+  LDb := Wartungsdatenbank;
+  if FDConnection1.Connected and SameText(FActiveDatabase, LDb) then
+    Exit;
   if FDConnection1.Connected then
     FDConnection1.Connected := False;
-  FDConnection1.Params.Values['Database'] := 'postgres';
+  FDConnection1.Params.Values['Database'] := LDb;
   FDConnection1.Connected := True;
-  FActiveDatabase := 'postgres';
+  FActiveDatabase := LDb;
 end;
 
 function TdmPGManager.IsConnected: Boolean;

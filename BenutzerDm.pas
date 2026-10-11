@@ -125,7 +125,7 @@ implementation
 
 uses
   Vcl.Dialogs, System.Variants,
-  BenutzerFrm, System.SyncObjs;
+  BenutzerFrm, System.SyncObjs, uGridMemo;
 
 var
   GSperreBenutzer: TCriticalSection;
@@ -168,6 +168,10 @@ begin
     Zuordnung(qryMandantAuswahl, 'mandant'),
     Zuordnung(tblBenutzerMandant, 'benutzer_mandant'),
     Zuordnung(memPersonEmail, 'v_person_email_anmeldung')]);
+  // v_benutzer_uebersicht.mandanten/person sind zusammengesetzte Postgres
+  // 'text'-Spalten - ohne das haette das Gitter dort nur "(WIDEMEMO)"
+  // gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(qryBenutzer);
   qryBenutzer.IndexFieldNames := 'anmeldename';
   qryPersonAuswahl.IndexFieldNames := 'name';
   // Stammmandant zuerst, danach alphabetisch - wie das fruehere ORDER BY.

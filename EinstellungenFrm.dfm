@@ -66,6 +66,10 @@ object frmEinstellungen: TfrmEinstellungen
       item
         Caption = 'Website'
         Width = 100
+      end
+      item
+        Caption = 'Farben'
+        Width = 90
       end>
     object tsPersonentyp: TTabSheet
       Caption = 'Personentyp'
@@ -690,6 +694,74 @@ object frmEinstellungen: TfrmEinstellungen
         end
       end
     end
+    object tsFarben: TTabSheet
+      Caption = 'Farben'
+      object barFarben: TRibbonButtonBar
+        Left = 0
+        Top = 0
+        Width = 1000
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        Buttons = <
+          item
+            Action = actFarbauswahl
+            Width = 120
+          end
+          item
+            Action = actSpeichern
+            Width = 90
+          end>
+      end
+      object pnlFarben: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 1
+        object pnlFarbenHinweis: TPanel
+          Left = 0
+          Top = 0
+          Width = 1000
+          Height = 32
+          Align = alTop
+          BevelOuter = bvNone
+          ShowCaption = False
+          TabOrder = 0
+          object lblFarbenHinweis: TLabel
+            Left = 8
+            Top = 6
+            Width = 900
+            Height = 20
+            AutoSize = False
+            Caption =
+              'Zeile ausw'#228'hlen, Farbauswahl starten, dann Speichern - wirkt ' +
+              'auf der Website beim n'#228'chsten Seitenaufruf.'
+          end
+        end
+        object dbgrdFarben: TDBGrid
+          Left = 0
+          Top = 32
+          Width = 1000
+          Height = 500
+          Align = alClient
+          DataSource = dmEinstellungen.dstblWebFarbe
+          Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgCancelOnExit]
+          ReadOnly = True
+          TabOrder = 1
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+        end
+      end
+    end
+  end
+  object ColorDialogFarben: TColorDialog
+    Left = 880
+    Top = 552
   end
   object PaneStyle1: TJvNavPaneStyleManager
     Theme = nptXPBlue
@@ -714,6 +786,10 @@ object frmEinstellungen: TfrmEinstellungen
     object actLoeschen: TAction
       Caption = 'L'#246'schen'
       OnExecute = btnLoeschenClick
+    end
+    object actFarbauswahl: TAction
+      Caption = 'Farbauswahl'
+      OnExecute = actFarbauswahlExecute
     end
   end
 end

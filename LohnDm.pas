@@ -101,7 +101,7 @@ implementation
 {$R *.dfm}
 
 uses
-  ZentraleDatenDm,
+  ZentraleDatenDm, uGridMemo,
   Vcl.Dialogs,
   MandantDm,
   LohnFrm, System.SyncObjs;
@@ -168,6 +168,14 @@ begin
     'WHERE pb.ist_mitarbeiter OR pb.ist_lehrer ' +
     'GROUP BY p.person_id, p.nachname_firmenname, p.vorname ' +
     'ORDER BY 2';
+
+  // v_lohn_uebersicht.anstellungsart ist Postgres 'text' (Sicht), und der
+  // CASE-Ausdruck in qryPersonen wird von Postgres ebenfalls als 'text'
+  // typisiert, obwohl er nur kurze Woerter liefert - ohne das haetten beide
+  // Gitter dort "(WIDEMEMO)" gezeigt. Nachtrag zur ersten Runde: hier
+  // urspruenglich vergessen, siehe uGridMemo.
+  MemosLesbarMachen(qryPerioden);
+  MemosLesbarMachen(qryPersonen);
 end;
 
 procedure TdmLohn.LadePerioden(AJahr, AMonat: Integer);
@@ -482,6 +490,12 @@ begin
     Zuordnung(tblAbzug, 'lohn_abzugsart'),
     Zuordnung(tblLohn, 'person_lohn'),
     Zuordnung(tblZulage, 'lohn_zulage')]);
+  // lohn_abzugsart/person_lohn/lohn_zulage tragen ein 'bemerkung'-Feld vom
+  // Typ Postgres 'text' - ohne das haetten die Gitter dort nur "(WIDEMEMO)"
+  // gezeigt. Siehe uGridMemo.
+  MemosLesbarMachen(tblAbzug);
+  MemosLesbarMachen(tblLohn);
+  MemosLesbarMachen(tblZulage);
 end;
 
 

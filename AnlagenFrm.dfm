@@ -264,9 +264,16 @@ object frmAnlagen: TfrmAnlagen
           Height = 15
           Caption = 'Standort (Raum)'
         end
+        object lblArtikel: TLabel
+          Left = 8
+          Top = 184
+          Width = 150
+          Height = 15
+          Caption = 'Herkunft (Artikel)'
+        end
         object lblZuordnungHinweis: TLabel
           Left = 8
-          Top = 190
+          Top = 246
           Width = 555
           Height = 70
           AutoSize = False
@@ -307,6 +314,92 @@ object frmAnlagen: TfrmAnlagen
           ListField = 'anzeige'
           ListSource = dmAnlagen.dsRaum
           TabOrder = 2
+        end
+        object cboArtikel: TDBLookupComboBox
+          Left = 8
+          Top = 204
+          Width = 400
+          Height = 23
+          DataField = 'artikel_id'
+          DataSource = dmAnlagen.dsAnlage
+          KeyField = 'artikel_id'
+          ListField = 'artikelname'
+          ListSource = dmAnlagen.dsArtikel
+          TabOrder = 3
+        end
+      end
+    end
+    object tsFotos: TTabSheet
+      Caption = 'Fotos'
+      object pnlFotos: TPanel
+        Align = alClient
+        BevelOuter = bvNone
+        ShowCaption = False
+        TabOrder = 0
+        object lblFotoBeschr: TLabel
+          Left = 8
+          Top = 6
+          Width = 72
+          Height = 15
+          Caption = 'Beschreibung'
+        end
+        object dbimgFoto: TDBImage
+          Left = 296
+          Top = 32
+          Width = 271
+          Height = 480
+          DataField = 'foto'
+          DataSource = dmAnlagen.dstblAnlageFoto
+          TabOrder = 0
+        end
+        object dbgrdFotos: TDBGrid
+          Left = 8
+          Top = 128
+          Width = 250
+          Height = 384
+          DataSource = dmAnlagen.dstblAnlageFoto
+          TabOrder = 1
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -12
+          TitleFont.Name = 'Segoe UI'
+          TitleFont.Style = []
+          Columns = <
+            item
+              Expanded = False
+              FieldName = 'reihenfolge'
+              Title.Caption = 'Foto'
+              Width = 190
+              Visible = True
+            end>
+        end
+        object dbmmoBeschreibung: TDBMemo
+          Left = 8
+          Top = 24
+          Width = 250
+          Height = 96
+          DataField = 'beschreibung'
+          DataSource = dmAnlagen.dstblAnlageFoto
+          ScrollBars = ssVertical
+          TabOrder = 2
+        end
+        object btnFotoLaden: TButton
+          Left = 576
+          Top = 32
+          Width = 120
+          Height = 25
+          Caption = 'Foto laden...'
+          TabOrder = 3
+          OnClick = btnFotoLadenClick
+        end
+        object btnFotoLoeschen: TButton
+          Left = 576
+          Top = 67
+          Width = 120
+          Height = 25
+          Caption = 'Foto entfernen'
+          TabOrder = 4
+          OnClick = btnFotoLoeschenClick
         end
       end
     end
@@ -370,5 +463,12 @@ object frmAnlagen: TfrmAnlagen
       Caption = 'L'#246'schen'
       OnExecute = ActionRechtsExecute
     end
+  end
+  object dlgFoto: TOpenPictureDialog
+    Filter =
+      'Bilder (*.jpg;*.jpeg;*.png;*.bmp)|*.jpg;*.jpeg;*.png;*.bmp|Alle ' +
+      'Dateien (*.*)|*.*'
+    Left = 960
+    Top = 300
   end
 end

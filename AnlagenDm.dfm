@@ -42,4 +42,25 @@ object dmAnlagen: TdmAnlagen
     Left = 152
     Top = 224
   end
+  object qryArtikel: TFDMemTable
+    Left = 40
+    Top = 288
+  end
+  object dsArtikel: TDataSource
+    DataSet = qryArtikel
+    Left = 152
+    Top = 288
+  end
+  object tblAnlageFoto: TFDMemTable
+    IndexFieldNames = 'anlage_id'
+    MasterSource = dsAnlage
+    MasterFields = 'anlage_id'
+    Left = 40
+    Top = 352
+  end
+  object dstblAnlageFoto: TDataSource
+    DataSet = tblAnlageFoto
+    Left = 152
+    Top = 352
+  end
 end
